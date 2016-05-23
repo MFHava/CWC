@@ -1,0 +1,76 @@
+
+//          Copyright Michael Florian Hava 2012.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file ../../LICENSE_1_0.txt or copy at
+//          http://www.boost.org/LICENSE_1_0.txt)
+
+#pragma once
+#define CWC_VERSION_MAJOR @CWC_VERSION_MAJOR@
+#define CWC_VERSION_MINOR @CWC_VERSION_MINOR@
+#define CWC_VERSION_PATCH @CWC_VERSION_PATCH@
+#define CWC_HPP_HEADER_INCLUDED
+
+#define CWC_DO_STRINGIFY(str) #str
+#define CWC_STRINGIFY(str) CWC_DO_STRINGIFY(str)
+
+#if defined(_MSC_VER)
+	#include "cwc/internal/config/msvc.hpp"
+#elif defined(__GNUG__)
+	#include "cwc/internal/config/gcc.hpp"
+#else
+	#error "Unknown compiler!"
+#endif
+
+#if defined(CWC_AUTOLINK_SUPPORTED) && !defined(CWC_BUILDING)
+	#ifdef CWC_AUTOLINK_DEBUG
+		#define CWC_LIB_DEBUG "@CWC_LIB_DEBUG_POSTFIX@"
+	#else
+		#define CWC_LIB_DEBUG ""
+	#endif
+
+	#pragma comment(lib, "cwc-@CWC_VERSION_MAJOR@.@CWC_VERSION_MINOR@.@CWC_VERSION_PATCH@-api-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
+	#if defined(CWC_HOST)
+		#pragma comment(lib, "cwc-@CWC_VERSION_MAJOR@.@CWC_VERSION_MINOR@.@CWC_VERSION_PATCH@-ctx-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
+	#endif
+
+	#undef CWC_LIB_DEBUG
+#endif
+
+#undef CWC_DO_STRINGIFY
+#undef CWC_STRINGIFY
+
+#ifndef CWC_HAS_NO_IMPLICIT_MOVE_SEMANTIC
+	#define CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(name)\
+		name(name &&) CWC_NOEXCEPT =default;\
+		auto operator=(name &&) CWC_NOEXCEPT -> name & =default;\
+		~name() CWC_NOEXCEPT =default;
+#else
+	#define CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(name)\
+		name(name && other) CWC_NOEXCEPT : cwc::component{std::move(other)} {}\
+		auto operator=(name && other) CWC_NOEXCEPT -> name & { cwc::component::operator=(std::move(other)); return *this; }\
+		~name() CWC_NOEXCEPT {}
+#endif
+
+//! @brief public API of C++ with Components
+namespace cwc {
+	//! @brief access to the global CWC context
+	namespace this_context {}
+}
+
+#include "internal/type_list.hpp"
+#include "public/types.hpp"
+#include "internal/error_handling.hpp"
+#include "internal/default_implementation_chaining.hpp"
+#include "internal/cast_to_interface.hpp"
+#include "internal/marshalling_fwd.hpp"
+#include "internal/instance_counter.hpp"
+#include "public/component.hpp"
+#include "internal/type_traits.hpp"
+#include "internal/marshalling.hpp"
+#include "internal/reference_guard.hpp"
+#include "public/config_enumerators.hpp"
+#include "internal/this_context.hpp"
+#include "public/this_context.hpp"
+#include "internal/make_base_list.hpp"
+#include "public/default_implementations.hpp"
+#include "public/make_empty.hpp"

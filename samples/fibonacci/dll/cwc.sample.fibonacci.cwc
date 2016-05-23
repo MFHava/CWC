@@ -1,0 +1,83 @@
+
+//          Copyright Michael Florian Hava 2012.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file ../../../LICENSE_1_0.txt or copy at
+//          http://www.boost.org/LICENSE_1_0.txt)
+
+#include "cwc.sample.fibonacci.h"
+#include <unordered_map>
+#include <cwc/internal/metadata_enumerator.hpp>
+#include <cwc/internal/create_component_factory.hpp>
+using namespace cwc::sample::fibonacci;
+
+namespace {
+	using cwc_components = ::cwc::TL::make_type_list<cwc::sample::fibonacci::generator$>::type;
+	static_assert(std::is_base_of<generator::cwc_component, cwc::sample::fibonacci::generator$>::value, "Implementation 'cwc::sample::fibonacci::generator$' does not fulfill the requirements of component 'generator'");
+
+	::cwc::internal::context_interface * cwc_context;
+	std::atomic<unsigned long long> cwc_instance_counter{0};
+
+	const std::unordered_multimap<std::string, std::string> cwc_metadata {
+#include "cwc.sample.fibonacci.cwcm"
+	};
+
+	class cwc_metadata_enumerator : public ::cwc::interface_implementation<::cwc::internal::metadata_enumerator, cwc_metadata_enumerator> {
+		std::unordered_multimap<std::string, std::string>::const_iterator it;
+	public:
+		cwc_metadata_enumerator() : it{std::begin(cwc_metadata)} {}
+
+		auto end() const -> bool { return it == std::end(cwc_metadata); }
+
+		void next() {
+			if(end()) throw std::runtime_error{"already at end"};
+			++it;
+		}
+
+		auto get() const -> cwc::internal::metadata_entry {
+			if(end()) throw std::runtime_error{"at end"};
+			return{it->first.c_str(), it->second.c_str()};
+		}
+	};
+}
+
+auto ::cwc::internal::this_context() -> context_interface & { return *cwc_context; }
+::cwc::internal::instance_counter::instance_counter() { ++cwc_instance_counter; }
+::cwc::internal::instance_counter::~instance_counter() { --cwc_instance_counter; }
+
+extern "C" CWC_EXPORT::cwc::boolean CWC_CALL cwc_unloadable() { return !cwc_instance_counter; }
+
+extern "C" CWC_EXPORT void CWC_CALL cwc_init(::cwc::internal::context_interface * context) {
+	assert(!cwc_context);
+	cwc_context = context;
+}
+
+extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(::cwc::ascii_string fqn, cwc::component::cwc_interface ** result) {
+	assert(cwc_context);
+	assert(result);
+	return ::cwc::internal::call_and_return_error([&] {
+		::cwc::internal::create_component_factory<cwc_components>::create(fqn, result);
+	});
+}
+
+extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_metadata(::cwc::internal::metadata_enumerator::cwc_interface ** result) {
+	assert(cwc_context);
+	assert(result);
+	return ::cwc::internal::call_and_return_error([&] {
+		::cwc::internal::metadata_enumerator tmp{new cwc_metadata_enumerator};
+		*result = ::cwc::internal::to_abi(tmp);
+	});
+}
+
+extern "C" CWC_EXPORT ::cwc::ascii_string CWC_CALL cwc_reflect() {
+	return
+		"bundle cwc::sample::fibonacci {\n"
+		"	interface sequence {\n"
+		"		auto operator()(::cwc::uint8 no) -> ::cwc::uint64;\n"
+		"	};\n"
+		"\n"
+		"	component generator : sequence {};\n"
+		"\n"
+		"	export generator;\n"
+		"}\n"
+	;
+}

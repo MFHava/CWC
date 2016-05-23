@@ -1,0 +1,269 @@
+
+//          Copyright Michael Florian Hava 2012.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file ../../LICENSE_1_0.txt or copy at
+//          http://www.boost.org/LICENSE_1_0.txt)
+
+#include <cwc/cwc.hpp>
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
+
+#ifdef CWC_HAS_NO_REGEX
+	#ifdef CWC_USE_BOOST_REGEX//if implementation does not support regex, we offer boost as alternative, else we fail
+		#include <boost/regex.hpp>
+		namespace {
+			using boost::regex;
+			using boost::smatch;
+			using boost::regex_match;
+		}
+	#else
+		#error "No support for Stdlib.Regex! Either use an implementation that supports Stdlib.Regex or define CWC_USE_BOOST_REGEX to enable Boost (fallback) support!"
+	#endif
+#else
+	#include <regex>
+	namespace {
+		using std::regex;
+		using std::smatch;
+		using std::regex_match;
+	}
+#endif
+
+#ifdef _WIN32
+	#define WIN32_LEAN_AND_MEAN
+	#define NOSERVICE
+	#define NOMCX
+	#define NOIME
+	#ifndef NOMINMAX
+		#define NOMINMAX
+	#endif
+	#include <Windows.h>
+#else
+	#include <dlfcn.h>
+	#define HMODULE void *
+	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
+	#define GetProcAddress(dll, function) dlsym(dll, function)
+#endif
+
+namespace {
+	CWC_THREAD_LOCAL cwc::ascii last_message[@MAX_EXCEPTION_MESSAGE_LENGTH@];
+
+	class context_impl final : public cwc::internal::context_interface {
+		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(cwc::ascii_string, cwc::component::cwc_interface **);
+
+		using factory_map = std::unordered_map<std::string, cwc::component>;
+		using key_value_map = std::unordered_map<std::string, std::string>;
+		using config_map = std::unordered_map<std::string, key_value_map>;
+		using dll_map = std::unordered_map<HMODULE, factory_export_type>;
+
+		factory_map component_factories;
+		std::unordered_map<std::string, factory_map> plugin_factories;
+		const config_map config;
+
+		auto load_dll(dll_map & map, const std::string & file) -> HMODULE {
+			const auto handle = LoadLibrary(file.c_str());
+			if(handle && !map.count(handle)) { 
+				if(const auto init = reinterpret_cast<void (CWC_CALL *)(context_interface *)>(GetProcAddress(handle, "cwc_init"))) {
+					if(const auto factory = reinterpret_cast<factory_export_type>(GetProcAddress(handle, "cwc_factory"))) {
+						init(this);
+						map[handle] = factory;
+					} else throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + file + '"'};
+				} else throw std::logic_error{"could not find entry point 'cwc_init' in bundle \"" + file + '"'};
+			}
+			return handle;
+		}
+
+		auto create_factory(factory_export_type factory, const std::string & file, const std::string & fqn) -> cwc::component {
+			cwc::component::cwc_interface * ptr{nullptr};
+			if(factory(cwc::internal::to_abi(fqn.c_str()), cwc::internal::to_abi(ptr)) != cwc::internal::error_code::no_error) throw std::logic_error{"could not retrieve factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
+			if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
+			return ptr;
+		}
+
+		auto parse_ini(std::istream & in) -> config_map {
+			config_map result;
+			if(in) {
+				const regex comment_or_whitespace{R"(\s*(?:[;#].*)?)"},
+				            section{R"(\s*(\[[^\s;#]+\])\s*(?:[;#].*)?)"},
+				            key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*(?:[;#].*)?)"};
+				std::string line, current_section;
+				while(std::getline(in, line)) {
+					smatch matched;
+					if(regex_match(line, matched, comment_or_whitespace)) {} //nothing to do here
+					else if(regex_match(line, matched, key_value_pair)) result[current_section][std::move(matched[1])] = std::move(matched[2]);
+					else if(regex_match(line, matched, section)) current_section = std::move(matched[1]);
+					else throw std::logic_error{"invalid configuration file"};
+				}
+			}
+			return result;
+		}
+
+		void load_component(dll_map & map, const std::string & fqn, const std::string & file) {
+			if(const auto library = load_dll(map, file)) component_factories.emplace(fqn, create_factory(map.at(library), file, fqn));
+			else throw std::logic_error{"could not load bundle \"" + file + '"'};
+		}
+
+		void load_plugins(dll_map & map, const std::string & fqn, const key_value_map & mapping) {
+			for(const auto & m : mapping)
+				if(const auto library = load_dll(map, m.second))
+					plugin_factories[fqn].emplace(m.first, create_factory(map.at(library), m.second, fqn));
+		}
+
+		class config_section_enumerator : public cwc::interface_implementation<cwc::config_section_enumerator, config_section_enumerator> {
+			key_value_map::const_iterator it, last;
+		public:
+			config_section_enumerator(const key_value_map & config) : it{std::begin(config)}, last{std::end(config)} {}
+
+			auto end() const -> bool { return it == last; }
+
+			void next() {
+				if(end()) throw std::runtime_error{"already at end"};
+				++it;
+			}
+
+			auto get() const -> cwc::config_entry {
+				if(end()) throw std::runtime_error{"at end"};
+				return{it->first.c_str(), it->second.c_str()};
+			}
+		};
+
+		class config_sections_enumerator : public cwc::interface_implementation<cwc::config_sections_enumerator, config_sections_enumerator> {
+			config_map::const_iterator it, last;
+		public:
+			config_sections_enumerator(const config_map & config) : it{std::begin(config)}, last{std::end(config)} {}
+
+			auto end() const -> bool { return it == last; }
+
+			void next() {
+				if(end()) throw std::runtime_error{"already at end"};
+				++it;
+			}
+
+			auto get() const -> cwc::ascii_string {
+				if(end()) throw std::runtime_error{"at end"};
+				return it->first.c_str();
+			}
+		};
+
+	public:
+		using cwc_interfaces = cwc::internal::make_base_list<cwc::internal::context_interface>::type;
+		using cwc_cast_table = cwc::TL::empty_type_list;
+
+		context_impl(std::istream & in) : config(parse_ini(in)) {//TODO: list-init
+			key_value_map components;
+			config_map plugins;
+			const auto it = config.find("[cwc.mapping]");
+			if(it != std::end(config)) {
+				for(const auto & mapping : it->second) {
+					if(mapping.second[0] != '[') components[mapping.first] = mapping.second;
+					else {//key maps to section
+						const auto & it = config.find(mapping.second);
+						if(it != std::end(config))
+							for(const auto & entry: it->second)
+								plugins[mapping.first].insert(entry);
+					}
+				}
+			}
+
+			dll_map map;//ensure that CWC_INJECT is only called once
+			for(const auto & c : components) load_component(map, c.first, c.second);
+			for(const auto & p : plugins) load_plugins(map, p.first, p.second);
+		}
+
+		cwc::internal::error_code CWC_CALL cwc$component$new$0() const override final { return cwc::internal::error_code::no_error; }
+
+		cwc::internal::error_code CWC_CALL cwc$component$delete$1() const override final { return cwc::internal::error_code::no_error; }
+
+		cwc::internal::error_code CWC_CALL cwc$component$as$2(const cwc::uuid id, void ** result) const override final { return cwc::internal::call_and_return_error([&] { cwc::internal::cast_to_interface<context_impl, cwc_interfaces>::cast(const_cast<context_impl *>(this), id, result); }); }
+
+		cwc::internal::error_code CWC_CALL cwc$internal$context$version$0(cwc::version * version) const override final {
+			version->major = CWC_VERSION_MAJOR;
+			version->minor = CWC_VERSION_MINOR;
+			version->patch = CWC_VERSION_PATCH;
+			return cwc::internal::error_code::no_error;
+		}
+
+		cwc::internal::error_code CWC_CALL cwc$internal$context$create$1(const cwc::ascii * const fqn, cwc::internal::abi<cwc::component>::out result) const override final {
+			return cwc::internal::call_and_return_error([&] {
+				auto tmp = component_factories.at(fqn);//TODO: unnecessary copy!
+				*result = cwc::internal::to_abi(tmp);
+			});
+		}
+
+		cwc::internal::error_code CWC_CALL cwc$internal$context$create$2(const cwc::ascii * const fqn, const cwc::plugin_id id, cwc::internal::abi<cwc::component>::out result) const override final {
+			return cwc::internal::call_and_return_error([&] {
+				auto tmp = plugin_factories.at(fqn).at(id.str);//TODO: unnecessary copy!
+				*result = cwc::internal::to_abi(tmp);
+			});
+		}
+
+		cwc::internal::error_code CWC_CALL cwc$internal$context$error$3(const cwc::ascii * const msg) const override final {
+			last_message[0] = '\0';
+			std::strncat(last_message, msg, sizeof(last_message) - 1);
+			return cwc::internal::error_code::no_error;//errors cannot occur
+		}
+
+		cwc::internal::error_code CWC_CALL cwc$internal$context$error$4(const cwc::ascii ** msg) const override final {
+			*msg = last_message;
+			return cwc::internal::error_code::no_error;//errors cannot occur
+		}
+
+		cwc::internal::error_code CWC_CALL cwc$internal$context$config$5(cwc::internal::abi<cwc::config_sections_enumerator>::out enumerator) const override final {
+			return cwc::internal::call_and_return_error([&] {
+				cwc::config_sections_enumerator tmp{new config_sections_enumerator{config}};
+				cwc::internal::from_abi(enumerator) = cwc::internal::to_abi(tmp);
+			});
+		}
+
+		cwc::internal::error_code CWC_CALL cwc$internal$context$config$6(cwc::internal::abi<const cwc::ascii_string>::in section, cwc::internal::abi<cwc::config_section_enumerator>::out enumerator) const override final {
+			return cwc::internal::call_and_return_error([&] {
+				cwc::config_section_enumerator tmp{new config_section_enumerator{config.at(section)}};
+				cwc::internal::from_abi(enumerator) = cwc::internal::to_abi(tmp);
+			});
+		}
+
+		cwc::internal::error_code CWC_CALL cwc$internal$context$config$7(const cwc::ascii * const section, const cwc::ascii * const key, const cwc::ascii ** value) const override final { return cwc::internal::call_and_return_error([&] { *value = this->config.at(section).at(key).data(); }); }
+	};
+
+	class context_handler {
+		char storage[sizeof(context_impl)];//TODO: aligned storage?!
+		bool initialized{false};
+
+	public:
+		void init(cwc::this_context::init_mode mode, const char * str) {
+			if(initialized) throw std::logic_error{"context already initialized"};
+			auto create = [&](std::istream & in) {
+				new(storage) context_impl{in};
+				initialized = true;
+			};
+			switch(mode) {
+				case cwc::this_context::init_mode::file:
+					if(std::ifstream in{str}) create(in);
+					else throw std::invalid_argument{"could not open file \"" + std::string(str) + "\" for context initialization"};
+					break;
+				case cwc::this_context::init_mode::string: {
+					std::istringstream in{str};
+					create(in);
+				} break;
+				default: throw std::invalid_argument{"unknown context initialization mode"};
+			}
+		}
+
+		auto get() const -> context_impl & {
+			if(!initialized) throw std::logic_error{"context is not initialized"};
+			return *const_cast<context_impl *>(reinterpret_cast<const context_impl *>(storage));
+		}
+
+		~context_handler() { if(initialized) get().~context_impl(); }
+	} context;
+}
+
+namespace cwc {
+	namespace this_context {
+		void init(init_mode mode, const char * str) { context.init(mode, str); }
+	}
+
+	namespace internal {
+		auto this_context() -> internal::context_interface & { return context.get(); }
+	}
+}

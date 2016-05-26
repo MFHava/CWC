@@ -18,23 +18,23 @@ namespace cwc {
 		template<typename SimpleType>
 		struct out_param<SimpleType, false> {
 			SimpleType * instance;
-			auto ref() CWC_NOEXCEPT -> SimpleType ** { return &instance; }
-			auto deref() CWC_NOEXCEPT -> SimpleType & { return *instance; }
+			auto ref() noexcept -> SimpleType ** { return &instance; }
+			auto deref() noexcept -> SimpleType & { return *instance; }
 		};
 
 		template<typename SimpleType>
 		struct out_param<const SimpleType, false> {
 			SimpleType instance;
-			auto ref() CWC_NOEXCEPT -> SimpleType * { return &instance; }
-			auto deref() CWC_NOEXCEPT -> SimpleType { return instance; }
+			auto ref() noexcept -> SimpleType * { return &instance; }
+			auto deref() noexcept -> SimpleType { return instance; }
 		};
 
 		template<typename ComponentType>
 		struct out_param<ComponentType, true> {
 			using interface = typename make_interface<ComponentType>::type;
 			interface * instance;
-			auto ref() CWC_NOEXCEPT -> interface ** { return &instance; }
-			auto deref() CWC_NOEXCEPT -> interface * { return instance; }
+			auto ref() noexcept -> interface ** { return &instance; }
+			auto deref() noexcept -> interface * { return instance; }
 		};
 
 		template<typename Type, bool IsComponent = is_component<Type>::value>
@@ -42,12 +42,12 @@ namespace cwc {
 
 		template<typename SimpleType>
 		struct marshalled<SimpleType, false> {
-			static auto ref(SimpleType & param) CWC_NOEXCEPT -> SimpleType * { return &param; }
+			static auto ref(SimpleType & param) noexcept -> SimpleType * { return &param; }
 		};
 
 		template<typename SimpleType>
 		struct marshalled<const SimpleType, false> {
-			static auto ref(const SimpleType & param) CWC_NOEXCEPT -> const SimpleType & { return param; }
+			static auto ref(const SimpleType & param) noexcept -> const SimpleType & { return param; }
 		};
 
 		template<typename ComponentType>
@@ -60,7 +60,7 @@ namespace cwc {
 
 		template<typename SimpleType>
 		struct unmarshalled<SimpleType *, false> {
-			static auto deref(SimpleType * param) CWC_NOEXCEPT -> SimpleType & {
+			static auto deref(SimpleType * param) noexcept -> SimpleType & {
 				assert(param);
 				return *param;
 			}
@@ -68,7 +68,7 @@ namespace cwc {
 
 		template<typename SimpleType>
 		struct unmarshalled<const SimpleType, false> {
-			static auto deref(const SimpleType & param) CWC_NOEXCEPT -> const SimpleType & { return param; }
+			static auto deref(const SimpleType & param) noexcept -> const SimpleType & { return param; }
 		};
 
 		template<typename InterfaceType>

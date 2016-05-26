@@ -11,7 +11,7 @@
 
 namespace cwc {
 	namespace internal {
-		auto current_exception_to_error_code() CWC_NOEXCEPT -> error_code {
+		auto current_exception_to_error_code() noexcept -> error_code {
 			try {
 				auto eptr = std::current_exception();
 				if(eptr) std::rethrow_exception(eptr);
@@ -84,7 +84,7 @@ namespace cwc {
 			struct exception : std::exception {//handle case of custom directly from std::exception derived exception => preserve message
 				//TODO: list initialization is currently not supported for Stlib-types in MSVC
 				exception(const char * msg) try : msg(msg) {} catch(...) { throw std::exception{}; } //if copying of message fails => force thrown exception to be std::exception
-				auto what() const CWC_NOEXCEPT -> const char * override { return msg.data(); }
+				auto what() const noexcept -> const char * override { return msg.data(); }
 			private:
 				std::string msg;
 			};

@@ -46,7 +46,7 @@
 #endif
 
 namespace {
-	CWC_THREAD_LOCAL cwc::ascii last_message[@MAX_EXCEPTION_MESSAGE_LENGTH@];
+	thread_local cwc::ascii last_message[@MAX_EXCEPTION_MESSAGE_LENGTH@];
 
 	class context_impl final : public cwc::internal::context_interface {
 		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(cwc::ascii_string, cwc::component::cwc_interface **);

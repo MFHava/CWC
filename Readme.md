@@ -12,4 +12,4 @@ CWC introduces a stable binary representation of components and related types. B
 
 Requirements
 ============ 
-CWC uses CMake as its build system and requires a conformant C++11 implementation. Some workarounds are employed to support partially conformat implementations (e.g. MSVC 2013 and GNU without Std.Regex) - these workarounds introduce additional dependencies! If no workarounds are necessary, all static libraries of CWC depend only on the C++11 standard library. The included tools aswell as the unit tests always depend on Boost libraries.
+CWC uses CMake as its build system and requires a conformant C++11 implementation. A library-only fallback to Boost is available if the used GNU implementation does not offer Std.Regex. If no workarounds are necessary, all static libraries of CWC depend only on the C++11 standard library. The included tools as well as the unit tests always depend on Boost libraries.

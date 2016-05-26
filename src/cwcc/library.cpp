@@ -23,12 +23,10 @@
 
 #include <sstream>
 #include <cwc/cwc.hpp>
-#include <cwc/internal/metadata_enumerator.hpp>
 #include "library.hpp"
 
 namespace cwcc {
 	namespace {
-		using metadata_t = cwc::internal::error_code(CWC_CALL *)(cwc::internal::metadata_enumerator::cwc_interface **);
 		using definition_t = cwc::ascii_string(CWC_CALL *)();
 
 		const auto dummy = [] {
@@ -54,21 +52,5 @@ namespace cwcc {
 		const auto definitionPtr = reinterpret_cast<definition_t>(GetProcAddress(instance.handle, "cwc_reflect"));
 		if(!definitionPtr) throw std::logic_error{"could not find entry point 'cwc_reflect' in bundle \"" + name + '"'};
 		definition_ = definitionPtr();
-
-		const auto metadataPtr = reinterpret_cast<metadata_t>(GetProcAddress(instance.handle, "cwc_metadata"));
-		if(!metadataPtr) throw std::logic_error{"could not find entry point 'cwc_metadata' in bundle \"" + name + '"'};
-
-		cwc::internal::metadata_enumerator::cwc_interface * enumerator;
-		cwc::internal::validate(metadataPtr(&enumerator));
-		if(!enumerator) throw std::runtime_error{"could not retrieve bundle's metadata"};
-		std::stringstream ss;
-		auto first = true;
-		for(auto e = cwc::internal::from_abi(enumerator); !e.end(); e.next()) {
-			const auto entry = e.get();
-			if(first) first = false;
-			else ss << ",\n";
-			ss << "{\"" << entry.key << "\", \"" << entry.value << "\"}";
-		}
-		metadata_ = ss.str();
 	}
 }

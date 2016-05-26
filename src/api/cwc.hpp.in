@@ -8,6 +8,9 @@
 #define CWC_VERSION_MAJOR @CWC_VERSION_MAJOR@
 #define CWC_VERSION_MINOR @CWC_VERSION_MINOR@
 #define CWC_VERSION_PATCH @CWC_VERSION_PATCH@
+#define CWC_CALL @CWC_CALL@
+#define CWC_EXPORT @CWC_EXPORT@
+
 #define CWC_HPP_HEADER_INCLUDED
 
 #define CWC_DO_STRINGIFY(str) #str
@@ -38,18 +41,6 @@
 
 #undef CWC_DO_STRINGIFY
 #undef CWC_STRINGIFY
-
-#ifndef CWC_HAS_NO_IMPLICIT_MOVE_SEMANTIC
-	#define CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(name)\
-		name(name &&) CWC_NOEXCEPT =default;\
-		auto operator=(name &&) CWC_NOEXCEPT -> name & =default;\
-		~name() CWC_NOEXCEPT =default;
-#else
-	#define CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(name)\
-		name(name && other) CWC_NOEXCEPT : cwc::component{std::move(other)} {}\
-		auto operator=(name && other) CWC_NOEXCEPT -> name & { cwc::component::operator=(std::move(other)); return *this; }\
-		~name() CWC_NOEXCEPT {}
-#endif
 
 //! @brief public API of C++ with Components
 namespace cwc {

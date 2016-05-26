@@ -43,35 +43,39 @@ namespace cwc {
 
 		//! @brief wrap an existing mutable component in the wrapper
 		//! @param[in] ptr mutable component pointer
-		component(cwc_interface * ptr);
+		component(cwc_interface * ptr) : ptr{ptr} {}
 
 		//! @brief wrap an existing const component in the wrapper
 		//! @param[in] ptr mutable component pointer
-		component(const cwc_interface * ptr);
+		component(const cwc_interface * ptr) : ptr{const_cast<cwc_interface*>(ptr)}, immutable{true} {}
 
 		//! @brief copy constructor - increases the reference count of the component referenced by other
 		//! @param[in] other component to copy
-		component(const component & other);
+		component(const component & other) : ptr{other.ptr}, immutable{other.immutable} { if(ptr) internal::validate(ptr->cwc$component$new$0()); }
 
 		//! @brief move constructor - transfers ownership of the referenced component to the new instance
 		//! @param[in] other component to adopt ownership from
-		component(component && other) CWC_NOEXCEPT;
+		component(component && other) noexcept { cwc_swap(other); }
 
 		//! @brief unifying assignment operator
 		//! @param[in] other component to copy/move from
 		//! @returns reference to this
-		auto operator=(component other) CWC_NOEXCEPT -> component &;
+		auto operator=(component other) noexcept -> component & { cwc_swap(other); return *this; }
 
 		//! @brief test if wrapper contains instance
 		//! @returns true iff wrapper manages instance
-		explicit operator bool() const CWC_NOEXCEPT;
+		explicit operator bool() const noexcept { return ptr != nullptr; }
 
 		//! @brief test if wrapper contains no instance
 		//! @returns true iff wrapper manages no instance
-		auto operator!() const CWC_NOEXCEPT -> bool;
+		auto operator!() const noexcept -> bool { return ptr == nullptr; }
 
 		//! @brief destructor - decrements the reference count of the managed component
-		virtual ~component() CWC_NOEXCEPT;
+		virtual ~component() noexcept {
+			if(!ptr) return;
+			auto result = ptr->cwc$component$delete$1();
+			assert(result == internal::error_code::no_error);
+		}
 	protected:
 		template<typename Interface>
 		class cwc_reference final {
@@ -95,7 +99,7 @@ namespace cwc {
 
 			auto compare(const cwc_reference & other) const -> std::ptrdiff_t { return ptr - other.ptr; }
 
-			~cwc_reference() CWC_NOEXCEPT {
+			~cwc_reference() noexcept {
 				if(!ptr) return;
 				const auto result = ptr->cwc$component$delete$1();
 				assert(result == internal::error_code::no_error);
@@ -109,11 +113,20 @@ namespace cwc {
 		auto cwc_marshall() const -> cwc_reference<const typename Interface::cwc_interface> { return cwc_new_reference<Interface>(); }
 
 		//! @attention this constructor is only present for technical reasons - it allows compilation, but may never be called at runtime!
-		component() CWC_NOEXCEPT;
+		component() noexcept { std::terminate(); }
 	private:
-		void cwc_swap(component & other) CWC_NOEXCEPT;
+		void cwc_swap(component & other) noexcept {
+			using std::swap;
+			swap(ptr, other.ptr);
+			swap(immutable, other.immutable);
+		}
 
-		auto cwc_compare_references(const component & other) const -> int8;
+		auto cwc_compare_references(const component & other) const -> int8 {
+			const auto diff = cwc_marshall<component>().compare(other.cwc_marshall<component>());
+			if(diff == 0) return 0;
+			else if(diff < 0) return -1;
+			else return +1;
+		}
 
 		template<typename Interface>
 		auto cwc_new_reference() -> typename Interface::cwc_interface * {
@@ -152,37 +165,43 @@ namespace cwc {
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if the components are equal
-	auto operator==(const component & lhs, const component & rhs) -> bool;
+	inline
+	auto operator==(const component & lhs, const component & rhs) -> bool { return lhs.cwc_compare_references(rhs) == 0; }
 
 	//! @brief compare components for reference inequality
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if the components are not equal
-	auto operator!=(const component & lhs, const component & rhs) -> bool;
+	inline
+	auto operator!=(const component & lhs, const component & rhs) -> bool { return !(lhs == rhs); }
 
 	//! @brief compare components for reference ordering
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if lhs < rhs
-	auto operator<(const component & lhs, const component & rhs) -> bool;
+	inline
+	auto operator<(const component & lhs, const component & rhs) -> bool { return lhs.cwc_compare_references(rhs) < 0; }
 
 	//! @brief compare components for reference ordering
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if lhs > rhs
-	auto operator>(const component & lhs, const component & rhs) -> bool;
+	inline
+	auto operator>(const component & lhs, const component & rhs) -> bool { return rhs < lhs; }
 
 	//! @brief compare components for reference ordering
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if lhs <= rhs
-	auto operator<=(const component & lhs, const component & rhs) -> bool;
+	inline
+	auto operator<=(const component & lhs, const component & rhs) -> bool { return !(lhs > rhs); }
 
 	//! @brief compare components for reference ordering
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if lhs >= rhs
-	auto operator>=(const component & lhs, const component & rhs) -> bool;
+	inline
+	auto operator>=(const component & lhs, const component & rhs) -> bool { return !(lhs < rhs); }
 
 	//! @brief cast between component types, the CWC equivalent of dynamic_cast
 	//! @tparam Interface target type

@@ -41,18 +41,26 @@ namespace cwc {
 		uint8 data[16];//!< @brief plain storage of 128bit UUID
 	};
 	CWC_PACK_END
+	static_assert(sizeof(uuid) == 16, "unexpected size of uuid detected");
 
 	//! @brief compares two uuids for equality
 	//! @param[in] lhs first uuid
 	//! @param[in] rhs second uuid
 	//! @returns true iff the two uuids are equal
-	auto operator==(const uuid & lhs, const uuid & rhs) -> bool;
+	inline
+	auto operator==(const uuid & lhs, const uuid & rhs) -> bool {
+		for(auto i = 0; i < sizeof(uuid::data); ++i)
+			if(lhs.data[i] != rhs.data[i])
+				return false;
+		return true;
+	}
 
 	//! @brief compares two uuids for inequality
 	//! @param[in] lhs first uuid
 	//! @param[in] rhs second uuid
 	//! @returns true iff the two uuids are not equal
-	auto operator!=(const uuid & lhs, const uuid & rhs) -> bool;
+	inline
+	auto operator!=(const uuid & lhs, const uuid & rhs) -> bool { return !(lhs == rhs); }
 
 	//! @brief marker type to be used when creating plugin-components
 	//! @attention plugin_id is non-owning!

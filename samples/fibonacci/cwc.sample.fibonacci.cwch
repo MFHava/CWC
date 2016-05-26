@@ -9,6 +9,8 @@
 
 namespace cwc {
 namespace sample {
+//! @brief CWC Sample "Fibonacci Generator"
+//! @author Michael Florian Hava
 namespace fibonacci {
 	struct sequence : virtual ::cwc::component {
 		using cwc_self = sequence;
@@ -31,8 +33,10 @@ namespace fibonacci {
 		sequence(const cwc_interface * ptr) : ::cwc::component{ptr} {}
 
 		sequence(const sequence &) =default;
+		sequence(sequence &&) noexcept =default;
 		auto operator=(const sequence &) -> sequence & =default;
-		CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(sequence)
+		auto operator=(sequence &&) noexcept -> sequence & =default;
+		~sequence() noexcept =default;
 
 		auto operator()(const ::cwc::uint8 & no) const -> ::cwc::internal::abi<const ::cwc::uint64>::ret {
 			::cwc::internal::abi<const ::cwc::uint64>::param cwc_ret;
@@ -71,8 +75,10 @@ namespace fibonacci {
 		cwc_factory(const cwc_interface * ptr) : ::cwc::component{ptr} {}
 
 		cwc_factory(const cwc_factory &) =default;
+		cwc_factory(cwc_factory &&) noexcept =default;
 		auto operator=(const cwc_factory &) -> cwc_factory & =default;
-		CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(cwc_factory)
+		auto operator=(cwc_factory &&) noexcept -> cwc_factory & =default;
+		~cwc_factory() noexcept =default;
 
 		auto operator()() const -> ::cwc::internal::abi<::cwc::component>::ret {
 			::cwc::internal::abi<::cwc::component>::param cwc_ret;
@@ -87,8 +93,10 @@ namespace fibonacci {
 		explicit generator(const ::cwc::plugin_id & cwc_plugin_id) : ::cwc::component(::cwc::internal::create_component<cwc_self>(cwc_plugin_id)) {}
 
 		generator(const generator &) =default;
+		generator(generator &&) noexcept =default;
 		auto operator=(const generator &) -> generator & =default;
-		CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(generator)
+		auto operator=(generator &&) noexcept -> generator & =default;
+		~generator() noexcept =default;
 	};
 
 }

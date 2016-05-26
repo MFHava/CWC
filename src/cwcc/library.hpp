@@ -10,9 +10,8 @@ namespace cwcc {
 	struct library {
 		library(const std::string & name);
 
-		auto metadata() const -> const std::string & { return metadata_; }
 		auto definition() const -> const std::string & { return definition_; }
 	private:
-		std::string definition_, metadata_;
+		std::string definition_;
 	};
 }

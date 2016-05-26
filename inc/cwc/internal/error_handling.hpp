@@ -48,10 +48,10 @@ namespace cwc {
 			//std11_regex_error (will be reported as runtime_error with somewhat helpful message)
 		};
 
-		auto current_exception_to_error_code() CWC_NOEXCEPT -> error_code;
+		auto current_exception_to_error_code() noexcept -> error_code;
 
 		template<typename Func>
-		auto call_and_return_error(Func func) CWC_NOEXCEPT -> error_code try {
+		auto call_and_return_error(Func func) noexcept -> error_code try {
 			func();
 			return error_code::no_error;
 		} catch(...) { return current_exception_to_error_code(); }

@@ -58,14 +58,11 @@ namespace cwc {
 		//! @param[in] ptr mutable component pointer
 		config_section_enumerator(const cwc_interface * ptr);
 
-		//! @brief copy constructor - increases the reference count of the component referenced by other
-		//! @param[in] other component to copy
-		config_section_enumerator(const config_section_enumerator & other) =default;
-
-		//! @brief copy assignment - decrements the reference count of the currently held component & increases the reference count of the component referenced by other
-		//! @param[in] other component to copy
-		auto operator=(const config_section_enumerator & other) -> config_section_enumerator & =default;
-		CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(config_section_enumerator)
+		config_section_enumerator(const config_section_enumerator &) =default;
+		config_section_enumerator(config_section_enumerator &&) noexcept =default;
+		auto operator=(const config_section_enumerator &) -> config_section_enumerator & =default;
+		auto operator=(config_section_enumerator &&) noexcept -> config_section_enumerator & =default;
+		~config_section_enumerator() noexcept =default;
 
 		//! @brief test if enumerator reached end
 		//! @returns true iff end was reached
@@ -121,14 +118,11 @@ namespace cwc {
 		//! @param[in] ptr mutable component pointer
 		config_sections_enumerator(const cwc_interface * ptr);
 
-		//! @brief copy constructor - increases the reference count of the component referenced by other
-		//! @param[in] other component to copy
-		config_sections_enumerator(const config_sections_enumerator & other) =default;
-
-		//! @brief copy assignment - decrements the reference count of the currently held component & increases the reference count of the component referenced by other
-		//! @param[in] other component to copy
-		auto operator=(const config_sections_enumerator & other) -> config_sections_enumerator & =default;
-		CWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(config_sections_enumerator)
+		config_sections_enumerator(const config_sections_enumerator &) =default;
+		config_sections_enumerator(config_sections_enumerator &&) noexcept =default;
+		auto operator=(const config_sections_enumerator &) -> config_sections_enumerator & =default;
+		auto operator=(config_sections_enumerator &&) noexcept -> config_sections_enumerator & =default;
+		~config_sections_enumerator() noexcept =default;
 
 		//! @brief test if enumerator reached end
 		//! @returns true iff end was reached

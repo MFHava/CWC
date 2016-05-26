@@ -19,8 +19,13 @@ namespace cwc {
 			auto operator=(const instance_counter &) -> instance_counter & =delete;
 			auto operator=(instance_counter &&) -> instance_counter & =delete;
 		public:
+#ifdef CWC_HOST//no instance counting for host
+			instance_counter() =default;
+			~instance_counter() =default;
+#else
 			instance_counter();
 			~instance_counter();
+#endif
 		};
 	}
 }

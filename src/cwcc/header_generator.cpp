@@ -54,7 +54,8 @@ namespace cwcc {
 				       "\t\t};\n";
 				header_visitor visitor{out, b};
 				for(const auto & m : b.members) m.apply_visitor(visitor);
-				for(auto tmp : factory.members)
+				for(auto tmp : factory.members) {
+					tmp.lines.clear();
 					for(auto i = 0; i < 2; ++i) {
 						for(const auto & doc : tmp.lines) out << "\t\t" << doc << '\n';
 						out << "\t\t";
@@ -75,10 +76,13 @@ namespace cwcc {
 						plugin.type = "::cwc::plugin_id";
 						tmp.in.insert(std::begin(tmp.in), plugin);
 					}
+				}
 				out << "\n"
 				       "\t\t" << self.name << "(const " << self.name << " &) =default;\n"
+				       "\t\t" << self.name << "(" << self.name << " &&) noexcept =default;\n"
 				       "\t\tauto operator=(const " << self.name << " &) -> " << self.name << " & =default;\n"
-				       "\t\tCWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(" << self.name << ")\n"
+				       "\t\tauto operator=(" << self.name << " &&) noexcept -> " << self.name << " & =default;\n"
+				       "\t\t~" << self.name << "() noexcept =default;\n"
 				       "\t};\n";
 			}
 			void operator()(const enum_ & self) { out << self << '\n'; }
@@ -132,8 +136,10 @@ namespace cwcc {
 				       "\t\t" << self.name << "(const cwc_interface * ptr) : ::cwc::component{ptr} {}\n"
 				       "\n"
 				       "\t\t" << self.name << "(const " << self.name << " &) =default;\n"
+				       "\t\t" << self.name << "(" << self.name << " &&) noexcept =default;\n"
 				       "\t\tauto operator=(const " << self.name << " &) -> " << self.name << " & =default;\n"
-				       "\t\tCWC_MOVE_SEMANTICS_NOT_IMPLICIT_EMULATION(" << self.name << ")\n"
+				       "\t\tauto operator=(" << self.name << " &&) noexcept -> " << self.name << " & =default;\n"
+				       "\t\t~" << self.name << "() noexcept =default;\n"
 				       "\n";
 				std::for_each(std::begin(self.members), std::end(self.members), external_wrapper_generator{out, this_bundle, self});
 				out << "\tprotected:\n"

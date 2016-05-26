@@ -4,6 +4,8 @@
 //    (See accompanying file ../../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+//! @brief CWC Sample "Fibonacci Generator"
+//! @author Michael Florian Hava
 bundle cwc::sample::fibonacci {
 	interface sequence {
 		auto operator()(::cwc::uint8 no) -> ::cwc::uint64;

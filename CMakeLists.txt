@@ -21,19 +21,24 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 SET(CWC_VERSION_MAJOR 0)
 SET(CWC_VERSION_MINOR 9)
-SET(CWC_VERSION_PATCH 2)
+SET(CWC_VERSION_PATCH 3)
 SET(CWC_LIB_DEBUG_POSTFIX "-debug")
+
+IF(${WIN32})#assume that all compilers on Windows are compatible with Microsoft-syntax
+	SET(CWC_CALL "__cdecl")
+	SET(CWC_EXPORT "__declspec(dllexport)")
+ELSE()#assume that all compilers on Unix (implicitly assumed) are compatible with GCC-syntax
+	SET(CWC_CALL "__attribute__((__cdecl__))")
+	SET(CWC_EXPORT "__attribute__((visibility(\"default\")))")
+ENDIF()
 
 SET(CWC_API_LIB_NAME cwc-${CWC_VERSION_MAJOR}.${CWC_VERSION_MINOR}.${CWC_VERSION_PATCH}-api)
 SET(CWC_CTX_LIB_NAME cwc-${CWC_VERSION_MAJOR}.${CWC_VERSION_MINOR}.${CWC_VERSION_PATCH}-ctx)
 
 IF(${MSVC})
-	IF(${MSVC_VERSION} LESS 1800)
+	IF(${MSVC_VERSION} LESS 1900)
 		MESSAGE(FATAL_ERROR "Unsupported MSVC Version")
 	ELSE()
-		IF(${MSVC_VERSION} GREATER 1900)
-			MESSAGE(WARNING "Untested MSVC Version")
-		ENDIF()
 		SET(CWC_API_LIB_NAME ${CWC_API_LIB_NAME}-msvc${MSVC_VERSION})
 		SET(CWC_CTX_LIB_NAME ${CWC_CTX_LIB_NAME}-msvc${MSVC_VERSION})
 	ENDIF()
@@ -157,8 +162,5 @@ IF(BUILD_SAMPLES)
 	SET_SOURCE_FILES_PROPERTIES(samples/fibonacci/dll/cwc.sample.fibonacci.cwc PROPERTIES
 		LANGUAGE CXX
 		COMPILE_FLAGS "-xc++"#NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise GCC won't compile this file
-	)
-	SET_SOURCE_FILES_PROPERTIES(samples/fibonacci/cwc.sample.fibonacci.cwch samples/fibonacci/cwc.sample.fibonacci.cwcm PROPERTIES
-		HEADER_FILE_ONLY TRUE
 	)
 ENDIF()

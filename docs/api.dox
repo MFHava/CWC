@@ -1,0 +1,18 @@
+/*!
+@page page_api Application Programming Interface (API)
+@tableofcontents
+
+@section section_cwc_headers Headers
+CWC has a single global header file <cwc/cwc.hpp>. Any other header is considered an implementation detail and it's explicit use results in undefined behavior!
+
+@section section_cwc_api What is part of official CWC-API?
+All symbols residing in namespaces @link cwc @endlink and @link cwc::this_context @endlink,
+unless explicitly mentioned as reserved, are considered part of the official CWC-API.
+
+@section section_cwc_reserved_identifiers Reserved/Internal Identifiers
+In order to ensure source code stability CWC reserves identifiers starting with @c CWC and @c cwc in any
+scope. Identifiers starting with any of the reserved patterns are NEVER part of the official API!
+
+All identifiers in the namespace @link cwc::internal @endlink are reserved for implementation details.
+
+*/

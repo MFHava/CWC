@@ -1,0 +1,23 @@
+/*!
+@page page_deviations_from_the_standard Deviations from the standard
+@tableofcontents
+
+Whilst CWC is developed manly in standard ISO-C++, there are some minor deviations from the standard. These are mainly required to enable the interop between different toolsets and can mostly be considered an implementation detail.
+
+@section sec_vtables Vtables
+CWCs @link page_abi ABI @endlink depends on vtable-based implementations of virtual member functions. Whilst this is not mandated by the standard, this approach is pretty much used by any modern system. The fact that certain aspects of vtable-generation are implemented differently by competing compilers is abstracted away by the ABI.
+
+@section sec_packing Structure packing
+In order to support portable compound data types, CWC must ensure that such types are represented in the exact same manner by every toolset. The easiest way to guarantee portable layouts for compound types is to restrict members to be of portable types and disable any kind of data structure alignment by using toolset specific language extensions. The usage of compiler specific instructions by the user is not required as it is already handled by CWC.
+
+@section sec_closed_bundles Bundles are closed
+Whilst bundles are mapped to traditional namespaces by the language binding, the conventions of CWC require them to be self-contained and distributed in a single package. There has to be a direct mapping between a dynamic library and a single namespace. Extensions to that namespace are only possible by issuing a new version of the library or by introducing nested bundles.
+
+This is likely the only deviation from the standard that has any direct implications to the design of components and libraries as it severely limits the established concept of namespaces.
+
+@section sec_eodr Extended One Definition Rule (EODR)
+The concept of the ODR is extended beyond the scope of the C++ standard. The EODR requires that every published interface is represented by a universally unique identifier (UUID). Additionally exported components must be uniquely identifiable by their fully qualified name (FQN) in order to bind them at runtime.
+
+@section sec_dollar_sign Extension to the identifier character set
+The C++ standard has a strict set of rules for which characters may be used in identifiers. CWC extends this set of characters with the dollar sign to prevent collisions with user-supplied identifiers. To further ensure the absence of identifier collisions, the dollar sign is considered reserved for the CWC-implementation details and may not be used.
+*/

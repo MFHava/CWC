@@ -1,0 +1,21 @@
+/*!
+@page page_cop Component Oriented Programming (COP)
+@tableofcontents
+
+@section section_cop What is COP?
+COP is an extension of traditional OOP that emphasizes the creation of new software from preexisting, highly reusable software components. What differentiates COP from OOP is the even greater emphasis on loose coupling (very late/runtime binding), enforced encapsulation (black box), stable interfaces and binary re-usability (cross language/toolset).
+
+@attention TODO
+
+
+@section section_component_definition What are software components?
+Historically there have been many attempts to fully define the concept of "software components". While these definitions tend to vary in minor details, the shared aspects of all of them can be summarized as follows:
+	+ Binary re-usability
+		+ Components must be reusable in precompiled form
+		+ 
+
+
+
+
+@attention TODO
+*/

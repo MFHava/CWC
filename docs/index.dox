@@ -1,0 +1,10 @@
+/*!
+@mainpage C++ with Components
+@tableofcontents
+
+C++ with Components (CWC) is a portable library- and tool-based component oriented extension to ISO-C++. Key aspect of CWC is the integration of @link page_cop component oriented programming @endlink into the syntax and semantics of standards-compliant C++.
+
+CWC was designed to have a minimal, straightforward @link page_api API@endlink. The underlying @link page_abi ABI @endlink which enables interoperability between toolsets (e.g. MSVC and GCC) on varying platforms (e.g. Windows and Linux) is abstracted away from the user as much as possible. In fact, as the usage model of CWC is heavily based on the @link page_bdl BDL @endlink and code generation, direct interaction with the ABI is not required when developing/interacting with components.
+
+@attention TODO (Installation, Getting Started,...)
+*/

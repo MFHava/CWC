@@ -1,0 +1,70 @@
+/*!
+@page page_abi Application Binary Interface (ABI)
+@tableofcontents
+
+@section abi_definition What is an ABI?
+Simply speaking an ABI controls how programs interact on a binary level. This includes but is not limited to the layout and representation of types, the mechanism used for function invocation (including details on parameter passing).
+
+For historical and practical reasons there exists no standard ABI for C++. This has proven to be a major problem when developing libraries for a long time, as developers had to choose between two approaches for interface designs:
+
+1. easy/simple to define but unportable
+2. hard/complex to define but portable
+
+Even popular open source libraries went with the first approach and use non-portable aspects in their public APIs, thus unnecessarily limiting the reuse of compiled libraries.
+
+@attention TODO?
+
+@section abi_standard What does the standard guarantee?
+The following subsections detail the rather loose guarantees the C- and C++-standards provide.
+
+@subsection abi_standard_fundamental Fundamental data types
+1. @c char is always the smallest allocable type having a size of @c 1.
+@code sizeof(char) == 1 @endcode
+
+2. The count of bits inside a @c char is implementation defined, but must be greater or equal to @c 8.
+@code CHAR_BIT >= 8 @endcode
+
+3. The sizes of types are strictly weak ordered:
+@code
+sizeof(char)  <= sizeof(short)  <= sizeof(int)         <= sizeof(long) <= sizeof(long long)
+sizeof(float) <= sizeof(double) <= sizeof(long double)
+@endcode
+
+4. @c short must be at least 16bits.
+@code
+SHRT_MIN <= -32767
+SHRT_MAX >= +32767
+@endcode
+
+5. The representation of signedness of integral types is implementation defined.
+It can be one's complement, two's complement or sign-and-magnitude.
+
+6. The format used for floating point types is implementation defined.
+
+7. For historical reasons @c char is a distinct type from both @c unsigned @c char and @c signed
+@c char and the signedness of @c char is implementation defined. Whereas for any other integral type
+@c T:
+@code signed T == T @endcode.
+
+8. The size of @c bool is implementation defined and explicitly not required to be 1.
+@code sizeof(bool) == ??? @endcode
+
+@attention TODO: structs (padding, ...), classes (inheritance), exception handling etc.
+
+@section cwc_abi How does the CWC-ABI work in detail?
+
+As a basis CWC defines aliases for @link cwc_abi_types fundamental types @endlink with guaranteed characteristics.
+
+@attention TODO: compound types
+
+@attention TODO: how are components represented
+
+@attention TODO: how are parameters passed
+
+@attention TODO: calling conventions
+
+@attention TODO: exception handling
+
+@attention TODO: name mangling
+
+*/

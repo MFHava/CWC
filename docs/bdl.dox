@@ -1,0 +1,14 @@
+/*!
+@page page_bdl Bundle Definition Language (BDL)
+@tableofcontents
+
+The BDL is a dedicated language to define bundles
+
+@attention TODO: definition of a bundle
+
+and it's content in a portable way. Developers define interfaces, components and types using the BDL and generated the @link page_abi ABI@endlink-compatible representations using the CWCC.
+
+@attention TODO: link to page for CWCC?
+
+@attention TODO
+*/

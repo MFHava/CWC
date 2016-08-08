@@ -44,7 +44,7 @@ namespace cwcc {
 	}
 
 	void generate_stub(std::ostream & out, const bundle & b) {
-		disclaimer(out, true);
+		file_disclaimer(out, true);
 		out << "//ATTENTION: stub file for CWC component implementation - by convention the expected filename will be '" << base_file_name(b.name) << ".h'\n"
 		       "#pragma once\n"
 		       "#include \"" << base_file_name(b.name) << ".cwch\"\n"

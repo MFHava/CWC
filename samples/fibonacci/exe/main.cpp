@@ -7,7 +7,7 @@
 #include <iostream>
 #include "../cwc.sample.fibonacci.cwch"
 
-int main() {
+int main() try {
 #if 1
 	cwc::this_context::init(cwc::this_context::init_mode::string,
 		"[cwc.mapping]\n"
@@ -49,5 +49,11 @@ int main() {
 		std::cerr << exc.what() << std::endl;
 	}
 
+	std::cin.get(); std::cin.get();
+} catch(const std::exception & exc) {
+	std::cerr << "ERROR: " << exc.what() << std::endl;
+	std::cin.get(); std::cin.get();
+} catch(...) {
+	std::cerr << "ERROR: <non-exception thrown>" << std::endl;
 	std::cin.get(); std::cin.get();
 }

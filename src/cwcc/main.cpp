@@ -11,6 +11,7 @@
 #include "nodes.hpp"
 #include "parser.hpp"
 #include "library.hpp"
+#include "disclaimer.hpp"
 #include "generators.hpp"
 
 namespace {
@@ -88,11 +89,9 @@ namespace {
 }
 
 int main(int argc, char * argv[]) {
-	std::cout << "C++ with Components compiler\n"
-	             "© 2012, Michael Florian Hava"
-	          << std::endl;
+	cwcc::program_disclaimer(std::cout);
 	if(argc != 2) {//batch operations are NOT supported!
-		std::cout << "usage:\n"
+		std::cout << "\nusage:\n"
 		             "\tCWCC bundle => .cwch (generated), .cwc (generated), .h (stub), .bdl (extracted)\n"
 		             "\tCWCC bdl    => .cwch (generated), .cwc (generated), .h (stub)"
 		          << std::endl;

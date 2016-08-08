@@ -149,7 +149,7 @@ namespace {
 		using cwc_interfaces = cwc::internal::make_base_list<cwc::internal::context_interface>::type;
 		using cwc_cast_table = cwc::TL::empty_type_list;
 
-		context_impl(std::istream & in) : config(parse_ini(in)) {//TODO: list-init
+		context_impl(std::istream & in) : config{parse_ini(in)} {
 			key_value_map components;
 			config_map plugins;
 			const auto it = config.find("[cwc.mapping]");
@@ -225,36 +225,53 @@ namespace {
 		cwc::internal::error_code CWC_CALL cwc$internal$context$config$7(const cwc::ascii * const section, const cwc::ascii * const key, const cwc::ascii ** value) const override final { return cwc::internal::call_and_return_error([&] { *value = this->config.at(section).at(key).data(); }); }
 	};
 
-	class context_handler {
-		char storage[sizeof(context_impl)];//TODO: aligned storage?!
-		bool initialized{false};
+	namespace {//TODO: this is C++14, but CWC currently only requires C++11
+		template<typename Type, typename... Args>
+		auto make_unique(Args &&... args) -> std::unique_ptr<Type> { return std::unique_ptr<Type>{new Type{std::forward<Args>(args)...}}; }
+	}
 
-	public:
-		void init(cwc::this_context::init_mode mode, const char * str) {
-			if(initialized) throw std::logic_error{"context already initialized"};
-			auto create = [&](std::istream & in) {
-				new(storage) context_impl{in};
-				initialized = true;
-			};
+	class context_handler final {
+		char storage[sizeof(context_impl)];//TODO: aligned storage?!
+		std::atomic<bool> initialized{false};
+
+		static auto prepare_input(cwc::this_context::init_mode mode, const char * str) -> std::unique_ptr<std::istream> {
 			switch(mode) {
-				case cwc::this_context::init_mode::file:
-					if(std::ifstream in{str}) create(in);
-					else throw std::invalid_argument{"could not open file \"" + std::string(str) + "\" for context initialization"};
-					break;
-				case cwc::this_context::init_mode::string: {
-					std::istringstream in{str};
-					create(in);
-				} break;
+				case cwc::this_context::init_mode::file: {
+					std::unique_ptr<std::istream> in = /*std::*/make_unique<std::ifstream>(str);
+					if(!*in) throw std::invalid_argument{"could not open file \"" + std::string{str} +"\" for context initialization"};
+					return in;
+				}
+				case cwc::this_context::init_mode::string: return /*std::*/make_unique<std::istringstream>(str);
 				default: throw std::invalid_argument{"unknown context initialization mode"};
 			}
 		}
 
-		auto get() const -> context_impl & {
-			if(!initialized) throw std::logic_error{"context is not initialized"};
-			return *const_cast<context_impl *>(reinterpret_cast<const context_impl *>(storage));
+		auto internal_get() noexcept -> context_impl & {
+			assert(initialized);
+			return *reinterpret_cast<context_impl *>(storage);
 		}
 
-		~context_handler() { if(initialized) get().~context_impl(); }
+	public:
+		void init(cwc::this_context::init_mode mode, const char * str) {
+			const auto in = prepare_input(mode, str);
+
+			auto expected = false;
+			if(!initialized.compare_exchange_strong(expected, true)) throw std::logic_error{"context already initialized"};
+			assert(initialized);
+
+			try { new(storage) context_impl{*in}; }
+			catch(...) {
+				initialized = false;
+				throw;
+			}
+		}
+
+		auto get() -> context_impl & {
+			if(!initialized) throw std::logic_error{"context is not initialized"};
+			return internal_get();
+		}
+
+		~context_handler() { if(initialized) internal_get().~context_impl(); }
 	} context;
 }
 

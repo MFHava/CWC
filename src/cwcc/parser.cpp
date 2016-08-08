@@ -88,7 +88,7 @@ namespace {
 			existing_type      %= local_identifier[phx::bind(&bundle_parser::validate_local_type, this, _1)] | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
 			struct_field       %= local_identifier > -('[' > uint_ % ',' > ']');
 			struct_members     %= *documentation >> existing_type >> struct_field % ',' > qi::lit(';');
-			struct_            %= *documentation >> (keyword["struct"] | keyword["union"][phx::at_c<3>(_val) = true]) > new_type > '{' > *struct_members > '}';
+			struct_            %= *documentation >> (keyword["struct"] | keyword["union"][phx::at_c<3>(_val) = true]) > new_type > '{' > +struct_members > '}';
 			enum_member        %= *documentation >> local_identifier;
 			enum_              %= *documentation >> keyword["enum"] > new_type > '{' > enum_member % ',' > '}';
 			export_            %= keyword["export"] > existing_type;
@@ -126,7 +126,6 @@ namespace {
 		}
 
 		static void error_handler(Iterator begin, Iterator pos, Iterator end, const boost::spirit::info & msg) {
-			//TODO: error message is offset!
 			auto line = 1;
 			auto first = begin;
 			for(auto it = begin; it != pos; ++it)
@@ -138,11 +137,13 @@ namespace {
 			const auto last = std::find(pos, end, '\n');
 			std::stringstream ss;
 			ss << "  line: " << line << ": \"";
-			const auto offset = 0;// ss.str().size();
+			const auto tmp = ss.tellp();
+			assert(tmp >= 0);
+			const auto offset = std::distance(first, pos) + static_cast<std::size_t>(tmp);
 			std::transform(first, last, std::ostream_iterator<char>{ss}, [](char c) { return c == '\t' ? ' ' : c; });
 			ss << "\"\n";
-			std::fill_n(std::ostream_iterator<char>{ss}, offset + std::distance(first, pos), ' ');
-			ss << "  ^=== invalid token (expected: " << msg << ')';
+			std::fill_n(std::ostream_iterator<char>{ss}, offset, ' ');
+			ss << "^=== invalid token (expected: " << msg << ')';
 			throw std::runtime_error{ss.str()};
 		}
 		qi::rule<Iterator, cwcc::documentation()> documentation;

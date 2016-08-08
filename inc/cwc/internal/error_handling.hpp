@@ -18,6 +18,7 @@ namespace cwc {
 			runtime = 3 //derive from std::runtime_error
 		};
 
+		//exceptions of the standard library: http://en.cppreference.com/w/cpp/error/exception
 		enum class error_code : uint32 {
 			no_error                   = 0,
 

@@ -18,7 +18,9 @@ namespace cwcc {
 
 			void operator()(const export_ & self) {
 				const auto it = std::find(self.component.rbegin(), self.component.rend(), ':').base();
-				componentAndExport.push_back(std::make_pair(self.component, bundle + "::" + std::string(it, std::end(self.component))));
+				assert(!self.component.empty());
+				auto tmp = self.component.front() == ':' ? self.component : "::" + bundle + "::" + self.component;//iff contract is local identifier: prepend with namespace, otherwise it is already fully qualified
+				componentAndExport.push_back(std::make_pair(std::move(tmp), bundle + "::" + std::string(it, std::end(self.component))));
 			}
 
 			template<typename Ignore>
@@ -31,20 +33,20 @@ namespace cwcc {
 	}
 
 	void generate_source(std::istream & in, std::ostream & out, const bundle & b) {
-		disclaimer(out, false);
+		file_disclaimer(out, false);
 		out << "#include \"" << base_file_name(b.name) << ".h\"\n"
 		       "#include <cstring>\n"
 		       "using namespace " << b.name << ";\n"
 		       "\n"
 		       "namespace {\n";
-		std::map<std::size_t, std::vector<std::string>> components;
+		std::map<std::size_t, std::vector<std::string>> components;//TODO: could be replaced with a multimap
 		{
 			std::vector<std::pair<std::string, std::string>> componentAndExport;
 			component_visitor visitor(b.name, componentAndExport);
 			for(auto & m : b.members) m.apply_visitor(visitor);
 			for(const auto & tmp : componentAndExport) {
-				out << "\tstatic_assert(std::is_base_of<" << b.name << "::" << tmp.first << "::cwc_component, " << tmp.second << "$>::value, \"Implementation '" << tmp.second << "$' does not fulfill the requirements of component '" << tmp.first << "'\");\n";
-				components[tmp.second.size()].push_back(tmp.second);
+				out << "\tstatic_assert(std::is_base_of<" << tmp.first << "::cwc_component, " << tmp.second << "$>::value, \"Implementation '" << tmp.second << "$' does not fulfill the requirements of component '" << tmp.first << "'\");\n";
+				components[tmp.first.size()].push_back(tmp.second);
 			}
 		}
 		out << "\n"
@@ -69,7 +71,7 @@ namespace cwcc {
 		       "\treturn ::cwc::internal::call_and_return_error([&] {\n"
 		       "\t\tswitch(std::strlen(fqn)) {\n";
 		for(const auto & pair : components) {
-			out << "\t\t\tcase " << pair.first << ": {\n";
+			out << "\t\t\tcase " << (pair.first - 2) << ": {\n";//fqns are NOT prepended with double colons
 			for(auto & fqn : pair.second) out << "\t\t\t\tif(!std::strcmp(fqn, " << fqn << "$::cwc_fqn())) return *result = new typename " << fqn << "$::cwc_component_factory;\n";
 			out << "\t\t\t} break;\n";
 		}

@@ -315,7 +315,7 @@ namespace cwcc {
 	}
 
 	void generate_header(std::ostream & out, const bundle & b) {
-		disclaimer(out, false);
+		file_disclaimer(out, false);
 		out << "#pragma once\n"
 		       "#include <cwc/cwc.hpp>\n";
 		for(const auto & d : dependencies(b)) out << "#include \"" << base_file_name(d) << ".cwch\"\n";

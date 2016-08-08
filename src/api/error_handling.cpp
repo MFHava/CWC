@@ -82,8 +82,7 @@ namespace cwc {
 			if(errc == error_code::no_error) return;
 
 			struct exception : std::exception {//handle case of custom directly from std::exception derived exception => preserve message
-				//TODO: list initialization is currently not supported for Stlib-types in MSVC
-				exception(const char * msg) try : msg(msg) {} catch(...) { throw std::exception{}; } //if copying of message fails => force thrown exception to be std::exception
+				exception(const char * msg) try : msg{msg} {} catch(...) { throw std::exception{}; } //if copying of message fails => force thrown exception to be std::exception
 				auto what() const noexcept -> const char * override { return msg.data(); }
 			private:
 				std::string msg;

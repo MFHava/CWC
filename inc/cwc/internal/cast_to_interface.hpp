@@ -65,7 +65,7 @@ namespace cwc {
 		};
 
 		template<typename Self>
-		struct cast_to_interface<Self, TL::empty_type_list> {//TODO: final
+		struct cast_to_interface<Self, TL::empty_type_list> final {
 			static void cast(Self *, const uuid &, void **) { throw std::bad_cast(); }
 		};
 	}

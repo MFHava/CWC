@@ -143,8 +143,8 @@ namespace cwcc {
 				       "\n";
 				std::for_each(std::begin(self.members), std::end(self.members), external_wrapper_generator{out, this_bundle, self});
 				out << "\tprotected:\n"
-				        "\t\t" << self.name << "() {}\n"
-				        "\t};\n";
+				       "\t\t" << self.name << "() =default;\n"
+				       "\t};\n";
 			}
 		private:
 			std::ostream & out;

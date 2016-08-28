@@ -45,7 +45,7 @@ namespace fibonacci {
 		}
 
 	protected:
-		sequence() {}
+		sequence() =default;
 	};
 
 	struct generator final : virtual sequence {
@@ -87,7 +87,7 @@ namespace fibonacci {
 		}
 
 	protected:
-		cwc_factory() {}
+		cwc_factory() =default;
 	};
 		generator() : ::cwc::component(::cwc::internal::create_component<cwc_self>()) {}
 		explicit generator(const ::cwc::plugin_id & cwc_plugin_id) : ::cwc::component(::cwc::internal::create_component<cwc_self>(cwc_plugin_id)) {}

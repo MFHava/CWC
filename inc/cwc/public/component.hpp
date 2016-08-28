@@ -31,7 +31,7 @@ namespace cwc {
 			cwc_interface_implementation(const cwc_interface_implementation &) =delete;
 			auto operator=(const cwc_interface_implementation &) -> cwc_interface_implementation & =delete;
 		public:
-			cwc_interface_implementation() {}
+			cwc_interface_implementation() =default;
 
 			virtual internal::error_code CWC_CALL cwc$component$new$0() const override final { return internal::call_and_return_error([&] { ++cwc_reference_counter; }); }
 			virtual internal::error_code CWC_CALL cwc$component$delete$1() const override final { return internal::call_and_return_error([&] { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }); }

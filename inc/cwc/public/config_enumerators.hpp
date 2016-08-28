@@ -52,11 +52,11 @@ namespace cwc {
 
 		//! @brief wrap an existing mutable component in the wrapper
 		//! @param[in] ptr mutable component pointer
-		config_section_enumerator(cwc_interface * ptr);
+		config_section_enumerator(cwc_interface * ptr) : component{ptr} {}
 
 		//! @brief wrap an existing const component in the wrapper
 		//! @param[in] ptr mutable component pointer
-		config_section_enumerator(const cwc_interface * ptr);
+		config_section_enumerator(const cwc_interface * ptr) : component{ptr} {}
 
 		config_section_enumerator(const config_section_enumerator &) =default;
 		config_section_enumerator(config_section_enumerator &&) noexcept =default;
@@ -66,17 +66,25 @@ namespace cwc {
 
 		//! @brief test if enumerator reached end
 		//! @returns true iff end was reached
-		auto end() const -> internal::abi<const boolean>::ret;
+		auto end() const -> internal::abi<const boolean>::ret {
+			internal::abi<const boolean>::param cwc_ret;
+			internal::validate(cwc_marshall<cwc_self>()->cwc$config_section_enumerator$end$0(internal::to_abi(cwc_ret)));
+			return internal::from_abi(cwc_ret);
+		}
 
 		//! @brief move to next entry in section
-		void next();
+		void next() { internal::validate(cwc_marshall<cwc_self>()->cwc$config_section_enumerator$next$1()); }
 
 		//! @brief retrieve current entry
 		//! @returns name and value of current entry
-		auto get() const -> internal::abi<const config_entry>::ret;
+		auto get() const -> internal::abi<const config_entry>::ret {
+			internal::abi<const config_entry>::param cwc_ret;
+			internal::validate(cwc_marshall<cwc_self>()->cwc$config_section_enumerator$get$2(internal::to_abi(cwc_ret)));
+			return internal::from_abi(cwc_ret);
+		}
 
 	protected:
-		config_section_enumerator();
+		config_section_enumerator() =default;
 	};
 
 	//! @brief enumerator for all sections
@@ -112,11 +120,11 @@ namespace cwc {
 
 		//! @brief wrap an existing mutable component in the wrapper
 		//! @param[in] ptr mutable component pointer
-		config_sections_enumerator(cwc_interface * ptr);
+		config_sections_enumerator(cwc_interface * ptr) : component{ptr} {}
 
 		//! @brief wrap an existing const component in the wrapper
 		//! @param[in] ptr mutable component pointer
-		config_sections_enumerator(const cwc_interface * ptr);
+		config_sections_enumerator(const cwc_interface * ptr) : component{ptr} {}
 
 		config_sections_enumerator(const config_sections_enumerator &) =default;
 		config_sections_enumerator(config_sections_enumerator &&) noexcept =default;
@@ -126,16 +134,24 @@ namespace cwc {
 
 		//! @brief test if enumerator reached end
 		//! @returns true iff end was reached
-		auto end() const -> internal::abi<const boolean>::ret;
+		auto end() const -> internal::abi<const boolean>::ret {
+			internal::abi<const boolean>::param cwc_ret;
+			internal::validate(cwc_marshall<cwc_self>()->cwc$config_sections_enumerator$end$0(internal::to_abi(cwc_ret)));
+			return internal::from_abi(cwc_ret);
+		}
 
 		//! @brief move to next entry in section
-		void next();
+		void next() { internal::validate(cwc_marshall<cwc_self>()->cwc$config_sections_enumerator$next$1()); }
 
 		//! @brief retrieve current section
 		//! @returns name of current section
-		auto get() const -> internal::abi<const ascii_string>::ret;
+		auto get() const -> internal::abi<const ascii_string>::ret {
+			internal::abi<const ascii_string>::param cwc_ret;
+			internal::validate(cwc_marshall<cwc_self>()->cwc$config_sections_enumerator$get$2(internal::to_abi(cwc_ret)));
+			return internal::from_abi(cwc_ret);
+		}
 
 	protected:
-		config_sections_enumerator();
+		config_sections_enumerator() =default;
 	};
 }

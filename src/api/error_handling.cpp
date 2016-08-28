@@ -13,8 +13,8 @@ namespace cwc {
 	namespace internal {
 		auto current_exception_to_error_code() noexcept -> error_code {
 			try {
-				auto eptr = std::current_exception();
-				if(eptr) std::rethrow_exception(eptr);
+				if(auto eptr = std::current_exception())
+					std::rethrow_exception(eptr);
 			}
 
 			catch(const std::bad_exception &) { return error_code::std98_bad_exception; }

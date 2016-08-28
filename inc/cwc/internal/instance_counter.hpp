@@ -18,14 +18,15 @@ namespace cwc {
 
 			auto operator=(const instance_counter &) -> instance_counter & =delete;
 			auto operator=(instance_counter &&) -> instance_counter & =delete;
+
+			static auto get_counter() noexcept -> std::atomic<std::size_t> & {
+				static std::atomic<std::size_t> counter{0};
+				return counter;
+			}
 		public:
-#ifdef CWC_HOST//no instance counting for host
-			instance_counter() =default;
-			~instance_counter() =default;
-#else
-			instance_counter();
-			~instance_counter();
-#endif
+			instance_counter() { ++get_counter(); }
+			~instance_counter() { --get_counter(); }
+			static auto get() noexcept -> std::size_t { return get_counter(); }
 		};
 	}
 }

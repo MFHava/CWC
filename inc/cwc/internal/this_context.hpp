@@ -25,11 +25,7 @@ namespace cwc {
 			virtual error_code CWC_CALL cwc$internal$context$config$7(abi<const ascii_string>::in section, abi<const ascii_string>::in key, abi<const ascii_string>::out value) const =0;
 		};
 
-		void validate(error_code err);
-
 		auto this_context() -> context_interface &;
-
-		auto plugin_available(const char * fqn, const plugin_id & id) -> bool;
 
 		template<typename Component, typename... Params>
 		auto create_component(Params &&... params) -> component::cwc_interface * {

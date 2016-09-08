@@ -31,9 +31,8 @@
 		#define CWC_LIB_DEBUG ""
 	#endif
 
-	#pragma comment(lib, "cwc-@CWC_VERSION_MAJOR@.@CWC_VERSION_MINOR@.@CWC_VERSION_PATCH@-api-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
 	#if defined(CWC_HOST)
-		#pragma comment(lib, "cwc-@CWC_VERSION_MAJOR@.@CWC_VERSION_MINOR@.@CWC_VERSION_PATCH@-ctx-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
+		#pragma comment(lib, "cwc-@CWC_VERSION_MAJOR@.@CWC_VERSION_MINOR@.@CWC_VERSION_PATCH@-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
 	#endif
 
 	#undef CWC_LIB_DEBUG
@@ -50,7 +49,7 @@ namespace cwc {
 
 #include "internal/type_list.hpp"
 #include "public/types.hpp"
-#include "internal/error_handling.hpp"
+#include "internal/error_code.hpp"
 #include "internal/default_implementation_chaining.hpp"
 #include "internal/cast_to_interface.hpp"
 #include "internal/marshalling_fwd.hpp"
@@ -61,6 +60,7 @@ namespace cwc {
 #include "internal/reference_guard.hpp"
 #include "public/config_enumerators.hpp"
 #include "internal/this_context.hpp"
+#include "internal/error_handling.hpp"
 #include "public/this_context.hpp"
 #include "internal/make_base_list.hpp"
 #include "public/default_implementations.hpp"

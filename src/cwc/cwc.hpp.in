@@ -17,9 +17,9 @@
 #define CWC_STRINGIFY(str) CWC_DO_STRINGIFY(str)
 
 #if defined(_MSC_VER)
-	#include "cwc/internal/config/msvc.hpp"
+	#include "cwc/config/msvc.hpp"
 #elif defined(__GNUG__)
-	#include "cwc/internal/config/gcc.hpp"
+	#include "cwc/config/gcc.hpp"
 #else
 	#error "Unknown compiler!"
 #endif

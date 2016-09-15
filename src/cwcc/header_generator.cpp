@@ -173,7 +173,7 @@ namespace cwcc {
 						if(this_interface.name == self.out->type) out << self.out->mutable_ << "cwc_interface ** cwc_ret";
 						else out << "::cwc::internal::abi<" << self.out->mutable_ << self.out->type << ">::out cwc_ret";
 					}
-					out << ") " << self.mutable_ << "=0;\n";
+					out << ") " << self.mutable_ << "noexcept =0;\n";
 				}
 			private:
 				std::ostream & out;
@@ -242,7 +242,7 @@ namespace cwcc {
 					generator(self);
 					const auto str = ss.str();
 					std::copy(std::begin(str), std::find(str.rbegin(), str.rend(), ')').base(), std::ostream_iterator<char>(out));
-					out << ' ' << self.mutable_ << "override final {\n"
+					out << ' ' << self.mutable_ << "noexcept override final {\n"
 					       "\t\t\t\treturn ::cwc::internal::call_and_return_error([&] {\n"
 					       "\t\t\t\t\t";
 					if(self.out) out << "::cwc::internal::abi<" << self.out->mutable_ << self.out->type << ">::retval cwc_tmp = ";

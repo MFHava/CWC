@@ -25,24 +25,24 @@ namespace cwc {
 		struct cwc_interface : component::cwc_interface {
 			static auto cwc_uuid() -> uuid { return {0xFD, 0xE0, 0x42, 0xD0, 0x4, 0xC6, 0x52, 0xD6, 0x8B, 0x6E, 0x26, 0x2F, 0xA3, 0x18, 0x65, 0xF5}; }
 			using cwc_wrapper = cwc_self;
-			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$end$0(internal::abi<const boolean>::out cwc_ret) const =0;
-			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$next$1() =0;
-			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$get$2(internal::abi<const config_entry>::out cwc_ret) const =0;
+			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$end$0(internal::abi<const boolean>::out cwc_ret) const noexcept =0;
+			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$next$1() noexcept =0;
+			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$get$2(internal::abi<const config_entry>::out cwc_ret) const noexcept =0;
 		};
 		template<typename CWCImplementation, typename CWCTypeList>
 		struct cwc_interface_implementation : internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$end$0(internal::abi<const boolean>::out cwc_ret) const override final {
+			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$end$0(internal::abi<const boolean>::out cwc_ret) const noexcept override final {
 				return internal::call_and_return_error([&] {
 					internal::abi<const boolean>::retval cwc_tmp = static_cast<const CWCImplementation *>(this)->end();
 					internal::from_abi(cwc_ret) = internal::to_abi(cwc_tmp);
 				});
 			}
-			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$next$1() override final {
+			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$next$1() noexcept override final {
 				return internal::call_and_return_error([&] {
 					static_cast<CWCImplementation *>(this)->next();
 				});
 			}
-			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$get$2(internal::abi<const config_entry>::out cwc_ret) const override final {
+			virtual internal::error_code CWC_CALL cwc$config_section_enumerator$get$2(internal::abi<const config_entry>::out cwc_ret) const noexcept override final {
 				return internal::call_and_return_error([&] {
 					internal::abi<const config_entry>::retval cwc_tmp = static_cast<const CWCImplementation *>(this)->get();
 					internal::from_abi(cwc_ret) = internal::to_abi(cwc_tmp);
@@ -93,24 +93,24 @@ namespace cwc {
 		struct cwc_interface : component::cwc_interface {
 			static auto cwc_uuid() -> uuid { return {0x74, 0xEB, 0x4, 0x63, 0x95, 0x18, 0x56, 0x78, 0x84, 0x38, 0x9B, 0x10, 0x2B, 0x3D, 0xBD, 0xF4}; }
 			using cwc_wrapper = cwc_self;
-			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$end$0(internal::abi<const boolean>::out cwc_ret) const =0;
-			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$next$1() =0;
-			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$get$2(internal::abi<const ascii_string>::out cwc_ret) const =0;
+			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$end$0(internal::abi<const boolean>::out cwc_ret) const noexcept =0;
+			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$next$1() noexcept =0;
+			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$get$2(internal::abi<const ascii_string>::out cwc_ret) const noexcept =0;
 		};
 		template<typename CWCImplementation, typename CWCTypeList>
 		struct cwc_interface_implementation : internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$end$0(internal::abi<const boolean>::out cwc_ret) const override final {
+			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$end$0(internal::abi<const boolean>::out cwc_ret) const noexcept override final {
 				return internal::call_and_return_error([&] {
 					internal::abi<const boolean>::retval cwc_tmp = static_cast<const CWCImplementation *>(this)->end();
 					internal::from_abi(cwc_ret) = internal::to_abi(cwc_tmp);
 				});
 			}
-			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$next$1() override final {
+			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$next$1() noexcept override final {
 				return internal::call_and_return_error([&] {
 					static_cast<CWCImplementation *>(this)->next();
 				});
 			}
-			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$get$2(internal::abi<const ascii_string>::out cwc_ret) const override final {
+			virtual internal::error_code CWC_CALL cwc$config_sections_enumerator$get$2(internal::abi<const ascii_string>::out cwc_ret) const noexcept override final {
 				return internal::call_and_return_error([&] {
 					internal::abi<const ascii_string>::retval cwc_tmp = static_cast<const CWCImplementation *>(this)->get();
 					internal::from_abi(cwc_ret) = internal::to_abi(cwc_tmp);

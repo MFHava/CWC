@@ -20,8 +20,4 @@
 	#define CWC_HAS_NO_REGEX//has header with only the exception beeing implemented
 #endif
 
-#ifdef __MINGW32__//mingw does not support these features
-	#define CWC_HAS_NO_THREADS
-#endif
-
 //no support for autolinking on any platform

@@ -20,9 +20,9 @@ namespace cwc {
 		struct cwc_interface {
 			static auto cwc_uuid() -> uuid { return {0x45, 0x91, 0x4, 0xE, 0xEF, 0xBF, 0x5E, 0x84, 0xA1, 0x58, 0x53, 0x3E, 0xD4, 0xAC, 0xFF, 0x93}; }
 			using cwc_wrapper = component;
-			virtual internal::error_code CWC_CALL cwc$component$new$0() const =0;
-			virtual internal::error_code CWC_CALL cwc$component$delete$1() const =0;
-			virtual internal::error_code CWC_CALL cwc$component$as$2(const uuid id, void ** result) const =0;
+			virtual internal::error_code CWC_CALL cwc$component$new$0() const noexcept =0;
+			virtual internal::error_code CWC_CALL cwc$component$delete$1() const noexcept =0;
+			virtual internal::error_code CWC_CALL cwc$component$as$2(const uuid id, void ** result) const noexcept =0;
 		};
 
 		template<typename Implementation, typename TypeList>
@@ -33,9 +33,9 @@ namespace cwc {
 		public:
 			cwc_interface_implementation() =default;
 
-			virtual internal::error_code CWC_CALL cwc$component$new$0() const override final { return internal::call_and_return_error([&] { ++cwc_reference_counter; }); }
-			virtual internal::error_code CWC_CALL cwc$component$delete$1() const override final { return internal::call_and_return_error([&] { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }); }
-			virtual internal::error_code CWC_CALL cwc$component$as$2(const uuid id, void ** result) const override final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), id, result); }); }
+			virtual internal::error_code CWC_CALL cwc$component$new$0() const noexcept override final { return internal::call_and_return_error([&] { ++cwc_reference_counter; }); }
+			virtual internal::error_code CWC_CALL cwc$component$delete$1() const noexcept override final { return internal::call_and_return_error([&] { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }); }
+			virtual internal::error_code CWC_CALL cwc$component$as$2(const uuid id, void ** result) const noexcept override final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), id, result); }); }
 		};
 
 		//! @brief type of this class

@@ -15,14 +15,14 @@ namespace cwc {
 		struct context_interface : component::cwc_interface {
 			static auto cwc_uuid() -> uuid { return {0xFE, 0xFF, 0xDB, 0x25, 0xC3, 0xC0, 0x5E, 0xD1, 0x9C, 0x2E, 0xDB, 0x38, 0xB5, 0x3B, 0x69, 0x73}; }
 			using cwc_wrapper = void;
-			virtual error_code CWC_CALL cwc$internal$context$version$0(abi<const version>::out version) const =0;
-			virtual error_code CWC_CALL cwc$internal$context$create$1(abi<const ascii_string>::in fqn, abi<component>::out result) const =0;
-			virtual error_code CWC_CALL cwc$internal$context$create$2(abi<const ascii_string>::in fqn, abi<const plugin_id>::in id, abi<component>::out result) const =0;
-			virtual error_code CWC_CALL cwc$internal$context$error$3(abi<const ascii_string>::in msg) const =0;
-			virtual error_code CWC_CALL cwc$internal$context$error$4(abi<const ascii_string>::out msg) const =0;
-			virtual error_code CWC_CALL cwc$internal$context$config$5(abi<config_sections_enumerator>::out enumerator) const =0;
-			virtual error_code CWC_CALL cwc$internal$context$config$6(abi<const ascii_string>::in section, abi<config_section_enumerator>::out enumerator) const =0;
-			virtual error_code CWC_CALL cwc$internal$context$config$7(abi<const ascii_string>::in section, abi<const ascii_string>::in key, abi<const ascii_string>::out value) const =0;
+			virtual error_code CWC_CALL cwc$internal$context$version$0(abi<const version>::out version) const noexcept =0;
+			virtual error_code CWC_CALL cwc$internal$context$create$1(abi<const ascii_string>::in fqn, abi<component>::out result) const noexcept =0;
+			virtual error_code CWC_CALL cwc$internal$context$create$2(abi<const ascii_string>::in fqn, abi<const plugin_id>::in id, abi<component>::out result) const noexcept =0;
+			virtual error_code CWC_CALL cwc$internal$context$error$3(abi<const ascii_string>::in msg) const noexcept =0;
+			virtual error_code CWC_CALL cwc$internal$context$error$4(abi<const ascii_string>::out msg) const noexcept =0;
+			virtual error_code CWC_CALL cwc$internal$context$config$5(abi<config_sections_enumerator>::out enumerator) const noexcept =0;
+			virtual error_code CWC_CALL cwc$internal$context$config$6(abi<const ascii_string>::in section, abi<config_section_enumerator>::out enumerator) const noexcept =0;
+			virtual error_code CWC_CALL cwc$internal$context$config$7(abi<const ascii_string>::in section, abi<const ascii_string>::in key, abi<const ascii_string>::out value) const noexcept =0;
 		};
 
 		auto this_context() -> context_interface &;

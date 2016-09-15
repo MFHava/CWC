@@ -46,7 +46,7 @@
 #endif
 
 namespace {
-	thread_local cwc::ascii last_message[@MAX_EXCEPTION_MESSAGE_LENGTH@];
+	thread_local cwc::ascii last_message[@CWC_MAX_EXCEPTION_MESSAGE_LENGTH@];
 
 	class context_impl final : public cwc::internal::context_interface {
 		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(cwc::ascii_string, cwc::component::cwc_interface **);
@@ -170,59 +170,59 @@ namespace {
 			for(const auto & p : plugins) load_plugins(map, p.first, p.second);
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$component$new$0() const override final { return cwc::internal::error_code::no_error; }
+		cwc::internal::error_code CWC_CALL cwc$component$new$0() const noexcept override final { return cwc::internal::error_code::no_error; }
 
-		cwc::internal::error_code CWC_CALL cwc$component$delete$1() const override final { return cwc::internal::error_code::no_error; }
+		cwc::internal::error_code CWC_CALL cwc$component$delete$1() const noexcept override final { return cwc::internal::error_code::no_error; }
 
-		cwc::internal::error_code CWC_CALL cwc$component$as$2(const cwc::uuid id, void ** result) const override final { return cwc::internal::call_and_return_error([&] { cwc::internal::cast_to_interface<context_impl, cwc_interfaces>::cast(const_cast<context_impl *>(this), id, result); }); }
+		cwc::internal::error_code CWC_CALL cwc$component$as$2(const cwc::uuid id, void ** result) const noexcept override final { return cwc::internal::call_and_return_error([&] { cwc::internal::cast_to_interface<context_impl, cwc_interfaces>::cast(const_cast<context_impl *>(this), id, result); }); }
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$version$0(cwc::version * version) const override final {
+		cwc::internal::error_code CWC_CALL cwc$internal$context$version$0(cwc::version * version) const noexcept override final {
 			version->major = CWC_VERSION_MAJOR;
 			version->minor = CWC_VERSION_MINOR;
 			version->patch = CWC_VERSION_PATCH;
 			return cwc::internal::error_code::no_error;
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$create$1(const cwc::ascii * const fqn, cwc::internal::abi<cwc::component>::out result) const override final {
+		cwc::internal::error_code CWC_CALL cwc$internal$context$create$1(const cwc::ascii * const fqn, cwc::internal::abi<cwc::component>::out result) const noexcept override final {
 			return cwc::internal::call_and_return_error([&] {
 				auto tmp = component_factories.at(fqn);//TODO: unnecessary copy!
 				*result = cwc::internal::to_abi(tmp);
 			});
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$create$2(const cwc::ascii * const fqn, const cwc::plugin_id id, cwc::internal::abi<cwc::component>::out result) const override final {
+		cwc::internal::error_code CWC_CALL cwc$internal$context$create$2(const cwc::ascii * const fqn, const cwc::plugin_id id, cwc::internal::abi<cwc::component>::out result) const noexcept override final {
 			return cwc::internal::call_and_return_error([&] {
 				auto tmp = plugin_factories.at(fqn).at(id.str);//TODO: unnecessary copy!
 				*result = cwc::internal::to_abi(tmp);
 			});
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$error$3(const cwc::ascii * const msg) const override final {
+		cwc::internal::error_code CWC_CALL cwc$internal$context$error$3(const cwc::ascii * const msg) const noexcept override final {
 			last_message[0] = '\0';
 			std::strncat(last_message, msg, sizeof(last_message) - 1);
 			return cwc::internal::error_code::no_error;//errors cannot occur
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$error$4(const cwc::ascii ** msg) const override final {
+		cwc::internal::error_code CWC_CALL cwc$internal$context$error$4(const cwc::ascii ** msg) const noexcept override final {
 			*msg = last_message;
 			return cwc::internal::error_code::no_error;//errors cannot occur
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$config$5(cwc::internal::abi<cwc::config_sections_enumerator>::out enumerator) const override final {
+		cwc::internal::error_code CWC_CALL cwc$internal$context$config$5(cwc::internal::abi<cwc::config_sections_enumerator>::out enumerator) const noexcept override final {
 			return cwc::internal::call_and_return_error([&] {
 				cwc::config_sections_enumerator tmp{new config_sections_enumerator{config}};
 				cwc::internal::from_abi(enumerator) = cwc::internal::to_abi(tmp);
 			});
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$config$6(cwc::internal::abi<const cwc::ascii_string>::in section, cwc::internal::abi<cwc::config_section_enumerator>::out enumerator) const override final {
+		cwc::internal::error_code CWC_CALL cwc$internal$context$config$6(cwc::internal::abi<const cwc::ascii_string>::in section, cwc::internal::abi<cwc::config_section_enumerator>::out enumerator) const noexcept override final {
 			return cwc::internal::call_and_return_error([&] {
 				cwc::config_section_enumerator tmp{new config_section_enumerator{config.at(section)}};
 				cwc::internal::from_abi(enumerator) = cwc::internal::to_abi(tmp);
 			});
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$config$7(const cwc::ascii * const section, const cwc::ascii * const key, const cwc::ascii ** value) const override final { return cwc::internal::call_and_return_error([&] { *value = this->config.at(section).at(key).data(); }); }
+		cwc::internal::error_code CWC_CALL cwc$internal$context$config$7(const cwc::ascii * const section, const cwc::ascii * const key, const cwc::ascii ** value) const noexcept override final { return cwc::internal::call_and_return_error([&] { *value = this->config.at(section).at(key).data(); }); }
 	};
 
 	namespace {//TODO: this is C++14, but CWC currently only requires C++11

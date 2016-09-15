@@ -17,11 +17,11 @@ namespace fibonacci {
 		struct cwc_interface : ::cwc::component::cwc_interface {
 			static auto cwc_uuid() -> ::cwc::uuid { return {0x55, 0x9, 0x67, 0x3D, 0x71, 0x7, 0x51, 0xC5, 0x97, 0xAA, 0x1F, 0xE8, 0xA8, 0x2A, 0x1A, 0x6}; }
 			using cwc_wrapper = cwc_self;
-			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$cwc_operator_invoke$0(::cwc::internal::abi<const ::cwc::uint8>::in no, ::cwc::internal::abi<const ::cwc::uint64>::out cwc_ret) const =0;
+			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$cwc_operator_invoke$0(::cwc::internal::abi<const ::cwc::uint8>::in no, ::cwc::internal::abi<const ::cwc::uint64>::out cwc_ret) const noexcept =0;
 		};
 		template<typename CWCImplementation, typename CWCTypeList>
 		struct cwc_interface_implementation : ::cwc::internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$cwc_operator_invoke$0(::cwc::internal::abi<const ::cwc::uint8>::in no, ::cwc::internal::abi<const ::cwc::uint64>::out cwc_ret) const override final {
+			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$cwc_operator_invoke$0(::cwc::internal::abi<const ::cwc::uint8>::in no, ::cwc::internal::abi<const ::cwc::uint64>::out cwc_ret) const noexcept override final {
 				return ::cwc::internal::call_and_return_error([&] {
 					::cwc::internal::abi<const ::cwc::uint64>::retval cwc_tmp = static_cast<const CWCImplementation *>(this)->operator()(::cwc::internal::from_abi(no));
 					::cwc::internal::from_abi(cwc_ret) = ::cwc::internal::to_abi(cwc_tmp);
@@ -59,11 +59,11 @@ namespace fibonacci {
 		struct cwc_interface : ::cwc::component::cwc_interface {
 			static auto cwc_uuid() -> ::cwc::uuid { return {0x12, 0xEC, 0x4A, 0x37, 0x93, 0xBB, 0x54, 0x62, 0x81, 0x3E, 0xFA, 0xF0, 0x48, 0xD3, 0x64, 0x59}; }
 			using cwc_wrapper = cwc_self;
-			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$cwc_operator_invoke$0(::cwc::internal::abi<::cwc::component>::out cwc_ret) const =0;
+			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$cwc_operator_invoke$0(::cwc::internal::abi<::cwc::component>::out cwc_ret) const noexcept =0;
 		};
 		template<typename CWCImplementation, typename CWCTypeList>
 		struct cwc_interface_implementation : ::cwc::internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$cwc_operator_invoke$0(::cwc::internal::abi<::cwc::component>::out cwc_ret) const override final {
+			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$cwc_operator_invoke$0(::cwc::internal::abi<::cwc::component>::out cwc_ret) const noexcept override final {
 				return ::cwc::internal::call_and_return_error([&] {
 					::cwc::internal::abi<::cwc::component>::retval cwc_tmp = static_cast<const CWCImplementation *>(this)->operator()();
 					::cwc::internal::from_abi(cwc_ret) = ::cwc::internal::to_abi(cwc_tmp);

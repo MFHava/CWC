@@ -85,10 +85,11 @@ namespace cwcc {
 
 	auto operator<<(std::ostream & out, const typedef_ & self) -> std::ostream & {
 		for(const auto & doc : self.lines) out << '\t' << doc << '\n';
-		out << "\tusing " << self.name << " = " << self.mutable_ << self.type;
-		if(self.array) out << " *";
-		out << ";\n"
-			"\tstatic_assert(std::is_standard_layout<" << self.type << ">::value, \"Type '" << self.type << "' is incompatible with the requirements for portable type definitions\");";
+		out << "\tusing " << self.name << " = ";
+		if(self.array) out << "cwc::array_ref<";
+		out << self.mutable_ << self.type;
+		if(self.array) out << '>';
+		out << ";\n\tstatic_assert(std::is_standard_layout<" << self.type << ">::value, \"Type '" << self.type << "' is incompatible with the requirements for portable type definitions\");";
 		return out;
 	}
 

@@ -4,6 +4,7 @@
 //    (See accompanying file ../../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+#include <vector>
 #include <iostream>
 #include "../cwc.sample.fibonacci.cwch"
 
@@ -42,8 +43,10 @@ int main() try {
 	const auto number = std::atoi(tmp.c_str());
 
 	try {
-		const auto result = fibonacci(number);
-		std::cout << "result: " << result << std::endl;
+		std::vector<unsigned char> inputs{(unsigned char)number};
+		std::vector<unsigned long long> outputs(1);
+		fibonacci(inputs, outputs);
+		std::cout << "result: " << outputs[0] << std::endl;
 
 	} catch(const std::exception & exc) {
 		std::cerr << exc.what() << std::endl;

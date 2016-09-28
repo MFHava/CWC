@@ -6,21 +6,9 @@
 
 #define WIN32_LEAN_AND_MEAN//suppress #define interface
 #include <boost/test/unit_test.hpp>
-#include <future>
 #include "cwc/cwc.hpp"
 
-std::once_flag s_init;
-struct init {
-	init() {
-		std::call_once(s_init, [] {
-			cwc::this_context::init(cwc::this_context::init_mode::string, "");
-		});
-	}
-};
-
-using namespace std::string_literals;
-
-BOOST_FIXTURE_TEST_SUITE(error_handling, init)
+BOOST_AUTO_TEST_SUITE(error_handling)
 BOOST_AUTO_TEST_CASE(no_error) { BOOST_TEST((cwc::internal::call_and_return_error([] {}) == cwc::internal::error_code::no_error)); }
 
 template<typename Exception>

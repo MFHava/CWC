@@ -12,12 +12,19 @@ namespace sample {
 //! @brief CWC Sample "Fibonacci Generator"
 //! @author Michael Florian Hava
 namespace fibonacci {
+	using input = cwc::array_ref<const ::cwc::uint8>;
+	static_assert(std::is_standard_layout<::cwc::uint8>::value, "Type '::cwc::uint8' is incompatible with the requirements for portable type definitions");
+
+	using output = cwc::array_ref<::cwc::uint64>;
+	static_assert(std::is_standard_layout<::cwc::uint64>::value, "Type '::cwc::uint64' is incompatible with the requirements for portable type definitions");
+
 	struct sequence : virtual ::cwc::component {
 		using cwc_self = sequence;
 		struct cwc_interface : ::cwc::component::cwc_interface {
 			static auto cwc_uuid() -> ::cwc::uuid { return {0x55, 0x9, 0x67, 0x3D, 0x71, 0x7, 0x51, 0xC5, 0x97, 0xAA, 0x1F, 0xE8, 0xA8, 0x2A, 0x1A, 0x6}; }
 			using cwc_wrapper = cwc_self;
 			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$cwc_operator_invoke$0(::cwc::internal::abi<const ::cwc::uint8>::in no, ::cwc::internal::abi<const ::cwc::uint64>::out cwc_ret) const noexcept =0;
+			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$cwc_operator_invoke$1(::cwc::internal::abi<const input>::in nos, ::cwc::internal::abi<const output>::in results) const noexcept =0;
 		};
 		template<typename CWCImplementation, typename CWCTypeList>
 		struct cwc_interface_implementation : ::cwc::internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
@@ -25,6 +32,11 @@ namespace fibonacci {
 				return ::cwc::internal::call_and_return_error([&] {
 					::cwc::internal::abi<const ::cwc::uint64>::retval cwc_tmp = static_cast<const CWCImplementation *>(this)->operator()(::cwc::internal::from_abi(no));
 					::cwc::internal::from_abi(cwc_ret) = ::cwc::internal::to_abi(cwc_tmp);
+				});
+			}
+			virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$cwc_operator_invoke$1(::cwc::internal::abi<const input>::in nos, ::cwc::internal::abi<const output>::in results) const noexcept override final {
+				return ::cwc::internal::call_and_return_error([&] {
+					static_cast<const CWCImplementation *>(this)->operator()(::cwc::internal::from_abi(nos), ::cwc::internal::from_abi(results));
 				});
 			}
 		};
@@ -42,6 +54,10 @@ namespace fibonacci {
 			::cwc::internal::abi<const ::cwc::uint64>::param cwc_ret;
 			::cwc::internal::validate(cwc_marshall<cwc_self>()->cwc$sample$fibonacci$sequence$cwc_operator_invoke$0(::cwc::internal::to_abi(no), ::cwc::internal::to_abi(cwc_ret)));
 			return ::cwc::internal::from_abi(cwc_ret);
+		}
+
+		void operator()(const input & nos, const output & results) const {
+			::cwc::internal::validate(cwc_marshall<cwc_self>()->cwc$sample$fibonacci$sequence$cwc_operator_invoke$1(::cwc::internal::to_abi(nos), ::cwc::internal::to_abi(results)));
 		}
 
 	protected:

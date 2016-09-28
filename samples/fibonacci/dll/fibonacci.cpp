@@ -17,4 +17,9 @@ namespace sample {
 		}
 		return a;
 	}
+
+	void fibonacci::operator()(cwc::array_ref<const unsigned char> nos, cwc::array_ref<unsigned long long> results) const {
+		if(nos.size() != results.size()) throw std::invalid_argument{"input and output are not of same length!"};
+		for(std::size_t i{0}; i < nos.size(); ++i) results[i] = (*this)(nos[i]);
+	}
 }

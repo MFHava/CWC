@@ -10,5 +10,6 @@
 namespace sample {
 	struct fibonacci : cwc::component_implementation<cwc::sample::fibonacci::generator, fibonacci> {
 		auto operator()(unsigned char no) const -> unsigned long long;
+		void operator()(cwc::array_ref<const unsigned char> nos, cwc::array_ref<unsigned long long> results) const;
 	};
 }

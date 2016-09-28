@@ -7,3 +7,14 @@
 #define BOOST_TEST_MODULE CWC Tests
 #define WIN32_LEAN_AND_MEAN//suppress #define interface
 #include <boost/test/unit_test.hpp>
+#include <future>
+#include "cwc/cwc.hpp"
+
+struct ContextInit {
+	ContextInit() {
+		cwc::this_context::init(cwc::this_context::init_mode::string, "");
+	}
+
+};
+
+BOOST_GLOBAL_FIXTURE(ContextInit);

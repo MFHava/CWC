@@ -9,9 +9,29 @@
 #endif
 
 #pragma once
-#include <iterator>
+#include <initializer_list>
 
 namespace cwc {
+	namespace internal {//emulate C++17-features
+		template<typename Container>
+		constexpr auto size(const Container & c) -> decltype(c.size()) { return c.size(); }
+
+		template<typename Type, std::size_t Size>
+		constexpr auto size(const Type(&array)[Size]) noexcept -> std::size_t { return Size; }
+
+		template<typename Container>
+		constexpr auto data(Container & c) -> decltype(c.data()) { return c.data(); }
+
+		template<typename Container>
+		constexpr auto data(const Container & c) -> decltype(c.data()) { return c.data(); }
+
+		template<typename Type, std::size_t Size>
+		constexpr auto data(Type(&array)[Size]) noexcept -> Type * { return array; }
+
+		template<typename Type>
+		constexpr auto data(std::initializer_list<Type> ilist) noexcept -> const Type * { return ilist.begin(); }
+	}
+
 	//! @brief non-owning reference to array
 	//! @tparam Type type of the referenced array
 	CWC_PACK_BEGIN
@@ -38,38 +58,18 @@ namespace cwc {
 		auto operator=(array_ref &&) noexcept -> array_ref & =default;
 		~array_ref() =default;
 
-		//! @brief construct array_ref from RandomAccessIterators
-		//! @tparam RandomAccessIterator iterator type that fulfills the RandomAccessIterator-requirements
-		//! @param[in] first begin of range
-		//! @param[in] last end of range
-		//! @throws invalid_argument iff the given range is not [first, last)
-		template<typename RandomAccessIterator>
-		array_ref(RandomAccessIterator first, RandomAccessIterator last) {
-			using Trait = std::iterator_traits<RandomAccessIterator>;
-			static_assert(std::is_base_of<std::random_access_iterator_tag, typename Trait::iterator_category>::value, "array_ref only supports random access iterators");
-			using Input = typename std::remove_pointer<typename Trait::pointer>::type;
-			static_assert(!(std::is_const<Input>::value && !std::is_const<value_type>::value), "array_ref<T> can't be constructed with array_ref<const T>");
-
-			const auto size = std::distance(first, last);
-			if(size < 0) throw std::invalid_argument{"array_ref requires [first, last)"};
-			else if(size) {
-				ptr = &*first;
-				count = size;
-			}
-		}
-
-		//! @brief construct array_ref from RandomAccessRange
-		//! @tparam RandomAccessRange range type that fulfills the RandomAccessRange-requirements
+		//! @brief construct array_ref from ContiguousRange
+		//! @tparam ContiguousRange range type that fulfills the ContiguousRange-requirements
 		//! @param[in] range range to reference
 		//! @attention as array_ref is non-owning: never pass a temporary as it will result in a dangling reference
-		template<typename RandomAccessRange>
-		array_ref(RandomAccessRange & range) : array_ref{std::begin(range), std::end(range)} {}//TODO: how to prevent temporaries?!
+		template<typename ContiguousRange>
+		array_ref(ContiguousRange & range) noexcept : ptr{internal::data(range)}, count{internal::size(range)} {}
 
 		auto data()       noexcept ->       pointer { return ptr; }
 		auto data() const noexcept -> const_pointer { return ptr; }
 
 		auto size() const noexcept -> size_type { return count; }
-		auto empty() const noexcept -> bool { return count == 0; }
+		auto empty() const noexcept -> bool { return size() == 0; }
 
 		auto front()       noexcept ->       reference { return *begin(); }
 		auto front() const noexcept -> const_reference { return *begin(); }
@@ -89,12 +89,12 @@ namespace cwc {
 		auto end()    const noexcept -> const_iterator { return ptr + count; }
 		auto cend()   const noexcept -> const_iterator { return ptr + count; }
 
-		auto rbegin()        noexcept ->       reverse_iterator { return begin(); }
-		auto rbegin()  const noexcept -> const_reverse_iterator { return begin(); }
-		auto crbegin() const noexcept -> const_reverse_iterator { return cbegin(); }
-		auto rend()          noexcept ->       reverse_iterator { return end(); }
-		auto rend()    const noexcept -> const_reverse_iterator { return end(); }
-		auto crend()   const noexcept -> const_reverse_iterator { return cend(); }
+		auto rbegin()        noexcept ->       reverse_iterator { return end(); }
+		auto rbegin()  const noexcept -> const_reverse_iterator { return end(); }
+		auto crbegin() const noexcept -> const_reverse_iterator { return cend(); }
+		auto rend()          noexcept ->       reverse_iterator { return begin(); }
+		auto rend()    const noexcept -> const_reverse_iterator { return begin(); }
+		auto crend()   const noexcept -> const_reverse_iterator { return cbegin(); }
 	private:
 		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 

@@ -58,12 +58,24 @@ namespace cwc {
 		auto operator=(array_ref &&) noexcept -> array_ref & =default;
 		~array_ref() =default;
 
+		//! @brief construct array_ref from pointer and size
+		//! @param[in] ptr start of the referenced array
+		//! @param[in] count count of elements in the referenced array
+		//! @attention [ptr, count) must be valid!
+		array_ref(Type * ptr, std::size_t count) : ptr{ptr}, count{count} {}
+
+		//! @brief construct array_ref from two pointers
+		//! @param[in] first start of the referenced array
+		//! @param[in] last end of the referenced array
+		//! @attention [first, last) must be valid!
+		array_ref(Type * first, Type * last) : array_ref{first, last - first} {}
+
 		//! @brief construct array_ref from ContiguousRange
 		//! @tparam ContiguousRange range type that fulfills the ContiguousRange-requirements
 		//! @param[in] range range to reference
 		//! @attention as array_ref is non-owning: never pass a temporary as it will result in a dangling reference
 		template<typename ContiguousRange>
-		array_ref(ContiguousRange & range) noexcept : ptr{internal::data(range)}, count{internal::size(range)} {}
+		array_ref(ContiguousRange & range) noexcept : array_ref{internal::data(range), internal::size(range)} {}
 
 		auto data()       noexcept ->       pointer { return ptr; }
 		auto data() const noexcept -> const_pointer { return ptr; }

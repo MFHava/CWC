@@ -58,17 +58,21 @@ namespace cwc {
 		auto operator=(array_ref &&) noexcept -> array_ref & =default;
 		~array_ref() =default;
 
-		//! @brief construct array_ref from pointer and size
-		//! @param[in] ptr start of the referenced array
-		//! @param[in] count count of elements in the referenced array
-		//! @attention [ptr, count) must be valid!
-		array_ref(Type * ptr, std::size_t count) : ptr{ptr}, count{count} {}
 
 		//! @brief construct array_ref from two pointers
 		//! @param[in] first start of the referenced array
 		//! @param[in] last end of the referenced array
+		//! @throws std::invalid_argument iff first > last
 		//! @attention [first, last) must be valid!
-		array_ref(Type * first, Type * last) : array_ref{first, last - first} {}
+		array_ref(Type * first, Type * last) : first{first}, last{last} {
+			if(first > last) throw std::invalid_argument{"array_ref requires [first, last)"};
+		}
+
+		//! @brief construct array_ref from pointer and size
+		//! @param[in] ptr start of the referenced array
+		//! @param[in] count count of elements in the referenced array
+		//! @attention [ptr, count) must be valid!
+		array_ref(Type * ptr, std::size_t count) noexcept : array_ref{ptr, ptr + count} {}
 
 		//! @brief construct array_ref from ContiguousRange
 		//! @tparam ContiguousRange range type that fulfills the ContiguousRange-requirements
@@ -77,29 +81,29 @@ namespace cwc {
 		template<typename ContiguousRange>
 		array_ref(ContiguousRange & range) noexcept : array_ref{internal::data(range), internal::size(range)} {}
 
-		auto data()       noexcept ->       pointer { return ptr; }
-		auto data() const noexcept -> const_pointer { return ptr; }
+		auto data()       noexcept ->       pointer { return first; }
+		auto data() const noexcept -> const_pointer { return first; }
 
-		auto size() const noexcept -> size_type { return count; }
+		auto size() const noexcept -> size_type { return last - first; }
 		auto empty() const noexcept -> bool { return size() == 0; }
 
 		auto front()       noexcept ->       reference { return *begin(); }
 		auto front() const noexcept -> const_reference { return *begin(); }
-		auto back()        noexcept ->       iterator  { return *--end(); }
-		auto back() const  noexcept -> const_iterator  { return *--end(); }
+		auto back()        noexcept ->       iterator { return *--end(); }
+		auto back() const  noexcept -> const_iterator { return *--end(); }
 
-		auto operator[](size_type index)       noexcept ->       reference { return ptr[index]; }
-		auto operator[](size_type index) const noexcept -> const_reference { return ptr[index]; }
+		auto operator[](size_type index)       noexcept ->       reference { return first[index]; }
+		auto operator[](size_type index) const noexcept -> const_reference { return first[index]; }
 
 		auto at(size_type index)       ->       reference { return validate_index(index), (*this)[index]; }
 		auto at(size_type index) const -> const_reference { return validate_index(index), (*this)[index]; }
 
-		auto begin()        noexcept ->       iterator { return ptr; }
-		auto begin()  const noexcept -> const_iterator { return ptr; }
-		auto cbegin() const noexcept -> const_iterator { return ptr; }
-		auto end()          noexcept ->       iterator { return ptr + count; }
-		auto end()    const noexcept -> const_iterator { return ptr + count; }
-		auto cend()   const noexcept -> const_iterator { return ptr + count; }
+		auto begin()        noexcept ->       iterator { return first; }
+		auto begin()  const noexcept -> const_iterator { return first; }
+		auto cbegin() const noexcept -> const_iterator { return first; }
+		auto end()          noexcept ->       iterator { return last; }
+		auto end()    const noexcept -> const_iterator { return last; }
+		auto cend()   const noexcept -> const_iterator { return last; }
 
 		auto rbegin()        noexcept ->       reverse_iterator { return end(); }
 		auto rbegin()  const noexcept -> const_reverse_iterator { return end(); }
@@ -110,8 +114,7 @@ namespace cwc {
 	private:
 		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 
-		Type * ptr{nullptr};
-		uint64 count{0};
+		pointer first{nullptr}, last{nullptr};
 	};
 	CWC_PACK_END
 }

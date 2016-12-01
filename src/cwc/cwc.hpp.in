@@ -57,6 +57,7 @@ namespace cwc {
 #include "public/component.hpp"
 #include "internal/type_traits.hpp"
 #include "public/array_ref.hpp"
+#include "public/optional.hpp"
 #include "internal/marshalling.hpp"
 #include "internal/reference_guard.hpp"
 #include "public/config_enumerators.hpp"

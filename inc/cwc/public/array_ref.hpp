@@ -32,12 +32,13 @@ namespace cwc {
 		constexpr auto data(std::initializer_list<Type> ilist) noexcept -> const Type * { return ilist.begin(); }
 	}
 
+	CWC_PACK_BEGIN
 	//! @brief non-owning reference to array
 	//! @tparam Type type of the referenced array
-	CWC_PACK_BEGIN
 	template<typename Type>
 	struct array_ref final {
 		static_assert(!internal::is_component<Type>::value && !internal::is_interface<Type>::value, "array_ref only supports simple types");
+		static_assert(std::is_standard_layout<Type>::value, "array_ref only supports standard layout types");
 
 		using value_type             = Type;
 		using size_type              = std::size_t;
@@ -57,7 +58,6 @@ namespace cwc {
 		auto operator=(const array_ref &) -> array_ref & =default;
 		auto operator=(array_ref &&) noexcept -> array_ref & =default;
 		~array_ref() =default;
-
 
 		//! @brief construct array_ref from two pointers
 		//! @param[in] first start of the referenced array
@@ -111,10 +111,27 @@ namespace cwc {
 		auto rend()          noexcept ->       reverse_iterator { return begin(); }
 		auto rend()    const noexcept -> const_reverse_iterator { return begin(); }
 		auto crend()   const noexcept -> const_reverse_iterator { return cbegin(); }
+
+		void swap(array_ref & other) noexcept {
+			using std::swap;
+			swap(first, other.first);
+			swap(last,  other.last);
+		}
 	private:
 		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 
 		pointer first{nullptr}, last{nullptr};
 	};
 	CWC_PACK_END
+
+	template<typename Type>
+	auto operator==(const array_ref<Type> & lhs, const array_ref<Type> & rhs) noexcept -> bool { return (lhs.begin() == rhs.begin()) && (lhs.end() == rhs.end()); }
+
+	template<typename Type>
+	auto operator!=(const array_ref<Type> & lhs, const array_ref<Type> & rhs) noexcept -> bool { return !(lhs == rhs); }
+}
+
+namespace std {
+	template<typename Type>
+	void swap(cwc::array_ref<Type> & lhs, cwc::array_ref<Type> & rhs) noexcept { lhs.swap(rhs); }
 }

@@ -84,29 +84,46 @@ namespace {
 			bundle_identifier  %= local_identifier > *(repeat(2)[ascii::char_(':')] > local_identifier);
 			global_identifier  %= repeat(2)[ascii::char_(':')] > local_identifier > repeat(2)[ascii::char_(':')] > bundle_identifier;
 			method_identifier  %= keyword["operator"] > qi::lit("()")[_val = "operator()"] | local_identifier;
+
 			new_type           %= local_identifier[phx::bind(&bundle_parser::add_new_type, this, _1)];
 			existing_type      %= local_identifier[phx::bind(&bundle_parser::validate_local_type, this, _1)] | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
-			struct_field       %= local_identifier > -('[' > uint_ % ',' > ']');
-			struct_members     %= *documentation >> existing_type >> struct_field % ',' > qi::lit(';');
+
+			struct_members     %= *documentation >> existing_type >> -('[' > uint_ % ',' > ']') >> local_identifier % ',' > qi::lit(';');//TODO: allow empty arrays? (=> array_ref); TODO: allow optional values?!
 			struct_            %= *documentation >> (keyword["struct"] | keyword["union"][phx::at_c<3>(_val) = true]) > new_type > '{' > +struct_members > '}';
+
 			enum_member        %= *documentation >> local_identifier;
 			enum_              %= *documentation >> keyword["enum"] > new_type > '{' > enum_member % ',' > '}';
+
 			export_            %= keyword["export"] > existing_type;
+
 			component          %= *documentation >> keyword["component"] > new_type > ':' > existing_type % ',' > '{' > *constructor > '}';
+
 			constructor        %= *documentation >> keyword["constructor"] > params > ';';
+
 			void_method        %= *documentation >> keyword["void"] > method_identifier > params > mutable_;
 			auto_method        %= *documentation >> keyword["auto"] > method_identifier > params > mutable_ > returns;
 			method             %= (void_method | auto_method) > ';';
+
 			delegate           %= *documentation >> keyword["delegate"] > new_type > params > mutable_;
+
 			mutable_           %= (keyword["mutable"] >> qi::attr(true)) | qi::attr(false);
+
 			params             %= '(' > -(param % ',') > ')';
-			param              %= mutable_ >> existing_type >> local_identifier;
-			returns            %= "->" > mutable_ >> existing_type;
-			typedef_           %= *documentation >> keyword["using"] > new_type > '=' > mutable_ > existing_type > -keyword["[]"][phx::at_c<4>(_val) = true];
+
+			param              %= mutable_ >> existing_type >> local_identifier;//TODO: allow array_ref here (before identifier); TODO: allow optional values?!
+
+			returns            %= "->" > mutable_ >> existing_type;//TODO: allow array_ref here, TODO: allow optional values?!
+
+			typedef_           %= *documentation >> keyword["using"] > new_type > '=' > mutable_ > existing_type > -( keyword["[]"][phx::at_c<4>(_val) = cwcc::typedef_::attributes::array] | keyword["?"][phx::at_c<4>(_val) = cwcc::typedef_::attributes::optional]);
+
 			interface          %= *documentation >> keyword["interface"] > new_type > '{' >> *method > '}';
+
 			cpp_comment        %= repository::confix("//", qi::eol | qi::eoi)[*(*ascii::char_('\\') >> +(~ascii::char_('\\') - qi::eol))];
+
 			documentation      %= cpp_comment;
+
 			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((export_ | component | enum_ | struct_ | interface | typedef_ | delegate) > ';') > '}';
+
 			qi::on_error(start, phx::bind(error_handler, _1, _3, _2, _4));//register handler for parser errors
 		}
 	private:
@@ -157,7 +174,6 @@ namespace {
 		qi::rule<Iterator, auto_method(), Skipper> auto_method;
 		qi::rule<Iterator, void_method(), Skipper> void_method;
 		qi::rule<Iterator, cwcc::delegate(), Skipper> delegate;
-		qi::rule<Iterator, cwcc::struct_::member::field(), Skipper> struct_field;
 		qi::rule<Iterator, cwcc::struct_::member(), Skipper> struct_members;
 		qi::rule<Iterator, cwcc::struct_(), Skipper> struct_;
 		qi::rule<Iterator, cwcc::enum_::member(), Skipper> enum_member;

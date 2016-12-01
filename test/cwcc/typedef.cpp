@@ -9,41 +9,51 @@
 BOOST_AUTO_TEST_CASE(typedef_) {
 	const auto & b = parse(
 		"bundle UT {\n"
-		"	using Type0 = ::cwc::int;\n"
-		"	using Type1 = mutable ::cwc::int;\n"
-		"	using Type2 = ::cwc::int[];\n"
-		"	using Type3 = mutable ::cwc::int[];\n"
+		"	using Type00 =         ::cwc::int;\n"
+		"	using Type01 = mutable ::cwc::int;\n"
+		"	using Type02 =         ::cwc::int[];\n"
+		"	using Type03 = mutable ::cwc::int[];\n"
+		"	using Type04 =         ::cwc::int?;\n"
+		"	using Type05 = mutable ::cwc::int?;\n"
 		"	//test\n"
-		"	using Type4 = ::cwc::int;\n"
+		"	using Type10 =         ::cwc::int;\n"
 		"	//test\n"
-		"	using Type5 = mutable ::cwc::int;\n"
+		"	using Type11 = mutable ::cwc::int;\n"
 		"	//test\n"
-		"	using Type6 = ::cwc::int[];\n"
+		"	using Type12 =         ::cwc::int[];\n"
 		"	//test\n"
-		"	using Type7 = mutable ::cwc::int[];\n"
+		"	using Type13 = mutable ::cwc::int[];\n"
+		"	//test\n"
+		"	using Type14 =         ::cwc::int?;\n"
+		"	//test\n"
+		"	using Type15 = mutable ::cwc::int?;\n"
 		"}"
 	);
 
 	cwcc::bundle reference;
 	reference.name = "UT";
-	auto append = [&](std::vector<cwcc::documentation> lines, std::string name, cwcc::mutability mutable_, bool array) {
+	auto append = [&](std::vector<cwcc::documentation> lines, std::string name, cwcc::mutability mutable_, boost::optional<cwcc::typedef_::attributes> attribute) {
 		cwcc::typedef_ t;
 		t.lines = std::move(lines);
 		t.name = std::move(name);
 		t.mutable_ = mutable_;
 		t.type = "::cwc::int";
-		t.array = array;
+		t.attribute = attribute;
 		reference.members.push_back(t);
 	};
 
-	append({},         "Type0", false, false);
-	append({},         "Type1", true,  false);
-	append({},         "Type2", false, true);
-	append({},         "Type3", true,  true);
-	append({{"test"}}, "Type4", false, false);
-	append({{"test"}}, "Type5", true,  false);
-	append({{"test"}}, "Type6", false, true);
-	append({{"test"}}, "Type7", true,  true);
+	append({},         "Type00", false, boost::none);
+	append({},         "Type01", true,  boost::none);
+	append({},         "Type02", false, cwcc::typedef_::attributes::array);
+	append({},         "Type03", true,  cwcc::typedef_::attributes::array);
+	append({},         "Type04", false, cwcc::typedef_::attributes::optional);
+	append({},         "Type05", true,  cwcc::typedef_::attributes::optional);
+	append({{"test"}}, "Type10", false, boost::none);
+	append({{"test"}}, "Type11", true,  boost::none);
+	append({{"test"}}, "Type12", false, cwcc::typedef_::attributes::array);
+	append({{"test"}}, "Type13", true,  cwcc::typedef_::attributes::array);
+	append({{"test"}}, "Type14", false, cwcc::typedef_::attributes::optional);
+	append({{"test"}}, "Type15", true,  cwcc::typedef_::attributes::optional);
 
 	BOOST_TEST((b == reference));
 }

@@ -15,7 +15,7 @@ namespace cwcc {
 	class mutability {
 		bool value{false};
 	public:
-		mutability() {}
+		mutability() =default;
 		mutability(bool value) : value{value} {}
 
 		friend
@@ -73,19 +73,13 @@ namespace cwcc {
 
 	struct struct_ {
 		struct member {
-			struct field {
-				std::string name;
-				std::vector<int> sizes;//NOTE: 0 == not an array!
-
-				friend
-				auto operator==(const field & lhs, const field & rhs) -> bool { return (lhs.name == rhs.name) && (lhs.sizes == rhs.sizes); }
-			};
 			std::vector<documentation> lines;
 			std::string type;
-			std::vector<cwcc::struct_::member::field> fields;
+			std::vector<int> sizes;//NOTE: 0 == not an array!
+			std::vector<std::string> fields;
 	
 			friend
-			auto operator==(const member & lhs, const member & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.type == rhs.type) && (lhs.fields == rhs.fields); }
+			auto operator==(const member & lhs, const member & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.type == rhs.type) && (lhs.sizes == rhs.sizes) && (lhs.fields == rhs.fields); }
 			friend
 			auto operator<<(std::ostream & out, const member & self) -> std::ostream &;
 		};
@@ -102,14 +96,15 @@ namespace cwcc {
 	};
 
 	struct typedef_ {
+		enum class attributes { array, optional };
 		std::vector<documentation> lines;
 		std::string name;
 		mutability mutable_;
 		std::string type;
-		bool array{false};
+		boost::optional<attributes> attribute;
 
 		friend
-		auto operator==(const typedef_ & lhs, const typedef_ & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type) && (lhs.array == rhs.array); }
+		auto operator==(const typedef_ & lhs, const typedef_ & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type) && (lhs.attribute == rhs.attribute); }
 		friend
 		auto operator<<(std::ostream & out, const typedef_ & self) -> std::ostream &;
 	};
@@ -183,14 +178,13 @@ namespace cwcc {
 }
 
 BOOST_FUSION_ADAPT_STRUCT(cwcc::documentation, line)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member::field, name, sizes)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member, lines, type, fields)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member, lines, type, sizes, fields)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_, lines, name, members, union_)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::export_, component)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::component::constructor, lines, params)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::enum_::member, lines, name)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::enum_, lines, name, members)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::typedef_, lines, name, mutable_, type, array)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::typedef_, lines, name, mutable_, type, attribute)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::component, lines, name, interfaces, members)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::param, mutable_, type, name)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::returns, mutable_, type)

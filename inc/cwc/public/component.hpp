@@ -161,42 +161,42 @@ namespace cwc {
 		friend auto component_cast(component & self) -> Interface;
 	};
 
-	//! @brief compare components for reference equality
+	//! @brief compare components for identity equality
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if the components are equal
 	inline
 	auto operator==(const component & lhs, const component & rhs) -> bool { return lhs.cwc_compare_references(rhs) == 0; }
 
-	//! @brief compare components for reference inequality
+	//! @brief compare components for identity inequality
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if the components are not equal
 	inline
 	auto operator!=(const component & lhs, const component & rhs) -> bool { return !(lhs == rhs); }
 
-	//! @brief compare components for reference ordering
+	//! @brief compare components for identity ordering
 	//! @param lhs first component
 	//! @param rhs second component
-	//! @returns true if lhs < rhs
+	//! @returns true if lhs <  rhs
 	inline
-	auto operator<(const component & lhs, const component & rhs) -> bool { return lhs.cwc_compare_references(rhs) < 0; }
+	auto operator< (const component & lhs, const component & rhs) -> bool { return lhs.cwc_compare_references(rhs) <  0; }
 
-	//! @brief compare components for reference ordering
+	//! @brief compare components for identity ordering
 	//! @param lhs first component
 	//! @param rhs second component
-	//! @returns true if lhs > rhs
+	//! @returns true if lhs >  rhs
 	inline
-	auto operator>(const component & lhs, const component & rhs) -> bool { return rhs < lhs; }
+	auto operator> (const component & lhs, const component & rhs) -> bool { return rhs < lhs; }
 
-	//! @brief compare components for reference ordering
+	//! @brief compare components for identity ordering
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if lhs <= rhs
 	inline
 	auto operator<=(const component & lhs, const component & rhs) -> bool { return !(lhs > rhs); }
 
-	//! @brief compare components for reference ordering
+	//! @brief compare components for identity ordering
 	//! @param lhs first component
 	//! @param rhs second component
 	//! @returns true if lhs >= rhs

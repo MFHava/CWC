@@ -31,12 +31,10 @@ namespace cwcc {
 	}
 
 	auto operator<<(std::ostream & out, const struct_::member & self) -> std::ostream & {
-		out << self.type << ' ' << self.fields[0].name;
-		for(const auto & s : self.fields[0].sizes) out << '[' << s << ']';
-		for(std::size_t i{1}; i < self.fields.size(); ++i) {
-			out << ", " << self.fields[i].name;
-			for(const auto & s : self.fields[i].sizes) out << '[' << s << ']';
-		}
+		out << self.type;
+		for(const auto & s : self.sizes) out << '[' << s << ']';
+		out << ' ' << self.fields[0];
+		for(std::size_t i{1}; i < self.fields.size(); ++i) out << ", " << self.fields[i];
 		out << ';';
 		return out;
 	}
@@ -52,7 +50,7 @@ namespace cwcc {
 			e.members.push_back({{}, "cwc_no_active_field"});
 			for(const auto & member : self.members)
 				for(const auto & m : member.fields)
-					e.members.push_back({{}, m.name});
+					e.members.push_back({{}, m});
 			std::stringstream ss;
 			ss << e;
 			ss.seekp(-1, std::ios::cur);
@@ -77,7 +75,7 @@ namespace cwcc {
 		if(!self.members.empty()) out << '\n';
 		for(const auto & member : self.members)
 			for(const auto & m : member.fields)
-				out << "\tstatic_assert(!::cwc::internal::is_component<std::remove_all_extents<decltype(" << self.name << "::" << m.name << ")>::type>::value, \"Type of '" << self.name << "::" << m.name << "' is incompatible with the requirements of portable structs or unions\");\n";
+				out << "\tstatic_assert(!::cwc::internal::is_component<std::remove_all_extents<decltype(" << self.name << "::" << m << ")>::type>::value, \"Type of '" << self.name << "::" << m << "' is incompatible with the requirements of portable structs or unions\");\n";
 		if(!self.members.empty()) out << '\n';
 		//TODO: generates one linebreak too much!
 		return out;
@@ -86,10 +84,16 @@ namespace cwcc {
 	auto operator<<(std::ostream & out, const typedef_ & self) -> std::ostream & {
 		for(const auto & doc : self.lines) out << '\t' << doc << '\n';
 		out << "\tusing " << self.name << " = ";
-		if(self.array) out << "cwc::array_ref<";
+		if(self.attribute)
+			switch(*self.attribute) {
+				case typedef_::attributes::array:    out << "cwc::array_ref<"; break;
+				case typedef_::attributes::optional: out << "cwc::optional<";  break;
+				default: throw std::runtime_error{"invalid attribute"};
+			}
 		out << self.mutable_ << self.type;
-		if(self.array) out << '>';
-		out << ";\n\tstatic_assert(std::is_standard_layout<" << self.type << ">::value, \"Type '" << self.type << "' is incompatible with the requirements for portable type definitions\");";
+		if(self.attribute) out << '>';
+		out << ';';
+		if(!self.attribute) out << "\n\tstatic_assert(std::is_standard_layout<" << self.type << ">::value, \"Type '" << self.type << "' is incompatible with the requirements for portable type definitions\");";
 		return out;
 	}
 

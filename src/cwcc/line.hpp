@@ -10,7 +10,8 @@
 
 namespace cwcc {
 	struct line : std::string {
-		friend auto operator>>(std::istream & in, line & l) -> std::istream & {
+		friend
+		auto operator>>(std::istream & in, line & l) -> std::istream & {
 			std::getline(in, l);
 			return in;
 		}

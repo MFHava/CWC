@@ -64,9 +64,7 @@ namespace cwc {
 		//! @param[in] last end of the referenced array
 		//! @throws std::invalid_argument iff first > last
 		//! @attention [first, last) must be valid!
-		array_ref(Type * first, Type * last) : first{first}, last{last} {
-			if(first > last) throw std::invalid_argument{"array_ref requires [first, last)"};
-		}
+		array_ref(Type * first, Type * last) : first{first}, last{last} { if(first > last) throw std::invalid_argument{"array_ref requires [first, last)"}; }
 
 		//! @brief construct array_ref from pointer and size
 		//! @param[in] ptr start of the referenced array
@@ -129,9 +127,7 @@ namespace cwc {
 
 	template<typename Type>
 	auto operator!=(const array_ref<Type> & lhs, const array_ref<Type> & rhs) noexcept -> bool { return !(lhs == rhs); }
-}
 
-namespace std {
 	template<typename Type>
-	void swap(cwc::array_ref<Type> & lhs, cwc::array_ref<Type> & rhs) noexcept { lhs.swap(rhs); }
+	void swap(array_ref<Type> & lhs, array_ref<Type> & rhs) noexcept { lhs.swap(rhs); }
 }

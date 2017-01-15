@@ -236,9 +236,7 @@ namespace cwc {
 
 	template<typename Type>
 	auto operator>=(const Type & value, const optional<Type> & opt) -> bool { return opt ? value >= *opt : true; }
-}
 
-namespace std {
 	template<typename Type>
-	void swap(cwc::optional<Type> & lhs, cwc::optional<Type> & rhs) noexcept { lhs.swap(rhs); }
+	void swap(optional<Type> & lhs, optional<Type> & rhs) noexcept { lhs.swap(rhs); }
 }

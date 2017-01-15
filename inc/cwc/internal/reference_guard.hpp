@@ -13,7 +13,7 @@
 namespace cwc {
 	namespace internal {
 		struct reference_guard {
-			reference_guard(component::cwc_interface * ptr) : ptr{ptr} { if(!ptr) throw std::runtime_error{"factory is nullptr"}; }
+			reference_guard(component::cwc_interface * ptr) : ptr{ptr} { if(!ptr) throw std::runtime_error{"ptr is nullptr"}; }
 			~reference_guard() {
 				const auto result = ptr->cwc$component$delete$1();
 				assert(result == error_code::no_error);

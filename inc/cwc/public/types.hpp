@@ -14,15 +14,15 @@
 namespace cwc {
 	//! @defgroup cwc_abi_types Fundamental ABI types
 	//! @{
-	using ascii = char;//!< @brief only the lower 7 bits are interpreted (as signedness of char is implementation defined)
-	using int8 = std::int8_t;//!< @brief signed 8bit integer
-	using uint8 = std::uint8_t;//!< @brief unsigned  8bit integer
-	using int16 = std::int16_t;//!< @brief signed 16bit integer
-	using uint16 = std::uint16_t;//!< @brief unsigned 16bit integer
-	using int32 = std::int32_t;//!< @brief signed 32bit integer
-	using uint32 = std::uint32_t;//!< @brief unsigned 32bit integer
-	using int64 = std::int64_t;//!< @brief signed 64bit integer
-	using uint64 = std::uint64_t;//!< @brief unsigned 64bit integer
+	using ascii   = char;//!< @brief only the lower 7 bits are interpreted (as signedness of char is implementation defined)
+	using int8    = std::int8_t;//!< @brief signed 8bit integer
+	using uint8   = std::uint8_t;//!< @brief unsigned  8bit integer
+	using int16   = std::int16_t;//!< @brief signed 16bit integer
+	using uint16  = std::uint16_t;//!< @brief unsigned 16bit integer
+	using int32   = std::int32_t;//!< @brief signed 32bit integer
+	using uint32  = std::uint32_t;//!< @brief unsigned 32bit integer
+	using int64   = std::int64_t;//!< @brief signed 64bit integer
+	using uint64  = std::uint64_t;//!< @brief unsigned 64bit integer
 	using float32 = float;//!< @brief single precision (32bit) floating point
 	using float64 = double;//!< @brief double precision (64bit) floating point
 	using boolean = uint8;//!< @brief portable boolean (as bool lacks size guarantee)

@@ -88,7 +88,9 @@ namespace cwc {
 			}
 			auto operator=(const cwc_reference &) -> cwc_reference & =delete;
 			auto operator=(cwc_reference &&) -> cwc_reference & =delete;
-			friend struct component;
+
+			friend
+			struct component;
 		public:
 			cwc_reference(Interface * ptr) : ptr{ptr} {}
 
@@ -148,17 +150,21 @@ namespace cwc {
 		cwc_interface * ptr{nullptr};
 		bool immutable{false};
 
-		friend auto operator<(const component & lhs, const component & rhs) -> bool;
-		friend auto operator==(const component & lhs, const component & rhs) -> bool;
+		friend
+		auto operator<(const component & lhs, const component & rhs) -> bool;
+		friend
+		auto operator==(const component & lhs, const component & rhs) -> bool;
 
 		template<typename Type, bool IsComponent>
-		friend struct internal::marshalled;
+		friend
+		struct internal::marshalled;
 
 		template<typename Interface>
-		friend auto component_cast(const component & self) -> const Interface;
-
+		friend
+		auto component_cast(const component & self) -> const Interface;
 		template<typename Interface>
-		friend auto component_cast(component & self) -> Interface;
+		friend
+		auto component_cast(component & self) -> Interface;
 	};
 
 	//! @brief compare components for identity equality

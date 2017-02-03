@@ -16,7 +16,7 @@ namespace cwc {
 		struct default_implementation_chaining;
 
 		template<typename Implementation, typename Head, typename Tail>
-		struct default_implementation_chaining<Implementation, TL::type_list<Head, Tail>> : Head::cwc_wrapper::template cwc_interface_implementation<Implementation, Tail> {};
+		struct default_implementation_chaining<Implementation, TL::type_list<Head, Tail>> : Head::template cwc_implementation<Implementation, Tail> {};
 
 		template<typename Implementation, typename VTable>
 		struct default_implementation_chaining<Implementation, TL::type_list<VTable, TL::empty_type_list>> : VTable {};//last base has to be vtable to connect implementation to

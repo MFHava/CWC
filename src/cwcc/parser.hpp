@@ -10,5 +10,5 @@
 namespace cwcc {
 	struct bundle;
 
-	auto parse(std::istream & in) -> bundle;
+	auto parse(std::istream & is) -> bundle;
 }

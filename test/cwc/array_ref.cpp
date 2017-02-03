@@ -10,27 +10,6 @@
 #include <vector>
 
 namespace {
-	template<typename Type>
-	struct type_check {
-		using Ref = cwc::array_ref<Type>;
-	
-		static_assert(std::is_same<                            Type   , typename Ref::value_type>::value,             "value_type");
-		static_assert(std::is_same<                            Type & , typename Ref::reference>::value,              "reference");
-		static_assert(std::is_same<                      const Type & , typename Ref::const_reference>::value,        "const_reference");
-		static_assert(std::is_same<                            Type * , typename Ref::pointer>::value,                "pointer");
-		static_assert(std::is_same<                      const Type * , typename Ref::const_pointer>::value,          "const_pointer");
-		static_assert(std::is_same<                            Type * , typename Ref::iterator>::value,               "iterator");
-		static_assert(std::is_same<                      const Type * , typename Ref::const_iterator>::value,         "const_iterator");
-		static_assert(std::is_same<std::reverse_iterator<      Type *>, typename Ref::reverse_iterator>::value,       "reverse_iterator");
-		static_assert(std::is_same<std::reverse_iterator<const Type *>, typename Ref::const_reverse_iterator>::value, "reverse_iterator");
-	};
-	
-	type_check<      int> dummy0;
-	type_check<const int> dummy1;
-
-	type_check<      float *> dummy2;
-	type_check<const float *> dummy3;
-
 	void test() {
 		using namespace cwc;
 
@@ -71,5 +50,8 @@ namespace {
 		//array_ref<int> ref81 = ref61;
 		array_ref<const int> ref82 = ref60;
 		array_ref<const int> ref83 = ref61;
+
+		array_ref<const int> ref84 = std::move(ref60);
+		array_ref<const int> ref85 = std::move(ref61);
 	}
 }

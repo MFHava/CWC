@@ -7,13 +7,13 @@
 #include "@CMAKE_CURRENT_SOURCE_DIR@/src/cwcc/disclaimer.hpp"
 
 namespace cwcc {
-	void program_disclaimer(std::ostream & out) {
-		out << "C++ with Components compiler (CWC @CWC_VERSION_MAJOR@.@CWC_VERSION_MINOR@.@CWC_VERSION_PATCH@)\n"
-		       "© 2012, Michael Florian Hava\n";
+	void program_disclaimer(std::ostream & os) {
+		os << "C++ with Components compiler (CWC @CWC_VERSION@)\n"
+		      "© 2012, Michael Florian Hava\n";
 	}
 
-	void file_disclaimer(std::ostream & out, bool modifiable) {
-		out << "//This file was generated for CWC @CWC_VERSION_MAJOR@.@CWC_VERSION_MINOR@.@CWC_VERSION_PATCH@ by CWCC\n";
-		if(!modifiable) out << "//ATTENTION: Do not modify this file as its content is highly dependent on the design of CWC!\n";
+	void file_disclaimer(std::ostream & os, bool modifiable) {
+		os << "//This file was generated for CWC @CWC_VERSION@ by CWCC\n";
+		if(!modifiable) os << "//ATTENTION: Do not modify this file as its content is highly dependent on the design of CWC!\n";
 	}
 }

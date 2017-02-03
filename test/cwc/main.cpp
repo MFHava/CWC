@@ -12,7 +12,7 @@
 
 struct ContextInit {
 	ContextInit() {
-		cwc::this_context::init(cwc::this_context::init_mode::string, "");
+		cwc::init(cwc::init_mode::string, "");
 	}
 
 };

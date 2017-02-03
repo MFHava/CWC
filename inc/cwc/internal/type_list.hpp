@@ -9,7 +9,6 @@
 #endif
 
 #pragma once
-#include <type_traits>
 
 namespace cwc {
 	namespace TL {
@@ -35,19 +34,6 @@ namespace cwc {
 				Type,
 				typename make_type_list<Types...>::type
 			>;
-		};
-
-		template<typename TypeList>
-		struct size;
-
-		template<>
-		struct size<empty_type_list> {
-			enum { value = 0 };
-		};
-
-		template<typename Head, typename Tail>
-		struct size<type_list<Head, Tail>> {
-			enum { value = 1 + size<Tail>::value };
 		};
 
 		template<typename TypeList, typename Type>
@@ -79,30 +65,6 @@ namespace cwc {
 			using type = type_list<
 				Head,
 				typename append<
-					Tail,
-					Type
-				>::type
-			>;
-		};
-
-		template<typename TypeList, typename Type>
-		struct erase;
-
-		template<typename Type>
-		struct erase<empty_type_list, Type> {
-			using type = empty_type_list;
-		};
-
-		template<typename Head, typename Tail>
-		struct erase<type_list<Head, Tail>, Head> {
-			using type = Tail;
-		};
-
-		template<typename Head, typename Tail, typename Type>
-		struct erase<type_list<Head, Tail>, Type> {
-			using type = type_list<
-				Head,
-				typename erase<
 					Tail,
 					Type
 				>::type
@@ -189,57 +151,6 @@ namespace cwc {
 			};
 		};
 
-		template<typename TypeList, typename Type, template<typename, typename> class BinaryPredicate>
-		class find_if_not {
-			template<typename Type1, typename Type2>
-			struct NegatedBinaryPredicate {
-				enum {
-					value = !BinaryPredicate<
-						Type1,
-						Type2
-					>::value
-				};
-			};
-		public:
-			enum {
-				value = find_if<
-					TypeList,
-					Type,
-					NegatedBinaryPredicate
-				>::value
-			};
-		};
-
-		template<typename TypeList, typename Type>
-		struct find {
-			enum {
-				value = find_if<
-					TypeList,
-					Type,
-					std::is_same
-				>::value
-			};
-		};
-
-		template<typename TypeList, template<typename> class UnaryFunction>
-		struct transform;
-
-		template<template<typename> class UnaryFunction>
-		struct transform<empty_type_list, UnaryFunction> {
-			using type = empty_type_list;
-		};
-
-		template<typename Head, typename Tail, template<typename> class UnaryFunction>
-		struct transform<type_list<Head, Tail>, UnaryFunction> {
-			using type = type_list<
-				typename UnaryFunction<Head>::type,
-				typename transform<
-					Tail,
-					UnaryFunction
-				>::type
-			>;
-		};
-
 		template<typename TypeList, int Index>
 		struct at;
 
@@ -254,48 +165,6 @@ namespace cwc {
 				Tail,
 				Index - 1
 			>::type;
-		};
-
-		template<typename TypeList, typename OldType, typename NewType, bool All>
-		struct replace;
-
-		template<typename OldType, typename NewType, bool All>
-		struct replace<empty_type_list, OldType, NewType, All> {
-			using type = empty_type_list;
-		};
-
-		template<typename Tail, typename OldType, typename NewType>
-		struct replace<type_list<OldType, Tail>, OldType, NewType, false> {
-			using type = type_list<
-				NewType,
-				Tail
-			>;
-		};
-
-		template<typename Tail, typename OldType, typename NewType>
-		struct replace<type_list<OldType, Tail>, OldType, NewType, true> {//replace_all
-			using type = type_list<
-				NewType,
-				typename replace<
-					Tail,
-					OldType,
-					NewType,
-					true
-				>::type
-			>;
-		};
-
-		template<typename Head, typename Tail, typename OldType, typename NewType, bool All>
-		struct replace<type_list<Head, Tail>, OldType, NewType, All> {
-			using type = type_list<
-				Head,
-				typename replace<
-					Tail,
-					OldType,
-					NewType,
-					All
-				>::type
-			>;
 		};
 	}
 }

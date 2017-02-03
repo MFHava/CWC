@@ -9,7 +9,6 @@
 #endif
 
 #pragma once
-#include <initializer_list>
 
 namespace cwc {
 	namespace internal {//emulate C++17-features
@@ -37,20 +36,7 @@ namespace cwc {
 	//! @tparam Type type of the referenced array
 	template<typename Type>
 	struct array_ref final {
-		static_assert(!internal::is_component<Type>::value && !internal::is_interface<Type>::value, "array_ref only supports simple types");
 		static_assert(std::is_standard_layout<Type>::value, "array_ref only supports standard layout types");
-
-		using value_type             = Type;
-		using size_type              = std::size_t;
-		using difference_type        = std::ptrdiff_t;
-		using reference              = value_type &;
-		using const_reference        = const value_type &;
-		using pointer                = Type *;
-		using const_pointer          = typename std::add_const<Type>::type *;
-		using iterator               = pointer;
-		using const_iterator         = const_pointer;
-		using reverse_iterator       = std::reverse_iterator<iterator>;
-		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 		array_ref() =default;
 		array_ref(const array_ref & other) =default;
@@ -75,58 +61,76 @@ namespace cwc {
 		//! @brief construct array_ref from ContiguousRange
 		//! @tparam ContiguousRange range type that fulfills the ContiguousRange-requirements
 		//! @param[in] range range to reference
-		//! @attention as array_ref is non-owning: never pass a temporary as it will result in a dangling reference
 		template<typename ContiguousRange>
 		array_ref(ContiguousRange & range) noexcept : array_ref{internal::data(range), internal::size(range)} {}
 
-		auto data()       noexcept ->       pointer { return first; }
-		auto data() const noexcept -> const_pointer { return first; }
+		template<typename ContiguousRange>
+		array_ref(const ContiguousRange && range) =delete;
 
-		auto size() const noexcept -> size_type { return last - first; }
+		template<typename OtherType>
+		array_ref(const array_ref<OtherType> & other) noexcept : first{other.begin()}, last{other.end()} {}
+
+		template<typename OtherType>
+		array_ref(array_ref<OtherType> && other) noexcept : first{other.begin()}, last{other.end()} {}
+
+		template<typename OtherType>
+		auto operator=(const array_ref<OtherType> & other) noexcept -> array_ref & {
+			first = other.begin();
+			last = other.end();
+			return *this;
+		}
+
+		template<typename OtherType>
+		auto operator=(array_ref<OtherType> && other) noexcept -> array_ref & {
+			first = other.begin();
+			last = other.end();
+			return *this;
+		}
+
+		auto data()       noexcept ->       Type * { return first; }
+		auto data() const noexcept -> const Type * { return first; }
+
+		auto size()  const noexcept -> std::size_t { return last - first; }
 		auto empty() const noexcept -> bool { return size() == 0; }
 
-		auto front()       noexcept ->       reference { return *begin(); }
-		auto front() const noexcept -> const_reference { return *begin(); }
-		auto back()        noexcept ->       iterator { return *--end(); }
-		auto back() const  noexcept -> const_iterator { return *--end(); }
+		auto operator[](std::size_t index)       noexcept ->       Type & { return first[index]; }
+		auto operator[](std::size_t index) const noexcept -> const Type & { return first[index]; }
 
-		auto operator[](size_type index)       noexcept ->       reference { return first[index]; }
-		auto operator[](size_type index) const noexcept -> const_reference { return first[index]; }
+		auto at(std::size_t index)       ->       Type & { return validate_index(index), (*this)[index]; }
+		auto at(std::size_t index) const -> const Type & { return validate_index(index), (*this)[index]; }
 
-		auto at(size_type index)       ->       reference { return validate_index(index), (*this)[index]; }
-		auto at(size_type index) const -> const_reference { return validate_index(index), (*this)[index]; }
+		auto begin()        noexcept ->       Type * { return first; }
+		auto begin()  const noexcept -> const Type * { return first; }
+		auto cbegin() const noexcept -> const Type * { return first; }
+		auto end()          noexcept ->       Type * { return last; }
+		auto end()    const noexcept -> const Type * { return last; }
+		auto cend()   const noexcept -> const Type * { return last; }
 
-		auto begin()        noexcept ->       iterator { return first; }
-		auto begin()  const noexcept -> const_iterator { return first; }
-		auto cbegin() const noexcept -> const_iterator { return first; }
-		auto end()          noexcept ->       iterator { return last; }
-		auto end()    const noexcept -> const_iterator { return last; }
-		auto cend()   const noexcept -> const_iterator { return last; }
-
-		auto rbegin()        noexcept ->       reverse_iterator { return end(); }
-		auto rbegin()  const noexcept -> const_reverse_iterator { return end(); }
-		auto crbegin() const noexcept -> const_reverse_iterator { return cend(); }
-		auto rend()          noexcept ->       reverse_iterator { return begin(); }
-		auto rend()    const noexcept -> const_reverse_iterator { return begin(); }
-		auto crend()   const noexcept -> const_reverse_iterator { return cbegin(); }
+		auto rbegin()        noexcept -> std::reverse_iterator<      Type *> { return std::reverse_iterator<      Type *>(end()); }
+		auto rbegin()  const noexcept -> std::reverse_iterator<const Type *> { return std::reverse_iterator<const Type *>(end()); }
+		auto crbegin() const noexcept -> std::reverse_iterator<const Type *> { return std::reverse_iterator<const Type *>(cend()); }
+		auto rend()          noexcept -> std::reverse_iterator<      Type *> { return std::reverse_iterator<      Type *>(begin()); }
+		auto rend()    const noexcept -> std::reverse_iterator<const Type *> { return std::reverse_iterator<const Type *>(begin()); }
+		auto crend()   const noexcept -> std::reverse_iterator<const Type *> { return std::reverse_iterator<const Type *>(cbegin()); }
 
 		void swap(array_ref & other) noexcept {
 			using std::swap;
 			swap(first, other.first);
 			swap(last,  other.last);
 		}
-	private:
-		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 
-		pointer first{nullptr}, last{nullptr};
+		//TODO: switch to value comparison?! (=> generate comparison operators for all structs automagically?!)
+		friend
+		auto operator==(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return (lhs.begin() == rhs.begin()) && (lhs.end() == rhs.end()); }
+
+		friend
+		auto operator!=(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return !(lhs == rhs); }
+	private:
+		void validate_index(std::size_t index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
+
+		Type * first{nullptr}, * last{nullptr};
 	};
 	CWC_PACK_END
-
-	template<typename Type>
-	auto operator==(const array_ref<Type> & lhs, const array_ref<Type> & rhs) noexcept -> bool { return (lhs.begin() == rhs.begin()) && (lhs.end() == rhs.end()); }
-
-	template<typename Type>
-	auto operator!=(const array_ref<Type> & lhs, const array_ref<Type> & rhs) noexcept -> bool { return !(lhs == rhs); }
 
 	template<typename Type>
 	void swap(array_ref<Type> & lhs, array_ref<Type> & rhs) noexcept { lhs.swap(rhs); }

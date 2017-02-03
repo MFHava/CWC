@@ -16,7 +16,7 @@ namespace cwc {
 		struct make_base_list {
 			using type = typename TL::unique<
 				typename TL::make_type_list<
-					component::cwc_interface,
+					component,
 					Types...
 				>::type
 			>::type;

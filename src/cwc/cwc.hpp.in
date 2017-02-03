@@ -5,9 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#define CWC_VERSION_MAJOR @CWC_VERSION_MAJOR@
-#define CWC_VERSION_MINOR @CWC_VERSION_MINOR@
-#define CWC_VERSION_PATCH @CWC_VERSION_PATCH@
+#define CWC_VERSION "@CWC_VERSION@"
 #define CWC_CALL @CWC_CALL@
 #define CWC_EXPORT @CWC_EXPORT@
 
@@ -32,7 +30,7 @@
 	#endif
 
 	#if defined(CWC_HOST)
-		#pragma comment(lib, "cwc-@CWC_VERSION_MAJOR@.@CWC_VERSION_MINOR@.@CWC_VERSION_PATCH@-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
+		#pragma comment(lib, "cwc-@CWC_VERSION@-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
 	#endif
 
 	#undef CWC_LIB_DEBUG
@@ -41,29 +39,37 @@
 #undef CWC_DO_STRINGIFY
 #undef CWC_STRINGIFY
 
+#include <atomic>
+#include <memory>
+#include <cassert>
+#include <cstdint>
+#include <cstring>
+#include <ostream>
+#include <stdexcept>
+#include <functional>
+#include <type_traits>
+
 //! @brief public API of C++ with Components
-namespace cwc {
-	//! @brief access to the global CWC context
-	namespace this_context {}
-}
+namespace cwc {}
+
+#include "public/array_ref.hpp"
+#include "public/types.hpp"
+#include "public/optional.hpp"
+#include "public/string_view.hpp"
+#include "public/intrusive_ptr.hpp"
 
 #include "internal/type_list.hpp"
-#include "public/types.hpp"
+#include "internal/make_base_list.hpp"
 #include "internal/error_code.hpp"
+#include "internal/call.hpp"
 #include "internal/default_implementation_chaining.hpp"
 #include "internal/cast_to_interface.hpp"
-#include "internal/marshalling_fwd.hpp"
 #include "internal/instance_counter.hpp"
+
 #include "public/component.hpp"
-#include "internal/type_traits.hpp"
-#include "public/array_ref.hpp"
-#include "public/optional.hpp"
-#include "internal/marshalling.hpp"
-#include "internal/reference_guard.hpp"
+#include "public/enumerator.hpp"
 #include "public/config_enumerators.hpp"
-#include "internal/this_context.hpp"
-#include "internal/error_handling.hpp"
-#include "public/this_context.hpp"
-#include "internal/make_base_list.hpp"
+#include "public/context.hpp"
 #include "public/default_implementations.hpp"
-#include "public/make_empty.hpp"
+
+#include "internal/error_handling.hpp"

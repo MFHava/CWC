@@ -4,131 +4,68 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include <sstream>
-#include "line.hpp"
 #include "nodes.hpp"
 
 namespace cwcc {
-	auto operator<<(std::ostream & out, const enum_::member & self) -> std::ostream & {
-		for(const auto & doc : self.lines) out << "\t\t" << doc << '\n';
-		out << "\t\t" << self.name;
-		return out;
+	auto operator<<(std::ostream & os, const enum_::member & self) -> std::ostream & {
+		for(const auto & doc : self.lines) os << "\t\t" << doc << '\n';
+		return os << "\t\t" << self.name << ',';
 	}
 
-	auto operator<<(std::ostream & out, const enum_ & self) -> std::ostream & {
+	auto operator<<(std::ostream & os, const enum_ & self) -> std::ostream & {
 		if(self.members.size() > self.max_size) throw std::length_error{"ERROR: enums only support up to " + std::to_string(self.max_size) + " members"};
 		if(self.members.empty()) throw std::logic_error{"ERROR: empty enums are not supported"};
-		for(const auto & doc : self.lines) out << '\t' << doc << '\n';
-		out << "\tenum class " << self.name << " : ::cwc::uint8 {\n";
-		auto it = std::begin(self.members);
-		for(; it != std::end(self.members); ++it) {
-			out << *it;
-			if(it + 1 != std::end(self.members)) out << ',';
-			out << '\n';
-		}
-		out << "\t};";
-		return out;
+		for(const auto & doc : self.lines) os << '\t' << doc << '\n';
+		os << "\tenum class " << self.name << " : ::cwc::uint8 {\n";
+		for(const auto & e : self.members) os << e << '\n';
+		return os << "\t};";
 	}
 
-	auto operator<<(std::ostream & out, const struct_::member & self) -> std::ostream & {
-		out << self.type;
-		for(const auto & s : self.sizes) out << '[' << s << ']';
-		out << ' ' << self.fields[0];
-		for(std::size_t i{1}; i < self.fields.size(); ++i) out << ", " << self.fields[i];
-		out << ';';
-		return out;
+	auto operator<<(std::ostream & os, const struct_::member & self) -> std::ostream & {
+		os << self.type << ' ' << self.fields[0];
+		for(std::size_t i{1}; i < self.fields.size(); ++i) os << ", " << self.fields[i];
+		return os << ';';
 	}
 
-	auto operator<<(std::ostream & out, const struct_ & self) -> std::ostream & {
-		out << "\tCWC_PACK_BEGIN\n";
-		for(const auto & doc : self.lines) out << '\t' << doc << '\n';
-		out << "\tstruct " << self.name << " {\n";
-		const auto indent = self.union_ ? 3 : 2;
-		if(self.union_) {
-			enum_ e;
-			e.name = "cwc_field";
-			e.members.push_back({{}, "cwc_no_active_field"});
-			for(const auto & member : self.members)
-				for(const auto & m : member.fields)
-					e.members.push_back({{}, m});
-			std::stringstream ss;
-			ss << e;
-			ss.seekp(-1, std::ios::cur);
-			ss << " cwc_discriminator;\n";
-			std::copy(std::istream_iterator<line>{ss}, std::istream_iterator<line>{}, std::ostream_iterator<std::string>{out << '\t', "\n\t"});
-			out << "\tunion {\n";
-		}
-
+	auto operator<<(std::ostream & os, const struct_ & self) -> std::ostream & {
+		os << "\tCWC_PACK_BEGIN\n";
+		for(const auto & doc : self.lines) os << '\t' << doc << '\n';
+		os << "\tstruct " << self.name << " {\n";
 		for(auto & member : self.members) {
-			for(const auto & doc : member.lines) {
-				std::fill_n(std::ostream_iterator<char>{out}, indent, '\t');
-				out << doc << '\n';
-			}
-			std::fill_n(std::ostream_iterator<char>{out}, indent, '\t');
-			out << member << '\n';
+			for(const auto & doc : member.lines) os << "\t\t" << doc << '\n';
+			os << "\t\t" << member << '\n';
 		}
-
-		if(self.union_) out << "\t\t};\n";
-		out << "\t};\n"
-			"\tCWC_PACK_END\n";
-
-		if(!self.members.empty()) out << '\n';
-		for(const auto & member : self.members)
-			for(const auto & m : member.fields)
-				out << "\tstatic_assert(!::cwc::internal::is_component<std::remove_all_extents<decltype(" << self.name << "::" << m << ")>::type>::value, \"Type of '" << self.name << "::" << m << "' is incompatible with the requirements of portable structs or unions\");\n";
-		if(!self.members.empty()) out << '\n';
-		//TODO: generates one linebreak too much!
-		return out;
+		for(const auto & member : self.members) os << "\t\tstatic_assert(std::is_standard_layout<" << member.type << ">::value, \"Type '" << member.type << "' is incompatible with the requirements of portable structs\");\n";
+		return os << "\t};\n"
+		             "\tCWC_PACK_END";
 	}
 
-	auto operator<<(std::ostream & out, const typedef_ & self) -> std::ostream & {
-		for(const auto & doc : self.lines) out << '\t' << doc << '\n';
-		out << "\tusing " << self.name << " = ";
-		if(self.attribute)
-			switch(*self.attribute) {
-				case typedef_::attributes::array:    out << "cwc::array_ref<"; break;
-				case typedef_::attributes::optional: out << "cwc::optional<";  break;
-				default: throw std::runtime_error{"invalid attribute"};
-			}
-		out << self.mutable_ << self.type;
-		if(self.attribute) out << '>';
-		out << ';';
-		if(!self.attribute) out << "\n\tstatic_assert(std::is_standard_layout<" << self.type << ">::value, \"Type '" << self.type << "' is incompatible with the requirements for portable type definitions\");";
-		return out;
+	auto operator<<(std::ostream & os, const typedef_ & self) -> std::ostream & {
+		for(const auto & doc : self.lines) os << '\t' << doc << '\n';
+		return os << "\tusing " << self.name << " = " << self.type << ";\n"
+		             "\tstatic_assert(std::is_standard_layout<" << self.type << ">::value, \"Type '" << self.type << "' is incompatible with the requirements for portable type definitions\");";//TODO: is it safe to generate this every time?!
 	}
 
 	auto component::factory() const -> interface {
 		interface p;
-		returns ret;
 		p.name = "cwc_factory";
+		intrusive_ptr ret;
+		ret.mutable_ = true;
+		ret.type = untemplated_type{"::cwc::component"};
 
 		auto transform = [&](const constructor & c) {
 			interface::method m;
 			m.lines = c.lines;
-			m.name = "operator()";
+			m.name = "create";
 			m.in = c.params;
 			m.out = ret;
-			m.out->mutable_ = true;
-			m.out->type = "::cwc::component";
-			p.members.push_back(m);
+			p.methods.push_back(m);
 		};
 
 		if(members.empty()) transform(constructor());
 		else for(const auto & member : members)
 			transform(member);
 
-		return p;
-	}
-
-	delegate::operator interface() const {
-		interface p;
-		p.name = name;
-		interface::method m;
-		m.lines = lines;
-		m.name = "operator()";
-		m.mutable_ = mutable_;
-		m.in = in;
-		p.members.push_back(m);
 		return p;
 	}
 }

@@ -27,10 +27,8 @@
 
 namespace cwcc {
 	namespace {
-		using definition_t = cwc::ascii_string(CWC_CALL *)();
-
 		const auto dummy = [] {
-			cwc::this_context::init(cwc::this_context::init_mode::string, "");//empty init
+			cwc::init(cwc::init_mode::string, "");//empty init
 			return 0;
 		}();
 	}
@@ -45,12 +43,14 @@ namespace cwcc {
 
 			~guard() { FreeLibrary(handle); }
 		} instance{name};
-		const auto init = reinterpret_cast<void(CWC_CALL *)(cwc::internal::context_interface *)>(GetProcAddress(instance.handle, "cwc_init"));
+		const auto init = reinterpret_cast<void(CWC_CALL *)(cwc::intrusive_ptr<cwc::context>)>(GetProcAddress(instance.handle, "cwc_init"));
 		if(!init) throw std::logic_error{"could not find entry point 'cwc_init' in bundle \"" + name + '"'};
-		init(&cwc::internal::this_context());
+		init(cwc::this_context());
 		
-		const auto definitionPtr = reinterpret_cast<definition_t>(GetProcAddress(instance.handle, "cwc_reflect"));
+		const auto definitionPtr = reinterpret_cast<void(CWC_CALL *)(cwc::string_view *)>(GetProcAddress(instance.handle, "cwc_reflect"));
 		if(!definitionPtr) throw std::logic_error{"could not find entry point 'cwc_reflect' in bundle \"" + name + '"'};
-		definition_ = definitionPtr();
+		cwc::string_view definition;
+		definitionPtr(&definition);
+		definition_ = definition.c_str();
 	}
 }

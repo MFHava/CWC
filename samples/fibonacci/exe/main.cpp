@@ -4,57 +4,54 @@
 //    (See accompanying file ../../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+#include <string>
 #include <vector>
 #include <iostream>
 #include "../cwc.sample.fibonacci.cwch"
 
 int main() try {
-#if 1
-	cwc::this_context::init(cwc::this_context::init_mode::string,
-		"[cwc.mapping]\n"
-		"cwc::sample::fibonacci::generator = [ids]\n"
-		"[ids]\n"
-		"ID = sample-fibonacci-dll.dll\n"
-	);
-	cwc::sample::fibonacci::generator fibonacci{cwc::plugin_id{"ID"}};
-	assert(cwc::this_context::plugin_available<cwc::sample::fibonacci::generator>(cwc::plugin_id{"ID"}));
-	assert(!cwc::this_context::plugin_available<cwc::sample::fibonacci::generator>(cwc::plugin_id{"XID"}));
-#else
-
-	cwc::this_context::init(cwc::this_context::init_mode::string,
+	cwc::init(cwc::init_mode::string,
 		"[cwc.mapping]\n"
 		"cwc::sample::fibonacci::generator = sample-fibonacci-dll.dll"
 	);
+	const auto context = cwc::this_context();
 
-	cwc::sample::fibonacci::generator fibonacci;
-#endif
-	for(auto t = cwc::this_context::config(); !t.end(); t.next()) {
-		std::cout << t.get() << std::endl;
-		for(auto tt = cwc::this_context::config(t.get()); !tt.end(); tt.next()) {
-			const auto & cur = tt.get();
+	std::cout << "CWC " << context->version() << std::endl;
+#if 0
+	for(auto section : cwc::make_enumerator_range(context->config())) {
+		std::cout << section.name << std::endl;
+		for(const auto & entry : cwc::make_enumerator_range(std::move(section.enumerator))) {
+			std::cout << entry.key << " = " << entry.value << std::endl;
+		}
+		std::cout << std::endl;
+	}
+#else
+	for(auto t = context->config(); !t->end(); t->next()) {
+		auto section = t->get();
+		std::cout << section.name << std::endl;
+		for(auto tt = section.enumerator; !tt->end(); tt->next()) {
+			const auto & cur = tt->get();
 			std::cout << cur.key << " = " << cur.value << std::endl;
 		}
 		std::cout << std::endl;
 	}
+#endif
+
+	auto factory = cwc::this_context()->factory<cwc::sample::fibonacci::generator>();
+	const auto dummy = factory->create(0);
+	const auto generator = factory->create()->intrusive_from_this<cwc::sample::fibonacci::sequence>();
+	//auto generator = cwc::intrusive_ptr_cast<cwc::sample::fibonacci::sequence>(factory->create());
+	//cwc::intrusive_ptr<cwc::sample::fibonacci::sequence> generator{factory->create()};
 
 	std::cout << "calculate fibonacci no: " << std::flush;
 	std::string tmp;
 	std::getline(std::cin, tmp);
-	const auto number = std::atoi(tmp.c_str());
-
-	try {
-		std::vector<unsigned char> inputs{(unsigned char)number};
-		std::vector<unsigned long long> outputs(1);
-		fibonacci(inputs, outputs);
-		std::cout << "result: " << outputs[0] << std::endl;
-
-	} catch(const std::exception & exc) {
-		std::cerr << exc.what() << std::endl;
-	}
-
+	const auto result = generator->compute(std::atoi(tmp.c_str()));
+	std::cout << "result: " << result << std::endl;
+	
 	std::cin.get(); std::cin.get();
 } catch(const std::exception & exc) {
-	std::cerr << "ERROR: " << exc.what() << std::endl;
+	std::cerr << "ERROR(" << typeid(exc).name() << "): " << exc.what() << std::endl;
 	std::cin.get(); std::cin.get();
 } catch(...) {
 	std::cerr << "ERROR: <non-exception thrown>" << std::endl;

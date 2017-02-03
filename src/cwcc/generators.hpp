@@ -11,9 +11,7 @@
 namespace cwcc {
 	struct bundle;
 
-	void generate_header(std::ostream & out, const bundle & b);
-	void generate_stub(std::ostream & out, const bundle & b);
-	void generate_source(std::istream & in, std::ostream & out, const bundle & b);
-
-	auto base_file_name(std::string s) -> std::string;
+	void generate_header(std::ostream & os, const bundle & b);
+	void generate_stub(std::ostream & os, const bundle & b);
+	void generate_source(std::istream & is, std::ostream & os, const bundle & b);
 }

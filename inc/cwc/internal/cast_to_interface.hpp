@@ -9,7 +9,6 @@
 #endif
 
 #pragma once
-#include <typeinfo>
 
 namespace cwc {
 	namespace internal {
@@ -53,20 +52,26 @@ namespace cwc {
 
 		template<typename Self, typename TypeList>
 		struct cast_to_interface final {
-			static void cast(Self * self, const uuid & id, void ** result) {
+			enum { IsConst = std::is_const<Self>::value };
+			using ResultType = typename std::conditional<IsConst, const void, void>::type;
+
+			static void cast(Self * self, const uuid & id, ResultType ** result) {
 				using Type = typename TypeList::head;
 				if(id != Type::cwc_uuid()) return cast_to_interface<Self, typename TypeList::tail>::cast(self, id, result);
 				using Cast = typename interface_cast<Self, Type>::type;
 				static_assert(std::is_base_of<Type, Cast>::value, "replacement type is not compatible with target type");
-				auto ptr = static_cast<Cast *>(self);
-				validate(ptr->cwc$component$new$0());
+				auto ptr = static_cast<typename std::conditional<IsConst, const Cast, Cast>::type *>(self);
+				ptr->cwc$component$new$0();
 				*result = ptr;
 			}
 		};
 
 		template<typename Self>
 		struct cast_to_interface<Self, TL::empty_type_list> final {
-			static void cast(Self *, const uuid &, void **) { throw std::bad_cast(); }
+			enum { IsConst = std::is_const<Self>::value };
+			using ResultType = typename std::conditional<IsConst, const void, void>::type;
+
+			static void cast(Self *, const uuid &, ResultType **) { throw std::bad_cast(); }
 		};
 	}
 }

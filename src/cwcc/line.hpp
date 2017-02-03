@@ -11,9 +11,9 @@
 namespace cwcc {
 	struct line : std::string {
 		friend
-		auto operator>>(std::istream & in, line & l) -> std::istream & {
-			std::getline(in, l);
-			return in;
+		auto operator>>(std::istream & is, line & l) -> std::istream & {
+			std::getline(is, l);
+			return is;
 		}
 	};
 }

@@ -9,7 +9,6 @@
 #endif
 
 #pragma once
-#include <cstdint>
 
 namespace cwc {
 	//! @defgroup cwc_abi_types Fundamental ABI types
@@ -28,20 +27,9 @@ namespace cwc {
 	using boolean = uint8;//!< @brief portable boolean (as bool lacks size guarantee)
 	//! @}
 
-	using ascii_string = const ascii *;//!< @brief a basic string as array of ascii, end is marked via '\0'
-
-	//! @brief versioning information of context
-	CWC_PACK_BEGIN
-	struct version {
-		uint16 major;//!< @brief major version
-		uint16 minor;//!< @brief minor version
-		uint16 patch;//!< @brief patch version
-	};
-	CWC_PACK_END
-
 	//! @brief universally unique identifier
 	CWC_PACK_BEGIN
-	struct uuid {
+	struct uuid final {
 		uint8 data[16];//!< @brief plain storage of 128bit UUID
 	};
 	CWC_PACK_END
@@ -65,12 +53,4 @@ namespace cwc {
 	//! @returns true iff the two uuids are not equal
 	inline
 	auto operator!=(const uuid & lhs, const uuid & rhs) -> bool { return !(lhs == rhs); }
-
-	//! @brief marker type to be used when creating plugin-components
-	//! @attention plugin_id is non-owning!
-	CWC_PACK_BEGIN
-	struct plugin_id {
-		ascii_string str;
-	};
-	CWC_PACK_END
 }

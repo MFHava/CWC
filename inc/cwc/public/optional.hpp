@@ -9,7 +9,6 @@
 #endif
 
 #pragma once
-#include <cassert>
 
 namespace cwc {
 	namespace internal {
@@ -26,10 +25,7 @@ namespace cwc {
 	//! @note the design of this class is derived from C++17
 	template<typename Type>
 	struct optional final {
-		static_assert(!internal::is_component<Type>::value && !internal::is_interface<Type>::value, "optional only supports simple types");
 		static_assert(std::is_standard_layout<Type>::value, "optional only supports standard layout types");
-
-		using value_type = Type;
 
 		//! @brief construct an empty optional
 		optional() noexcept =default;
@@ -117,125 +113,125 @@ namespace cwc {
 			(**this).~Type();
 			initialized = false;
 		}
+
+		friend
+		auto operator==(const optional & lhs, const optional & rhs) -> bool {
+			if(static_cast<bool>(lhs) != static_cast<bool>(rhs)) return false;
+			if(static_cast<bool>(lhs) == false) return true;
+			return *lhs == *rhs;
+		}
+
+		friend
+		auto operator!=(const optional & lhs, const optional & rhs) -> bool {
+			if(static_cast<bool>(lhs) != static_cast<bool>(rhs)) return true;
+			if(static_cast<bool>(lhs) == false) return false;
+			return *lhs != *rhs;
+		}
+
+		friend
+		auto operator< (const optional & lhs, const optional & rhs) -> bool {
+			if(static_cast<bool>(rhs) == false) return false;
+			if(static_cast<bool>(lhs) == false) return true;
+			return *lhs < *rhs;
+		}
+
+		friend
+		auto operator<=(const optional & lhs, const optional & rhs) -> bool {
+			if(static_cast<bool>(lhs) == false) return true;
+			if(static_cast<bool>(rhs) == false) return false;
+			return *lhs <= *rhs;
+		}
+
+		friend
+		auto operator> (const optional & lhs, const optional & rhs) -> bool {
+			if(static_cast<bool>(lhs) == false) return false;
+			if(static_cast<bool>(rhs) == false) return true;
+			return *lhs > *rhs;
+		}
+
+		friend
+		auto operator>=(const optional & lhs, const optional & rhs) -> bool {
+			if(static_cast<bool>(rhs) == false) return true;
+			if(static_cast<bool>(lhs) == false) return false;
+			return *lhs >= *rhs;
+		}
+
+		friend
+		auto operator==(const optional & opt, internal::nullopt_t) noexcept -> bool { return !opt; }
+
+		friend
+		auto operator==(internal::nullopt_t, const optional & opt) noexcept -> bool { return !opt; }
+
+		friend
+		auto operator!=(const optional & opt, internal::nullopt_t) noexcept -> bool { return opt; }
+
+		friend
+		auto operator!=(internal::nullopt_t, const optional & opt) noexcept -> bool { return opt; }
+
+		friend
+		auto operator< (const optional & opt, internal::nullopt_t) noexcept -> bool { return false; }
+
+		friend
+		auto operator< (internal::nullopt_t, const optional & opt) noexcept -> bool { return opt; }
+
+		friend
+		auto operator<=(const optional & opt, internal::nullopt_t) noexcept -> bool { return !opt; }
+
+		friend
+		auto operator<=(internal::nullopt_t, const optional & opt) noexcept -> bool { return true; }
+
+		friend
+		auto operator> (const optional & opt, internal::nullopt_t) noexcept -> bool { return opt; }
+
+		friend
+		auto operator> (internal::nullopt_t, const optional & opt) noexcept -> bool { return false; }
+
+		friend
+		auto operator>=(const optional & opt, internal::nullopt_t) noexcept -> bool { return true; }
+
+		friend
+		auto operator>=(internal::nullopt_t, const optional & opt) noexcept -> bool { return !opt; }
+
+		friend
+		auto operator==(const optional & opt, const Type & value) -> bool { return opt ? *opt == value : false; }
+
+		friend
+		auto operator==(const Type & value, const optional & opt) -> bool { return opt ? value == *opt : false; }
+
+		friend
+		auto operator!=(const optional & opt, const Type & value) -> bool { return opt ? *opt != value : true; }
+
+		friend
+		auto operator!=(const Type & value, const optional & opt) -> bool { return opt ? value != *opt : true; }
+
+		friend
+		auto operator< (const optional & opt, const Type & value) -> bool { return opt ? *opt < value : true; }
+
+		friend
+		auto operator< (const Type & value, const optional & opt) -> bool { return opt ? value < *opt : false; }
+
+		friend
+		auto operator<=(const optional & opt, const Type & value) -> bool { return opt ? *opt <= value : true; }
+
+		friend
+		auto operator<=(const Type & value, const optional & opt) -> bool { return opt ? value <= *opt : false; }
+
+		friend
+		auto operator> (const optional & opt, const Type & value) -> bool { return opt ? *opt > value : false; }
+
+		friend
+		auto operator> (const Type & value, const optional & opt) -> bool { return opt ? value > *opt : true; }
+
+		friend
+		auto operator>=(const optional & opt, const Type & value) -> bool { return opt ? *opt >= value : false; }
+
+		friend
+		auto operator>=(const Type & value, const optional & opt) -> bool { return opt ? value >= *opt : true; }
 	private:
 		uint8 data[sizeof(Type)];
 		boolean initialized{false};
 	};
 	CWC_PACK_END
-
-	template<typename Type>
-	auto operator==(const optional<Type> & lhs, const optional<Type> & rhs) -> bool {
-		if(static_cast<bool>(lhs) != static_cast<bool>(rhs)) return false;
-		if(static_cast<bool>(lhs) == false) return true;
-		return *lhs == *rhs;
-	}
-
-	template<typename Type>
-	auto operator!=(const optional<Type> & lhs, const optional<Type> & rhs) -> bool {
-		if(static_cast<bool>(lhs) != static_cast<bool>(rhs)) return true;
-		if(static_cast<bool>(lhs) == false) return false;
-		return *lhs != *rhs;
-	}
-
-	template<typename Type>
-	auto operator< (const optional<Type> & lhs, const optional<Type> & rhs) -> bool {
-		if(static_cast<bool>(rhs) == false) return false;
-		if(static_cast<bool>(lhs) == false) return true;
-		return *lhs < *rhs;
-	}
-
-	template<typename Type>
-	auto operator<=(const optional<Type> & lhs, const optional<Type> & rhs) -> bool {
-		if(static_cast<bool>(lhs) == false) return true;
-		if(static_cast<bool>(rhs) == false) return false;
-		return *lhs <= *rhs;
-	}
-
-	template<typename Type>
-	auto operator> (const optional<Type> & lhs, const optional<Type> & rhs) -> bool {
-		if(static_cast<bool>(lhs) == false) return false;
-		if(static_cast<bool>(rhs) == false) return true;
-		return *lhs > *rhs;
-	}
-
-	template<typename Type>
-	auto operator>=(const optional<Type> & lhs, const optional<Type> & rhs) -> bool {
-		if(static_cast<bool>(rhs) == false) return true;
-		if(static_cast<bool>(lhs) == false) return false;
-		return *lhs >= *rhs;
-	}
-
-	template<typename Type>
-	auto operator==(const optional<Type> & opt, internal::nullopt_t) noexcept -> bool { return !opt; }
-
-	template<typename Type>
-	auto operator==(internal::nullopt_t, const optional<Type> & opt) noexcept -> bool { return !opt; }
-
-	template<typename Type>
-	auto operator!=(const optional<Type> & opt, internal::nullopt_t) noexcept -> bool { return opt; }
-
-	template<typename Type>
-	auto operator!=(internal::nullopt_t, const optional<Type> & opt) noexcept -> bool { return opt; }
-
-	template<typename Type>
-	auto operator< (const optional<Type> & opt, internal::nullopt_t) noexcept -> bool { return false; }
-
-	template<typename Type>
-	auto operator< (internal::nullopt_t, const optional<Type> & opt) noexcept -> bool { return opt; }
-
-	template<typename Type>
-	auto operator<=(const optional<Type> & opt, internal::nullopt_t) noexcept -> bool { return !opt; }
-
-	template<typename Type>
-	auto operator<=(internal::nullopt_t, const optional<Type> & opt) noexcept -> bool { return true; }
-
-	template<typename Type>
-	auto operator> (const optional<Type> & opt, internal::nullopt_t) noexcept -> bool { return opt; }
-
-	template<typename Type>
-	auto operator> (internal::nullopt_t, const optional<Type> & opt) noexcept -> bool { return false; }
-
-	template<typename Type>
-	auto operator>=(const optional<Type> & opt, internal::nullopt_t) noexcept -> bool { return true; }
-
-	template<typename Type>
-	auto operator>=(internal::nullopt_t, const optional<Type> & opt) noexcept -> bool { return !opt; }
-
-	template<typename Type>
-	auto operator==(const optional<Type> & opt, const Type & value) -> bool { return opt ? *opt == value : false; }
-
-	template<typename Type>
-	auto operator==(const Type & value, const optional<Type> & opt) -> bool { return opt ? value == *opt : false; }
-
-	template<typename Type>
-	auto operator!=(const optional<Type> & opt, const Type & value) -> bool { return opt ? *opt != value : true; }
-
-	template<typename Type>
-	auto operator!=(const Type & value, const optional<Type> & opt) -> bool { return opt ? value != *opt : true; }
-
-	template<typename Type>
-	auto operator< (const optional<Type> & opt, const Type & value) -> bool { return opt ? *opt < value : true; }
-
-	template<typename Type>
-	auto operator< (const Type & value, const optional<Type> & opt) -> bool { return opt ? value < *opt : false; }
-
-	template<typename Type>
-	auto operator<=(const optional<Type> & opt, const Type & value) -> bool { return opt ? *opt <= value : true; }
-
-	template<typename Type>
-	auto operator<=(const Type & value, const optional<Type> & opt) -> bool { return opt ? value <= *opt : false; }
-
-	template<typename Type>
-	auto operator> (const optional<Type> & opt, const Type & value) -> bool { return opt ? *opt > value : false; }
-
-	template<typename Type>
-	auto operator> (const Type & value, const optional<Type> & opt) -> bool { return opt ? value > *opt : true; }
-
-	template<typename Type>
-	auto operator>=(const optional<Type> & opt, const Type & value) -> bool { return opt ? *opt >= value : false; }
-
-	template<typename Type>
-	auto operator>=(const Type & value, const optional<Type> & opt) -> bool { return opt ? value >= *opt : true; }
 
 	template<typename Type>
 	void swap(optional<Type> & lhs, optional<Type> & rhs) noexcept { lhs.swap(rhs); }

@@ -21,9 +21,7 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/static)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-SET(CWC_VERSION_MAJOR 0)
-SET(CWC_VERSION_MINOR 9)
-SET(CWC_VERSION_PATCH 5)
+SET(CWC_VERSION "2.0.0-alpha")
 SET(CWC_LIB_DEBUG_POSTFIX "-debug")
 
 IF(${WIN32})#assume that all compilers on Windows are compatible with Microsoft-syntax
@@ -34,7 +32,7 @@ ELSE()#assume that all compilers on Unix (implicitly assumed) are compatible wit
 	SET(CWC_EXPORT "__attribute__((visibility(\"default\")))")
 ENDIF()
 
-SET(CWC_LIB_NAME cwc-${CWC_VERSION_MAJOR}.${CWC_VERSION_MINOR}.${CWC_VERSION_PATCH})
+SET(CWC_LIB_NAME cwc-${CWC_VERSION})
 
 IF(${MSVC})
 	IF(${MSVC_VERSION} LESS 1900)

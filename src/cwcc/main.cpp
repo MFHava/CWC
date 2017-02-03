@@ -9,6 +9,7 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 #include "nodes.hpp"
+#include "utils.hpp"
 #include "parser.hpp"
 #include "library.hpp"
 #include "disclaimer.hpp"
@@ -21,11 +22,11 @@ namespace {
 		stub
 	};
 
-	auto operator<<(std::ostream & out, const type & t) -> std::ostream & {
+	auto operator<<(std::ostream & os, const type & t) -> std::ostream & {
 		switch(t) {
-			case type::extracted: return out << "extracted";
-			case type::generated: return out << "generated";
-			case type::stub:      return out << "stub";
+			case type::extracted: return os << "extracted";
+			case type::generated: return os << "generated";
+			case type::stub:      return os << "stub";
 			default: std::terminate();
 		}
 	}
@@ -53,18 +54,18 @@ namespace {
 	template<typename WriteFunctor>
 	void conditional_write(const std::string & filename, type type, WriteFunctor functor) {
 		if(allow_write(filename, type)) {
-			std::ofstream out{filename};
-			out.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
-			functor(out);
-			out.flush();
+			std::ofstream os{filename};
+			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
+			functor(os);
+			os.flush();
 		}
 	}
 
 	void generate_files(const cwcc::bundle & bundle, std::istream & definition) {
 		const auto base_name = cwcc::base_file_name(bundle.name) + '.';
-		conditional_write(base_name + "cwch", type::generated, [&](std::ostream & out) { cwcc::generate_header(out, bundle); });
-		conditional_write(base_name + "cwc",  type::generated, [&](std::ostream & out) { cwcc::generate_source(definition, out, bundle); });
-		conditional_write(base_name + "h",    type::stub,      [&](std::ostream & out) { cwcc::generate_stub(out, bundle); });
+		conditional_write(base_name + "cwch", type::generated, [&](std::ostream & os) { cwcc::generate_header(os, bundle); });
+		conditional_write(base_name + "cwc",  type::generated, [&](std::ostream & os) { cwcc::generate_source(definition, os, bundle); });
+		conditional_write(base_name + "h",    type::stub,      [&](std::ostream & os) { cwcc::generate_stub(os, bundle); });
 	}
 
 	void reflect(const char * filename) {
@@ -74,7 +75,7 @@ namespace {
 		in.seekg(0).clear();
 		const auto base_name = cwcc::base_file_name(bundle.name) + '.';
 
-		conditional_write(base_name + "bdl",  type::extracted, [&](std::ostream & out) { out << lib.definition(); });
+		conditional_write(base_name + "bdl",  type::extracted, [&](std::ostream & os) { os << lib.definition(); });
 		generate_files(bundle, in);
 	}
 

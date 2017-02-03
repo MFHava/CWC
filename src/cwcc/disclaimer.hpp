@@ -9,6 +9,6 @@
 #include "generators.hpp"
 
 namespace cwcc {
-	void program_disclaimer(std::ostream & out);
-	void file_disclaimer(std::ostream & out, bool modifiable);
+	void program_disclaimer(std::ostream & os);
+	void file_disclaimer(std::ostream & os, bool modifiable);
 }

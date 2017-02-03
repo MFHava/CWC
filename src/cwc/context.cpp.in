@@ -46,26 +46,26 @@
 #endif
 
 namespace {
-	thread_local cwc::ascii last_message[@CWC_MAX_EXCEPTION_MESSAGE_LENGTH@];
+	thread_local cwc::ascii last_message[@CWC_MAX_EXCEPTION_MESSAGE_LENGTH@]{0};
 
-	class context_impl final : public cwc::internal::context_interface {
-		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(cwc::ascii_string, cwc::component::cwc_interface **);
+	class context_impl final : public cwc::interface_implementation<cwc::context, context_impl> {
+		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(cwc::string_view, cwc::intrusive_ptr<cwc::component> *);
 
-		using factory_map = std::unordered_map<std::string, cwc::component>;
+		using factory_map = std::unordered_map<std::string, cwc::intrusive_ptr<cwc::component>>;
 		using key_value_map = std::unordered_map<std::string, std::string>;
 		using config_map = std::unordered_map<std::string, key_value_map>;
 		using dll_map = std::unordered_map<HMODULE, factory_export_type>;
 
 		factory_map component_factories;
 		std::unordered_map<std::string, factory_map> plugin_factories;
-		const config_map config;
+		const config_map configuration;
 
 		auto load_dll(dll_map & map, const std::string & file) -> HMODULE {
 			const auto handle = LoadLibrary(file.c_str());
 			if(handle && !map.count(handle)) { 
-				if(const auto init = reinterpret_cast<void (CWC_CALL *)(context_interface *)>(GetProcAddress(handle, "cwc_init"))) {
+				if(const auto init = reinterpret_cast<void (CWC_CALL *)(cwc::intrusive_ptr<context>)>(GetProcAddress(handle, "cwc_init"))) {
 					if(const auto factory = reinterpret_cast<factory_export_type>(GetProcAddress(handle, "cwc_factory"))) {
-						init(this);
+						init(intrusive_from_this<context>());
 						map[handle] = factory;
 					} else throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + file + '"'};
 				} else throw std::logic_error{"could not find entry point 'cwc_init' in bundle \"" + file + '"'};
@@ -73,21 +73,21 @@ namespace {
 			return handle;
 		}
 
-		auto create_factory(factory_export_type factory, const std::string & file, const std::string & fqn) -> cwc::component {
-			cwc::component::cwc_interface * ptr{nullptr};
-			if(factory(cwc::internal::to_abi(fqn.c_str()), cwc::internal::to_abi(ptr)) != cwc::internal::error_code::no_error) throw std::logic_error{"could not retrieve factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
+		auto create_factory(factory_export_type factory, const std::string & file, const std::string & fqn) -> cwc::intrusive_ptr<cwc::component> {
+			cwc::intrusive_ptr<cwc::component> ptr;
+			if(factory(fqn.c_str(), &ptr) != cwc::internal::error_code::no_error) throw std::logic_error{"could not retrieve factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
 			if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
 			return ptr;
 		}
 
-		auto parse_ini(std::istream & in) -> config_map {
+		auto parse_ini(std::istream & is) -> config_map {
 			config_map result;
-			if(in) {
+			if(is) {
 				const regex comment_or_whitespace{R"(\s*(?:[;#].*)?)"},
 				            section{R"(\s*(\[[^\s;#]+\])\s*(?:[;#].*)?)"},
 				            key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*(?:[;#].*)?)"};
 				std::string line, current_section;
-				while(std::getline(in, line)) {
+				while(std::getline(is, line)) {
 					smatch matched;
 					if(regex_match(line, matched, comment_or_whitespace)) {} //nothing to do here
 					else if(regex_match(line, matched, key_value_pair)) result[current_section][std::move(matched[1])] = std::move(matched[2]);
@@ -139,26 +139,23 @@ namespace {
 				++it;
 			}
 
-			auto get() const -> cwc::ascii_string {
+			auto get() const -> cwc::config_section {
 				if(end()) throw std::runtime_error{"at end"};
-				return it->first.c_str();
+				return{it->first.c_str(), cwc::make_intrusive<config_section_enumerator>(it->second)};
 			}
 		};
 
 	public:
-		using cwc_interfaces = cwc::internal::make_base_list<cwc::internal::context_interface>::type;
-		using cwc_cast_table = cwc::TL::empty_type_list;
-
-		context_impl(std::istream & in) : config{parse_ini(in)} {
+		context_impl(std::istream & is) : configuration{parse_ini(is)} {
 			key_value_map components;
 			config_map plugins;
-			const auto it = config.find("[cwc.mapping]");
-			if(it != std::end(config)) {
+			const auto it = configuration.find("[cwc.mapping]");
+			if(it != std::end(configuration)) {
 				for(const auto & mapping : it->second) {
 					if(mapping.second[0] != '[') components[mapping.first] = mapping.second;
 					else {//key maps to section
-						const auto & it = config.find(mapping.second);
-						if(it != std::end(config))
+						const auto & it = configuration.find(mapping.second);
+						if(it != std::end(configuration))
 							for(const auto & entry: it->second)
 								plugins[mapping.first].insert(entry);
 					}
@@ -170,117 +167,51 @@ namespace {
 			for(const auto & p : plugins) load_plugins(map, p.first, p.second);
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$component$new$0() const noexcept override final { return cwc::internal::error_code::no_error; }
+		auto version() const noexcept -> cwc::string_view { return CWC_VERSION; }
 
-		cwc::internal::error_code CWC_CALL cwc$component$delete$1() const noexcept override final { return cwc::internal::error_code::no_error; }
+		auto factory(cwc::string_view fqn) const noexcept -> cwc::intrusive_ptr<cwc::component> { return component_factories.at(fqn.c_str()); }
 
-		cwc::internal::error_code CWC_CALL cwc$component$as$2(const cwc::uuid id, void ** result) const noexcept override final { return cwc::internal::call_and_return_error([&] { cwc::internal::cast_to_interface<context_impl, cwc_interfaces>::cast(const_cast<context_impl *>(this), id, result); }); }
+		auto factory(cwc::string_view fqn, cwc::string_view id) const noexcept -> cwc::intrusive_ptr<cwc::component> { return plugin_factories.at(fqn.c_str()).at(id.c_str()); }
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$version$0(cwc::version * version) const noexcept override final {
-			version->major = CWC_VERSION_MAJOR;
-			version->minor = CWC_VERSION_MINOR;
-			version->patch = CWC_VERSION_PATCH;
-			return cwc::internal::error_code::no_error;
-		}
-
-		cwc::internal::error_code CWC_CALL cwc$internal$context$create$1(const cwc::ascii * const fqn, cwc::internal::abi<cwc::component>::out result) const noexcept override final {
-			return cwc::internal::call_and_return_error([&] {
-				auto tmp = component_factories.at(fqn);//TODO: unnecessary copy!
-				*result = cwc::internal::to_abi(tmp);
-			});
-		}
-
-		cwc::internal::error_code CWC_CALL cwc$internal$context$create$2(const cwc::ascii * const fqn, const cwc::plugin_id id, cwc::internal::abi<cwc::component>::out result) const noexcept override final {
-			return cwc::internal::call_and_return_error([&] {
-				auto tmp = plugin_factories.at(fqn).at(id.str);//TODO: unnecessary copy!
-				*result = cwc::internal::to_abi(tmp);
-			});
-		}
-
-		cwc::internal::error_code CWC_CALL cwc$internal$context$error$3(const cwc::ascii * const msg) const noexcept override final {
+		void error(cwc::string_view msg) const noexcept {
 			last_message[0] = '\0';
-			std::strncat(last_message, msg, sizeof(last_message) - 1);
-			return cwc::internal::error_code::no_error;//errors cannot occur
+			std::strncat(last_message, msg.c_str(), sizeof(last_message) - 1);
 		}
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$error$4(const cwc::ascii ** msg) const noexcept override final {
-			*msg = last_message;
-			return cwc::internal::error_code::no_error;//errors cannot occur
-		}
+		auto error() const noexcept -> cwc::string_view { return last_message; }
 
-		cwc::internal::error_code CWC_CALL cwc$internal$context$config$5(cwc::internal::abi<cwc::config_sections_enumerator>::out enumerator) const noexcept override final {
-			return cwc::internal::call_and_return_error([&] {
-				cwc::config_sections_enumerator tmp{new config_sections_enumerator{config}};
-				cwc::internal::from_abi(enumerator) = cwc::internal::to_abi(tmp);
-			});
-		}
-
-		cwc::internal::error_code CWC_CALL cwc$internal$context$config$6(cwc::internal::abi<const cwc::ascii_string>::in section, cwc::internal::abi<cwc::config_section_enumerator>::out enumerator) const noexcept override final {
-			return cwc::internal::call_and_return_error([&] {
-				cwc::config_section_enumerator tmp{new config_section_enumerator{config.at(section)}};
-				cwc::internal::from_abi(enumerator) = cwc::internal::to_abi(tmp);
-			});
-		}
-
-		cwc::internal::error_code CWC_CALL cwc$internal$context$config$7(const cwc::ascii * const section, const cwc::ascii * const key, const cwc::ascii ** value) const noexcept override final { return cwc::internal::call_and_return_error([&] { *value = this->config.at(section).at(key).data(); }); }
+		auto config() const noexcept -> cwc::intrusive_ptr<cwc::config_sections_enumerator> { return cwc::make_intrusive<config_sections_enumerator>(configuration); }
 	};
 
-	namespace {//TODO: this is C++14, but CWC currently only requires C++11
-		template<typename Type, typename... Args>
-		auto make_unique(Args &&... args) -> std::unique_ptr<Type> { return std::unique_ptr<Type>{new Type{std::forward<Args>(args)...}}; }
-	}
-
-	class context_handler final {
-		char storage[sizeof(context_impl)];//TODO: aligned storage?!
-		std::atomic<bool> initialized{false};
-
-		static auto prepare_input(cwc::this_context::init_mode mode, const char * str) -> std::unique_ptr<std::istream> {
-			switch(mode) {
-				case cwc::this_context::init_mode::file: {
-					std::unique_ptr<std::istream> in = /*std::*/make_unique<std::ifstream>(str);
-					if(!*in) throw std::invalid_argument{"could not open file \"" + std::string{str} +"\" for context initialization"};
-					return in;
-				}
-				case cwc::this_context::init_mode::string: return /*std::*/make_unique<std::istringstream>(str);
-				default: throw std::invalid_argument{"unknown context initialization mode"};
-			}
-		}
-
-		auto internal_get() noexcept -> context_impl & {
-			assert(initialized);
-			return *reinterpret_cast<context_impl *>(storage);
-		}
-
-	public:
-		void init(cwc::this_context::init_mode mode, const char * str) {
-			const auto in = prepare_input(mode, str);
-
-			auto expected = false;
-			if(!initialized.compare_exchange_strong(expected, true)) throw std::logic_error{"context already initialized"};
-			assert(initialized);
-
-			try { new(storage) context_impl{*in}; }
-			catch(...) {
-				initialized = false;
-				throw;
-			}
-		}
-
-		auto get() -> context_impl & {
-			if(!initialized) throw std::logic_error{"context is not initialized"};
-			return internal_get();
-		}
-
-		~context_handler() { if(initialized) internal_get().~context_impl(); }
-	} context;
+	std::atomic<bool> initialized{false};
+	cwc::intrusive_ptr<cwc::context> instance;
 }
 
 namespace cwc {
-	namespace this_context {
-		void init(init_mode mode, const char * str) { context.init(mode, str); }
+	void init(init_mode mode, const char * str) {
+		auto expected = false;
+		if(!initialized.compare_exchange_strong(expected, true)) throw std::logic_error{"context already initialized"};
+		try {
+			switch(mode) {
+				case cwc::init_mode::file: {
+					std::ifstream is{str};
+					if(!is) throw std::invalid_argument{"could not open file \"" + std::string{str} +"\" for context initialization"};
+					instance = cwc::make_intrusive<context_impl>(is);
+				} break;
+				case cwc::init_mode::string: {
+					std::istringstream is{str};
+					instance = cwc::make_intrusive<context_impl>(is);
+				} break;
+				default: throw std::invalid_argument{"unknown context initialization mode"};
+			}
+		} catch(...) {
+			initialized = false;
+			throw;
+		}
 	}
 
-	namespace internal {
-		auto this_context() -> internal::context_interface & { return context.get(); }
+	auto this_context() -> intrusive_ptr<context> {
+		if(!initialized) throw std::logic_error{"context is not initialized"};
+		return instance;
 	}
 }

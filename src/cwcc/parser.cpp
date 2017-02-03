@@ -5,6 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <unordered_set>
+//#define BOOST_SPIRIT_DEBUG
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/repository/include/qi_confix.hpp>
@@ -20,7 +21,7 @@ namespace {
 		std::string name;
 		std::vector<cwcc::param> in;
 		cwcc::mutability mutable_;
-		cwcc::returns out;
+		cwcc::templated_type out;
 
 		operator cwcc::interface::method() const {
 			cwcc::interface::method m;
@@ -83,13 +84,20 @@ namespace {
 			local_identifier   %= ascii::char_("a-zA-Z_") > *ascii::char_("a-zA-Z_0-9");
 			bundle_identifier  %= local_identifier > *(repeat(2)[ascii::char_(':')] > local_identifier);
 			global_identifier  %= repeat(2)[ascii::char_(':')] > local_identifier > repeat(2)[ascii::char_(':')] > bundle_identifier;
-			method_identifier  %= keyword["operator"] > qi::lit("()")[_val = "operator()"] | local_identifier;
 
 			new_type           %= local_identifier[phx::bind(&bundle_parser::add_new_type, this, _1)];
-			existing_type      %= local_identifier[phx::bind(&bundle_parser::validate_local_type, this, _1)] | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
+			existing_type      %= local_identifier[phx::bind(&bundle_parser::validate_local_type, this, _1)]
+			                    | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
 
-			struct_members     %= *documentation >> existing_type >> -('[' > uint_ % ',' > ']') >> local_identifier % ',' > qi::lit(';');//TODO: allow empty arrays? (=> array_ref); TODO: allow optional values?!
-			struct_            %= *documentation >> (keyword["struct"] | keyword["union"][phx::at_c<3>(_val) = true]) > new_type > '{' > +struct_members > '}';
+			templated_type     %= array_ref | optional /*TODO: | variant*/ | intrusive_ptr | untemplated_type;
+			untemplated_type   %= existing_type;
+			array_ref          %= keyword["array_ref"]     > '<' > mutable_ >> templated_type       > '>';
+			optional           %= keyword["optional"]      > '<' >             templated_type       > '>';
+			//TODO: variant            %= keyword["variant"]       > '<' >             templated_type % ',' > '>';
+			intrusive_ptr      %= keyword["intrusive_ptr"] > '<' > mutable_ >> templated_type       > '>';
+
+			struct_members     %= *documentation >> templated_type >> local_identifier % ',' > qi::lit(';');
+			struct_            %= *documentation >> keyword["struct"] > new_type > '{' > +struct_members > '}';
 
 			enum_member        %= *documentation >> local_identifier;
 			enum_              %= *documentation >> keyword["enum"] > new_type > '{' > enum_member % ',' > '}';
@@ -100,21 +108,19 @@ namespace {
 
 			constructor        %= *documentation >> keyword["constructor"] > params > ';';
 
-			void_method        %= *documentation >> keyword["void"] > method_identifier > params > mutable_;
-			auto_method        %= *documentation >> keyword["auto"] > method_identifier > params > mutable_ > returns;
+			void_method        %= *documentation >> keyword["void"] > local_identifier > params > mutable_;
+			auto_method        %= *documentation >> keyword["auto"] > local_identifier > params > mutable_ > "->" >> templated_type;
 			method             %= (void_method | auto_method) > ';';
 
-			delegate           %= *documentation >> keyword["delegate"] > new_type > params > mutable_;
+			enumerator         %= *documentation >> keyword["enumerator"] > new_type > "->" > templated_type;
 
 			mutable_           %= (keyword["mutable"] >> qi::attr(true)) | qi::attr(false);
 
 			params             %= '(' > -(param % ',') > ')';
 
-			param              %= mutable_ >> existing_type >> local_identifier;//TODO: allow array_ref here (before identifier); TODO: allow optional values?!
+			param              %= mutable_ >> templated_type >> local_identifier;
 
-			returns            %= "->" > mutable_ >> existing_type;//TODO: allow array_ref here, TODO: allow optional values?!
-
-			typedef_           %= *documentation >> keyword["using"] > new_type > '=' > mutable_ > existing_type > -( keyword["[]"][phx::at_c<4>(_val) = cwcc::typedef_::attributes::array] | keyword["?"][phx::at_c<4>(_val) = cwcc::typedef_::attributes::optional]);
+			typedef_           %= *documentation >> keyword["using"] > new_type > '=' > templated_type;
 
 			interface          %= *documentation >> keyword["interface"] > new_type > '{' >> *method > '}';
 
@@ -122,9 +128,40 @@ namespace {
 
 			documentation      %= cpp_comment;
 
-			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((export_ | component | enum_ | struct_ | interface | typedef_ | delegate) > ';') > '}';
+			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((export_ | component | enum_ | struct_ | interface | typedef_ | enumerator) > ';') > '}';
 
 			qi::on_error(start, phx::bind(error_handler, _1, _3, _2, _4));//register handler for parser errors
+
+			BOOST_SPIRIT_DEBUG_NODE(documentation);
+			BOOST_SPIRIT_DEBUG_NODE(untemplated_type);
+			BOOST_SPIRIT_DEBUG_NODE(templated_type);
+			BOOST_SPIRIT_DEBUG_NODE(array_ref);
+			BOOST_SPIRIT_DEBUG_NODE(optional);
+			/*BOOST_SPIRIT_DEBUG_NODE(variant);*/
+			BOOST_SPIRIT_DEBUG_NODE(intrusive_ptr);
+			BOOST_SPIRIT_DEBUG_NODE(constructor);
+			BOOST_SPIRIT_DEBUG_NODE(mutable_);
+			BOOST_SPIRIT_DEBUG_NODE(interface);
+			BOOST_SPIRIT_DEBUG_NODE(params);
+			BOOST_SPIRIT_DEBUG_NODE(param);
+			BOOST_SPIRIT_DEBUG_NODE(method);
+			BOOST_SPIRIT_DEBUG_NODE(auto_method);
+			BOOST_SPIRIT_DEBUG_NODE(void_method);
+			BOOST_SPIRIT_DEBUG_NODE(enumerator);
+			BOOST_SPIRIT_DEBUG_NODE(struct_members);
+			BOOST_SPIRIT_DEBUG_NODE(struct_);
+			BOOST_SPIRIT_DEBUG_NODE(enum_member);
+			BOOST_SPIRIT_DEBUG_NODE(enum_);
+			BOOST_SPIRIT_DEBUG_NODE(export_);
+			BOOST_SPIRIT_DEBUG_NODE(component);
+			BOOST_SPIRIT_DEBUG_NODE(typedef_);
+			BOOST_SPIRIT_DEBUG_NODE(start);
+			BOOST_SPIRIT_DEBUG_NODE(local_identifier);
+			BOOST_SPIRIT_DEBUG_NODE(global_identifier);
+			BOOST_SPIRIT_DEBUG_NODE(bundle_identifier);
+			BOOST_SPIRIT_DEBUG_NODE(new_type);
+			BOOST_SPIRIT_DEBUG_NODE(existing_type);
+			BOOST_SPIRIT_DEBUG_NODE(cpp_comment);
 		}
 	private:
 		std::string bundle;
@@ -164,16 +201,21 @@ namespace {
 			throw std::runtime_error{ss.str()};
 		}
 		qi::rule<Iterator, cwcc::documentation()> documentation;
+		qi::rule<Iterator, cwcc::untemplated_type(), Skipper> untemplated_type;
+		qi::rule<Iterator, cwcc::templated_type(), Skipper> templated_type;
+		qi::rule<Iterator, cwcc::array_ref(), Skipper> array_ref;
+		qi::rule<Iterator, cwcc::optional(), Skipper> optional;
+		//TODO: qi::rule<Iterator, cwcc::variant(), Skipper> variant;
+		qi::rule<Iterator, cwcc::intrusive_ptr(), Skipper> intrusive_ptr;
 		qi::rule<Iterator, cwcc::component::constructor(), Skipper> constructor;
 		qi::rule<Iterator, cwcc::mutability(), Skipper> mutable_;
 		qi::rule<Iterator, cwcc::interface(), Skipper> interface;
-		qi::rule<Iterator, cwcc::returns(), Skipper> returns;
 		qi::rule<Iterator, std::vector<cwcc::param>(), Skipper> params;
 		qi::rule<Iterator, cwcc::param(), Skipper> param;
 		qi::rule<Iterator, cwcc::interface::method(), Skipper> method;
 		qi::rule<Iterator, auto_method(), Skipper> auto_method;
 		qi::rule<Iterator, void_method(), Skipper> void_method;
-		qi::rule<Iterator, cwcc::delegate(), Skipper> delegate;
+		qi::rule<Iterator, cwcc::enumerator(), Skipper> enumerator;
 		qi::rule<Iterator, cwcc::struct_::member(), Skipper> struct_members;
 		qi::rule<Iterator, cwcc::struct_(), Skipper> struct_;
 		qi::rule<Iterator, cwcc::enum_::member(), Skipper> enum_member;
@@ -182,16 +224,15 @@ namespace {
 		qi::rule<Iterator, cwcc::component(), Skipper> component;
 		qi::rule<Iterator, cwcc::typedef_(), Skipper> typedef_;
 		qi::rule<Iterator, cwcc::bundle(), Skipper> start;
-		qi::rule<Iterator, std::string(), Skipper> method_identifier;
 		qi::rule<Iterator, std::string()> local_identifier, global_identifier, bundle_identifier, new_type, existing_type, cpp_comment;
 	};
 }
 
 namespace cwcc {
-	auto parse(std::istream & in) -> bundle {
+	auto parse(std::istream & is) -> bundle {
 		using iterator = std::istreambuf_iterator<char>;
 		bundle result;
-		const auto success = qi::phrase_parse(make_default_multi_pass(iterator{in}), make_default_multi_pass(iterator{}), bundle_parser<multi_pass<iterator>, qi::space_type>{}, qi::space, result);
+		const auto success = qi::phrase_parse(make_default_multi_pass(iterator{is}), make_default_multi_pass(iterator{}), bundle_parser<multi_pass<iterator>, qi::space_type>{}, qi::space, result);
 		if(!success) throw std::runtime_error{"parsing failed"};
 		return result;
 	}

@@ -10,7 +10,8 @@
 
 namespace cwcc {
 	template<typename Visitor>
-	void wrap_in_namespace(std::ostream & out, const bundle & b, bool comments, const char * delimiter = "") {
+	void wrap_in_namespace(std::ostream & os, const bundle & b, bool comments, const char * delimiter = "") {
+		//TODO: this will be simplified once nested namespaces (C++17) can be used
 		auto namespaces = 0;
 		{
 			auto it = std::begin(b.name);
@@ -18,26 +19,27 @@ namespace cwcc {
 				const auto tmp = std::find(it, std::end(b.name), ':');
 				if(comments && tmp == std::end(b.name))
 					for(const auto & doc : b.lines)
-						out << doc << '\n';
-				std::copy(it, tmp, std::ostream_iterator<char>(out << "namespace "));
-				out << " {\n";
+						os << doc << '\n';
+				std::copy(it, tmp, std::ostream_iterator<char>(os << "namespace "));
+				os << " {";
 				++namespaces;
 				if(tmp == std::end(b.name)) break;
 				it = tmp + 2;
 			}
+			os << '\n';
 		}
 		{
-			Visitor visitor{out, b};
+			Visitor visitor{os, b};
 			auto it = std::begin(b.members);
 			const auto end = std::end(b.members);
 			if(it != end) {
 				it->apply_visitor(visitor);
 				for(++it; it != end; ++it) {
-					out << delimiter;
+					os << delimiter;
 					it->apply_visitor(visitor);
 				}
 			}
 		}
-		std::fill_n(std::ostream_iterator<char>{out, "\n"}, namespaces, '}');
+		std::fill_n(std::ostream_iterator<char>{os, " "}, namespaces, '}');
 	}
 }

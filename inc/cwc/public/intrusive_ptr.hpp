@@ -28,9 +28,6 @@ namespace cwc {
 		intrusive_ptr(const intrusive_ptr & other) noexcept : ptr{other.ptr} { ptr->cwc$component$new$0(); }
 		intrusive_ptr(intrusive_ptr && other) noexcept { swap(other); }
 
-		template<typename OtherType>
-		intrusive_ptr(const intrusive_ptr<OtherType> & other) { if(other) *this = other->template intrusive_from_this<Type>(); }
-
 		auto operator=(const intrusive_ptr & other) -> intrusive_ptr & {
 			intrusive_ptr tmp{other};
 			swap(tmp);
@@ -38,19 +35,21 @@ namespace cwc {
 		}
 		auto operator=(intrusive_ptr && other) noexcept -> intrusive_ptr & { swap(other); return *this; }
 
-		template<typename OtherType>
-		auto operator=(const intrusive_ptr<OtherType> & other) -> intrusive_ptr & {
-			intrusive_ptr tmp{other};
-			swap(tmp);
-			return *this;
-		}
-
 		~intrusive_ptr() noexcept { if(ptr) ptr->cwc$component$delete$1(); }
 
 		auto operator->() const noexcept -> Type * { assert(ptr); return  ptr; }
 
 		explicit operator bool() const noexcept { return ptr != nullptr; }
 		auto operator!() const noexcept -> bool { return ptr == nullptr; }
+
+		template<typename OtherType>
+		operator intrusive_ptr<OtherType>() const {
+			static_assert(!std::is_const<Type>::value || (std::is_const<Type>::value && std::is_const<OtherType>::value), "constness violation detected");
+			if(!ptr) return intrusive_ptr<OtherType>{};
+			typename std::remove_const<OtherType>::type * tmp;
+			internal::call(*ptr, &component::cwc$component$cast$2, OtherType::cwc_uuid(), reinterpret_cast<void **>(&tmp));
+			return intrusive_ptr<OtherType>{tmp};
+		}
 
 		void reset() noexcept {
 			if(!ptr) return;
@@ -90,12 +89,6 @@ namespace cwc {
 		Type * ptr{nullptr};
 	};
 	CWC_PACK_END
-
-	template<typename TargetType, typename Type>
-	auto pointer_cast(const intrusive_ptr<Type> & ptr) -> intrusive_ptr<TargetType> {
-		if(ptr) return ptr->template intrusive_from_this<TargetType>();
-		else return intrusive_ptr<TargetType>{};
-	}
 
 	template<typename Type, typename... Args>
 	auto make_intrusive(Args &&... args) -> intrusive_ptr<Type> { return intrusive_ptr<Type>{new Type{std::forward<Args>(args)...}}; }

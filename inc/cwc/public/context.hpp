@@ -68,7 +68,7 @@ namespace cwc {
 		auto factory() const -> intrusive_ptr<typename Component::cwc_factory> {
 			intrusive_ptr<component> cwc_ret;
 			internal::call(*this, &context::cwc$internal$context$factory$4, Component::cwc_fqn(), &cwc_ret);
-			return pointer_cast<typename Component::cwc_factory>(cwc_ret);
+			return cwc_ret;
 		}
 
 		//! @brief create factory for plugin component type
@@ -79,7 +79,7 @@ namespace cwc {
 		auto factory(const string_view & id) const -> intrusive_ptr<typename Component::cwc_factory> {
 			intrusive_ptr<component> cwc_ret;
 			internal::call(*this, &context::cwc$internal$context$factory$5, Component::cwc_fqn(), id, &cwc_ret);
-			return pointer_cast<typename Component::cwc_factory>(cwc_ret);
+			return cwc_ret;
 		}
 
 		//! @brief test if plugin-component is available

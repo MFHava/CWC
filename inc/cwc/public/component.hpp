@@ -23,29 +23,8 @@ namespace cwc {
 
 		virtual void                 CWC_CALL cwc$component$new$0() const noexcept =0;
 		virtual void                 CWC_CALL cwc$component$delete$1() const noexcept =0;
-		virtual internal::error_code CWC_CALL cwc$component$cast$2(uuid id, void ** result) noexcept =0;
-		virtual internal::error_code CWC_CALL cwc$component$cast$3(uuid id, const void ** result) const noexcept =0;
+		virtual internal::error_code CWC_CALL cwc$component$cast$2(uuid id, void ** result) const noexcept =0;
 	public:
-		//! @brief retrieve intrusive_ptr for requested interface
-		//! @tparam TargetType type to cast new pointer to
-		//! @returns intrusive_ptr iff cast is valid
-		template<typename TargetType>
-		auto intrusive_from_this() -> intrusive_ptr<TargetType> {
-			typename std::remove_const<TargetType>::type * tmp;//remove constness of TargetType to allow conversion from 'mutable Type' to 'const TargetType'
-			internal::call(*this, &component::cwc$component$cast$2, TargetType::cwc_uuid(), reinterpret_cast<void **>(&tmp));
-			return intrusive_ptr<TargetType>{tmp};
-		}
-
-		//! @brief retrieve intrusive_ptr for requested interface
-		//! @tparam TargetType type to cast new pointer to
-		//! @returns intrusive_ptr iff cast is valid
-		template<typename TargetType>
-		auto intrusive_from_this() const -> intrusive_ptr<const TargetType> {
-			const TargetType * tmp;
-			internal::call(*this, &component::cwc$component$cast$3, TargetType::cwc_uuid(), reinterpret_cast<const void **>(&tmp));
-			return intrusive_ptr<const TargetType>{tmp};
-		}
-
 		template<typename Implementation, typename TypeList>
 		class cwc_implementation : public internal::default_implementation_chaining<Implementation, TypeList>, internal::instance_counter {
 			template<typename Type>
@@ -62,8 +41,29 @@ namespace cwc {
 
 			void                 CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
 			void                 CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
-			internal::error_code CWC_CALL cwc$component$cast$2(uuid id, void ** result) noexcept final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), id, result); }); }
-			internal::error_code CWC_CALL cwc$component$cast$3(uuid id, const void ** result) const noexcept final { return internal::call_and_return_error([&] { internal::cast_to_interface<const Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), id, result); }); }
+			internal::error_code CWC_CALL cwc$component$cast$2(uuid id, void ** result) const noexcept final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), id, result); }); }
+		protected:
+			//! @brief retrieve intrusive_ptr for requested interface
+			//! @tparam TargetType type to cast new pointer to
+			//! @returns intrusive_ptr iff cast is valid
+			template<typename TargetType>
+			auto intrusive_from_this() -> intrusive_ptr<TargetType> {
+				static_assert(std::is_base_of<TargetType, Implementation>::value, "invalid cast");
+				typename std::remove_const<TargetType>::type * result;//remove constness of TargetType to allow conversion from 'mutable Type' to 'const TargetType'
+				internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), TargetType::cwc_uuid(), reinterpret_cast<void **>(&result));
+				return intrusive_ptr<TargetType>{result};
+			}
+
+			//! @brief retrieve intrusive_ptr for requested interface
+			//! @tparam TargetType type to cast new pointer to
+			//! @returns intrusive_ptr iff cast is valid
+			template<typename TargetType>
+			auto intrusive_from_this() const -> intrusive_ptr<const TargetType> {
+				static_assert(std::is_base_of<TargetType, Implementation>::value, "invalid cast");
+				const TargetType * result;
+				internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), TargetType::cwc_uuid(), reinterpret_cast<void **>(&result));
+				return intrusive_ptr<const TargetType>{result};
+			}
 		public:
 			cwc_implementation() =default;
 			~cwc_implementation() =default;

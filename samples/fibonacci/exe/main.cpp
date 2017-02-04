@@ -39,9 +39,7 @@ int main() try {
 
 	auto factory = cwc::this_context()->factory<cwc::sample::fibonacci::generator>();
 	const auto dummy = factory->create(0);
-	const auto generator = factory->create()->intrusive_from_this<cwc::sample::fibonacci::sequence>();
-	//auto generator = cwc::intrusive_ptr_cast<cwc::sample::fibonacci::sequence>(factory->create());
-	//cwc::intrusive_ptr<cwc::sample::fibonacci::sequence> generator{factory->create()};
+	cwc::intrusive_ptr<cwc::sample::fibonacci::sequence> generator{factory->create()};
 
 	std::cout << "calculate fibonacci no: " << std::flush;
 	std::string tmp;

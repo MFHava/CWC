@@ -45,3 +45,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Ignore SVN & local build details
+.svn*
+build*
+inc/cwc/cwc.hpp

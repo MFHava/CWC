@@ -47,7 +47,7 @@ namespace cwc {
 			static_assert(!std::is_const<Type>::value || (std::is_const<Type>::value && std::is_const<OtherType>::value), "constness violation detected");
 			if(!ptr) return intrusive_ptr<OtherType>{};
 			typename std::remove_const<OtherType>::type * tmp;
-			internal::call(*ptr, &component::cwc$component$cast$2, OtherType::cwc_uuid(), reinterpret_cast<void **>(&tmp));
+			internal::validate(ptr->cwc$component$cast$2(OtherType::cwc_uuid(), reinterpret_cast<void **>(&tmp)));
 			return intrusive_ptr<OtherType>{tmp};
 		}
 

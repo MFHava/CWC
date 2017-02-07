@@ -38,13 +38,12 @@ int main() try {
 #endif
 
 	auto factory = cwc::this_context()->factory<cwc::sample::fibonacci::generator>();
-	const auto dummy = factory->create(0);
 	cwc::intrusive_ptr<cwc::sample::fibonacci::sequence> generator{factory->create()};
 
 	std::cout << "calculate fibonacci no: " << std::flush;
 	std::string tmp;
 	std::getline(std::cin, tmp);
-	const auto result = generator->compute(std::atoi(tmp.c_str()));
+	const auto result = generator->calculate(std::atoi(tmp.c_str()));
 	std::cout << "result: " << result << std::endl;
 	
 	std::cin.get(); std::cin.get();

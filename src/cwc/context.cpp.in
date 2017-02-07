@@ -49,7 +49,7 @@ namespace {
 	thread_local cwc::ascii last_message[@CWC_MAX_EXCEPTION_MESSAGE_LENGTH@]{0};
 
 	class context_impl final : public cwc::interface_implementation<cwc::context, context_impl> {
-		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(cwc::string_view, cwc::intrusive_ptr<cwc::component> *);
+		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(const cwc::string_view *, cwc::intrusive_ptr<cwc::component> *);
 
 		using factory_map = std::unordered_map<std::string, cwc::intrusive_ptr<cwc::component>>;
 		using key_value_map = std::unordered_map<std::string, std::string>;
@@ -75,7 +75,8 @@ namespace {
 
 		auto create_factory(factory_export_type factory, const std::string & file, const std::string & fqn) -> cwc::intrusive_ptr<cwc::component> {
 			cwc::intrusive_ptr<cwc::component> ptr;
-			if(factory(fqn.c_str(), &ptr) != cwc::internal::error_code::no_error) throw std::logic_error{"could not retrieve factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
+			const cwc::string_view tmp{fqn.c_str()};
+			if(factory(&tmp, &ptr) != cwc::internal::error_code::no_error) throw std::logic_error{"could not retrieve factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
 			if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
 			return ptr;
 		}

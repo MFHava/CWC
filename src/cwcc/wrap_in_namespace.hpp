@@ -14,12 +14,10 @@ namespace cwcc {
 		//TODO: this will be simplified once nested namespaces (C++17) can be used
 		auto namespaces = 0;
 		{
+			for(const auto & doc : b.lines) os << doc << '\n';
 			auto it = std::begin(b.name);
 			for(;;) {
 				const auto tmp = std::find(it, std::end(b.name), ':');
-				if(comments && tmp == std::end(b.name))
-					for(const auto & doc : b.lines)
-						os << doc << '\n';
 				std::copy(it, tmp, std::ostream_iterator<char>(os << "namespace "));
 				os << " {";
 				++namespaces;

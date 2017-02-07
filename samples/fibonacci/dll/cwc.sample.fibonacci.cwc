@@ -23,13 +23,13 @@ extern "C" CWC_EXPORT void CWC_CALL cwc_init(::cwc::intrusive_ptr<::cwc::context
 	cwc_context = context;
 }
 
-extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(::cwc::string_view fqn, cwc::intrusive_ptr<cwc::component> * result) {
+extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_view * fqn, cwc::intrusive_ptr<cwc::component> * result) {
 	assert(cwc_context);
 	assert(result);
 	return ::cwc::internal::call_and_return_error([&] {
-		switch(fqn.size()) {
+		switch(fqn->size()) {
 			case 34: {
-				if(fqn == cwc::sample::fibonacci::generator$::cwc_fqn()) return *result = cwc::make_intrusive<typename cwc::sample::fibonacci::generator$::cwc_component_factory>();
+				if(*fqn == cwc::sample::fibonacci::generator$::cwc_fqn()) return *result = cwc::make_intrusive<typename cwc::sample::fibonacci::generator$::cwc_component_factory>();
 			} break;
 		}
 		throw std::logic_error{"unsupported component"};
@@ -41,12 +41,9 @@ extern "C" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_view * definition)
 		"//! @brief CWC Sample \"Fibonacci Generator\"\n"
 		"//! @author Michael Florian Hava\n"
 		"bundle cwc::sample::fibonacci {\n"
-		"	using input = ::cwc::uint8[];\n"
-		"	using output = mutable ::cwc::uint64[];\n"
-		"\n"
 		"	interface sequence {\n"
-		"		auto operator()(::cwc::uint8 no) -> ::cwc::uint64;\n"
-		"		void operator()(input nos, output results);\n"
+		"		auto calculate(::cwc::uint8 no) -> ::cwc::uint64;\n"
+		"		void calculate(array_ref<::cwc::uint8> nos, array_ref<mutable ::cwc::uint64> results);\n"
 		"	};\n"
 		"\n"
 		"	component generator : sequence {};\n"

@@ -7,12 +7,9 @@
 //! @brief CWC Sample "Fibonacci Generator"
 //! @author Michael Florian Hava
 bundle cwc::sample::fibonacci {
-	using input = ::cwc::uint8[];
-	using output = mutable ::cwc::uint64[];
-
 	interface sequence {
-		auto operator()(::cwc::uint8 no) -> ::cwc::uint64;
-		void operator()(input nos, output results);
+		auto calculate(::cwc::uint8 no) -> ::cwc::uint64;
+		void calculate(array_ref<::cwc::uint8> nos, array_ref<mutable ::cwc::uint64> results);
 	};
 
 	component generator : sequence {};

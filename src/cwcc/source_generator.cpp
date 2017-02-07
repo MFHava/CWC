@@ -63,14 +63,14 @@ namespace cwcc {
 		      "\tcwc_context = context;\n"
 		      "}\n"
 		      "\n"
-		      "extern \"C\" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(::cwc::string_view fqn, cwc::intrusive_ptr<cwc::component> * result) {\n"
+		      "extern \"C\" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_view * fqn, cwc::intrusive_ptr<cwc::component> * result) {\n"
 		      "\tassert(cwc_context);\n"
 		      "\tassert(result);\n"
 		      "\treturn ::cwc::internal::call_and_return_error([&] {\n"
-		      "\t\tswitch(fqn.size()) {\n";
+		      "\t\tswitch(fqn->size()) {\n";
 		for(const auto & pair : components) {
 			os << "\t\t\tcase " << (pair.first - 1) << ": {\n";//fqns are NOT prepended with double colons, but contain \0
-			for(auto & fqn : pair.second) os << "\t\t\t\tif(fqn == " << fqn << "$::cwc_fqn()) return *result = cwc::make_intrusive<typename " << fqn << "$::cwc_component_factory>();\n";
+			for(auto & fqn : pair.second) os << "\t\t\t\tif(*fqn == " << fqn << "$::cwc_fqn()) return *result = cwc::make_intrusive<typename " << fqn << "$::cwc_component_factory>();\n";
 			os << "\t\t\t} break;\n";
 		}
 		os << "\t\t}\n"
@@ -79,7 +79,7 @@ namespace cwcc {
 		      "}\n"
 		      "\n"
 		      "extern \"C\" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_view * definition) {\n"
-		      "\t*definition = \n";
+		      "\t*definition =\n";
 		std::transform(std::istream_iterator<line>{is}, std::istream_iterator<line>{}, std::ostream_iterator<std::string>{os}, [](const std::string & str) {
 			std::stringstream ss;
 			ss << "\t\t\"";

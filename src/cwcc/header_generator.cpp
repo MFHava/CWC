@@ -53,10 +53,7 @@ namespace cwcc {
 					const auto & params = method.params();
 					if(!params.empty()) {
 						os << ", ";
-						auto print_param = [&](const param & p) {
-							if(p.mutable_) os << '&';
-							os << p.name;
-						};
+						auto print_param = [&](const param & p) { os << '&' << p.name; };
 						print_param(params[0]);
 						for(std::size_t i{1}; i < params.size(); ++i) {
 							os << ", ";
@@ -76,10 +73,7 @@ namespace cwcc {
 					if(method.out) os << "*cwc_ret = ";
 					os << "static_cast<" << method.mutable_ << "CWCImplementation &>(*this)." << method.name << '(';
 					if(!method.in.empty()) {
-						auto print_param = [&](const param & p) {
-							if(p.mutable_) os << '*';
-							os << p.name;
-						};
+						auto print_param = [&](const param & p) { os << '*' << p.name; };
 						print_param(method.in[0]);
 						for(std::size_t i{1}; i < method.in.size(); ++i) {
 							os << ", ";
@@ -134,11 +128,7 @@ namespace cwcc {
 					ss << "::cwc::internal::error_code CWC_CALL " << mangled[i] << '(';
 					const auto & params = method.params();
 					if(!params.empty()) {
-						auto print_param = [&](const param & p) {
-							ss << p.type << ' ';
-							if(p.mutable_) ss << "* ";
-							ss << p.name;
-						};
+						auto print_param = [&](const param & p) { ss << p.mutable_ << p.type << " * " << p.name; };
 						print_param(params[0]);
 						for(std::size_t i{1}; i < params.size(); ++i) {
 							ss << ", ";

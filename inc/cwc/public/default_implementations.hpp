@@ -15,11 +15,11 @@ namespace cwc {
 	//! @tparam Interface interface to implement
 	//! @tparam Implementation name of the class that implements the interface
 	//! @tparam CastTable mapping for custom casts (needed for ambiguous base classes)
-	template<typename Interface, typename Implementation, typename CastTable = TL::empty_type_list>
+	template<typename Interface, typename Implementation, typename CastTable = internal::TL::empty_type_list>
 	struct interface_implementation :
 		internal::default_implementation_chaining<
 			Implementation,
-			typename TL::append<
+			typename internal::TL::append<
 				typename internal::make_base_list<Interface>::type,
 				Interface
 			>::type
@@ -33,11 +33,11 @@ namespace cwc {
 	//! @tparam Component component to implement
 	//! @tparam Implementation name of the class that implements the component
 	//! @tparam CastTable mapping for custom casts (needed for ambiguous base classes)
-	template<typename Component, typename Implementation, typename CastTable = TL::empty_type_list>
+	template<typename Component, typename Implementation, typename CastTable = internal::TL::empty_type_list>
 	struct component_implementation :
 		internal::default_implementation_chaining<
 			Implementation,
-			typename TL::append<
+			typename internal::TL::append<
 				typename Component::cwc_interfaces,
 				Component
 			>::type

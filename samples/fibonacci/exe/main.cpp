@@ -9,17 +9,28 @@
 #include <iostream>
 #include "../cwc.sample.fibonacci.cwch"
 
+#define USE_PLUGIN
+
 int main() try {
+#ifndef USE_PLUGIN
 	cwc::init(cwc::init_mode::string,
 		"[cwc.mapping]\n"
 		"cwc::sample::fibonacci::generator = sample-fibonacci-dll.dll"
 	);
+#else
+	cwc::init(cwc::init_mode::string,
+		"[cwc.mapping]\n"
+		"cwc::sample::fibonacci::generator = [generator]\n"
+		"[generator]\n"
+		"ID = sample-fibonacci-dll.dll"
+	);
+#endif
 	const auto context = cwc::this_context();
 
 	std::cout << "CWC " << context->version() << std::endl;
 #if 0
 	for(auto section : cwc::make_enumerator_range(context->config())) {
-		std::cout << section.name << std::endl;
+		std::cout << '[' << section.name << "]\n";
 		for(const auto & entry : cwc::make_enumerator_range(std::move(section.enumerator))) {
 			std::cout << entry.key << " = " << entry.value << std::endl;
 		}
@@ -28,7 +39,7 @@ int main() try {
 #else
 	for(auto t = context->config(); !t->end(); t->next()) {
 		auto section = t->get();
-		std::cout << section.name << std::endl;
+		std::cout << '[' << section.name << "]\n";
 		for(auto tt = section.enumerator; !tt->end(); tt->next()) {
 			const auto & cur = tt->get();
 			std::cout << cur.key << " = " << cur.value << std::endl;
@@ -37,7 +48,12 @@ int main() try {
 	}
 #endif
 
+#ifndef USE_PLUGIN
 	auto factory = cwc::this_context()->factory<cwc::sample::fibonacci::generator>();
+#else
+	using namespace cwc::literals;
+	auto factory = cwc::this_context()->factory<cwc::sample::fibonacci::generator>("ID"_sv);
+#endif
 	cwc::intrusive_ptr<cwc::sample::fibonacci::sequence> generator{factory->create()};
 
 	std::cout << "calculate fibonacci no: " << std::flush;

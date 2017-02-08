@@ -85,7 +85,7 @@ namespace {
 			config_map result;
 			if(is) {
 				const regex comment_or_whitespace{R"(\s*(?:[;#].*)?)"},
-				            section{R"(\s*(\[[^\s;#]+\])\s*(?:[;#].*)?)"},
+				            section{R"(\s*\[([^\s;#]+)\]\s*(?:[;#].*)?)"},
 				            key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*(?:[;#].*)?)"};
 				std::string line, current_section;
 				while(std::getline(is, line)) {
@@ -150,12 +150,13 @@ namespace {
 		context_impl(std::istream & is) : configuration{parse_ini(is)} {
 			key_value_map components;
 			config_map plugins;
-			const auto it = configuration.find("[cwc.mapping]");
+			const auto it = configuration.find("cwc.mapping");
 			if(it != std::end(configuration)) {
 				for(const auto & mapping : it->second) {
-					if(mapping.second[0] != '[') components[mapping.first] = mapping.second;
+					if(mapping.second.front() != '[') components[mapping.first] = mapping.second;
 					else {//key maps to section
-						const auto & it = configuration.find(mapping.second);
+						if(mapping.second.back() != ']') throw std::invalid_argument{"malformed configuration"};
+						const auto & it = configuration.find(mapping.second.substr(1, mapping.second.size() - 2));
 						if(it != std::end(configuration))
 							for(const auto & entry: it->second)
 								plugins[mapping.first].insert(entry);
@@ -170,9 +171,7 @@ namespace {
 
 		auto version() const noexcept -> cwc::string_view { return CWC_VERSION; }
 
-		auto factory(cwc::string_view fqn) const noexcept -> cwc::intrusive_ptr<cwc::component> { return component_factories.at(fqn.c_str()); }
-
-		auto factory(cwc::string_view fqn, cwc::string_view id) const noexcept -> cwc::intrusive_ptr<cwc::component> { return plugin_factories.at(fqn.c_str()).at(id.c_str()); }
+		auto factory(const cwc::string_view & fqn, const cwc::optional<const cwc::string_view> & id) const -> cwc::intrusive_ptr<cwc::component> { return id ? plugin_factories.at(fqn.c_str()).at(id->c_str()) : component_factories.at(fqn.c_str()); }
 
 		void error(cwc::string_view msg) const noexcept {
 			last_message[0] = '\0';

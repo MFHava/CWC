@@ -47,7 +47,7 @@ namespace cwc {
 		auto empty() const noexcept -> bool { return array.empty(); }
 	
 		auto c_str() const noexcept -> const ascii * { return array.data(); }
-	
+
 		void swap(string_view & other) noexcept {
 			using std::swap;
 			swap(array, other.array);
@@ -116,4 +116,9 @@ namespace cwc {
 
 	inline
 	void swap(string_view & lhs, string_view & rhs) noexcept { lhs.swap(rhs); }
+
+	namespace literals {
+		inline
+		auto operator""_sv(const ascii * ptr, std::size_t) noexcept -> string_view { return{ptr}; }
+	}
 }

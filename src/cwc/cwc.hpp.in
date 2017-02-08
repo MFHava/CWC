@@ -50,7 +50,14 @@
 #include <type_traits>
 
 //! @brief public API of C++ with Components
-namespace cwc {}
+namespace cwc {
+	//! @brief user defined literals
+	namespace literals {}
+
+	//! @brief internal implementation details
+	//! @attention no member of this namespace is part of the public CWC API
+	namespace internal {}
+}
 
 #include "public/types.hpp"
 

@@ -150,7 +150,7 @@ namespace {
 			for(const auto & p : plugins) load_plugins(map, p.first, p.second);
 		}
 
-		auto version() const noexcept -> cwc::string_view { return CWC_VERSION; }
+		auto version() const noexcept -> cwc::string_view { return "@CWC_VERSION@"; }
 
 		auto factory(const cwc::string_view & fqn, const cwc::optional<const cwc::string_view> & id) const -> cwc::intrusive_ptr<cwc::component> { return id ? plugin_factories.at(fqn.c_str()).at(id->c_str()) : component_factories.at(fqn.c_str()); }
 

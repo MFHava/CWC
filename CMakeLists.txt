@@ -23,14 +23,6 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 SET(CWC_VERSION "2.2.0-alpha")
 SET(CWC_LIB_DEBUG_POSTFIX "-debug")
 
-IF(${WIN32})#assume that all compilers on Windows are compatible with Microsoft-syntax
-	SET(CWC_CALL   "__cdecl")
-	SET(CWC_EXPORT "__declspec(dllexport)")
-ELSE()#assume that all compilers on Unix (implicitly assumed) are compatible with GCC-syntax
-	SET(CWC_CALL   "__attribute__((__cdecl__))")
-	SET(CWC_EXPORT "__attribute__((visibility(\"default\")))")
-ENDIF()
-
 SET(CWC_LIB_NAME cwc-${CWC_VERSION})
 
 IF(${MSVC})

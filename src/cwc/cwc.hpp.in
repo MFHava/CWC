@@ -5,14 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#define CWC_VERSION "@CWC_VERSION@"
-#define CWC_CALL @CWC_CALL@
-#define CWC_EXPORT @CWC_EXPORT@
-
 #define CWC_HPP_HEADER_INCLUDED
-
-#define CWC_DO_STRINGIFY(str) #str
-#define CWC_STRINGIFY(str) CWC_DO_STRINGIFY(str)
 
 #if defined(_MSC_VER)
 	#include "cwc/config/msvc.hpp"
@@ -22,22 +15,17 @@
 	#error "Unknown compiler!"
 #endif
 
-#if defined(CWC_AUTOLINK_SUPPORTED) && !defined(CWC_BUILDING)
+#if defined(CWC_AUTOLINK_SUPPORTED) && !defined(CWC_BUILDING) && defined(CWC_HOST)
 	#ifdef CWC_AUTOLINK_DEBUG
 		#define CWC_LIB_DEBUG "@CWC_LIB_DEBUG_POSTFIX@"
 	#else
 		#define CWC_LIB_DEBUG ""
 	#endif
 
-	#if defined(CWC_HOST)
-		#pragma comment(lib, "cwc-@CWC_VERSION@-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
-	#endif
+	#pragma comment(lib, "cwc-@CWC_VERSION@-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
 
 	#undef CWC_LIB_DEBUG
 #endif
-
-#undef CWC_DO_STRINGIFY
-#undef CWC_STRINGIFY
 
 #include <atomic>
 #include <memory>

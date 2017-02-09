@@ -10,12 +10,22 @@
 
 #pragma once
 
+#define CWC_CALL       __cdecl
+#define CWC_EXPORT     __declspec(dllexport)
 #define CWC_PACK_BEGIN __pragma(pack(push, 1))
-#define CWC_PACK_END __pragma(pack(pop))
+#define CWC_PACK_END   __pragma(pack(pop))
 
 //support for autolinking
 #define CWC_AUTOLINK_SUPPORTED
+
+#define CWC_DO_STRINGIFY(str) #str
+#define CWC_STRINGIFY(str) CWC_DO_STRINGIFY(str)
+
 #define CWC_AUTOLINK_TOOLKIT "msvc" CWC_STRINGIFY(_MSC_VER)
+
 #ifdef _DEBUG
 	#define CWC_AUTOLINK_DEBUG
 #endif
+
+#undef CWC_DO_STRINGIFY
+#undef CWC_STRINGIFY

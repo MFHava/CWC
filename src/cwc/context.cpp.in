@@ -145,7 +145,7 @@ namespace {
 				}
 			}
 
-			dll_map map;//ensure that CWC_INJECT is only called once
+			dll_map map;//ensure that cwc_init is only called once
 			for(const auto & c : components) load_component(map, c.first, c.second);
 			for(const auto & p : plugins) load_plugins(map, p.first, p.second);
 		}

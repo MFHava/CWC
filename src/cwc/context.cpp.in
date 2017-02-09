@@ -5,29 +5,10 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <cwc/cwc.hpp>
+#include <regex>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
-
-#ifdef CWC_HAS_NO_REGEX
-	#ifdef CWC_USE_BOOST_REGEX//if implementation does not support regex, we offer boost as alternative, else we fail
-		#include <boost/regex.hpp>
-		namespace {
-			using boost::regex;
-			using boost::smatch;
-			using boost::regex_match;
-		}
-	#else
-		#error "No support for Stdlib.Regex! Either use an implementation that supports Stdlib.Regex or define CWC_USE_BOOST_REGEX to enable Boost (fallback) support!"
-	#endif
-#else
-	#include <regex>
-	namespace {
-		using std::regex;
-		using std::smatch;
-		using std::regex_match;
-	}
-#endif
 
 #ifdef _WIN32
 	#define WIN32_LEAN_AND_MEAN
@@ -84,15 +65,15 @@ namespace {
 		auto parse_ini(std::istream & is) -> config_map {
 			config_map result;
 			if(is) {
-				const regex comment_or_whitespace{R"(\s*(?:[;#].*)?)"},
-				            section{R"(\s*\[([^\s;#]+)\]\s*(?:[;#].*)?)"},
-				            key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*(?:[;#].*)?)"};
+				const std::regex comment_or_whitespace{R"(\s*(?:[;#].*)?)"},
+				                 section{R"(\s*\[([^\s;#]+)\]\s*(?:[;#].*)?)"},
+				                 key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*(?:[;#].*)?)"};
 				std::string line, current_section;
 				while(std::getline(is, line)) {
-					smatch matched;
-					if(regex_match(line, matched, comment_or_whitespace)) {} //nothing to do here
-					else if(regex_match(line, matched, key_value_pair)) result[current_section][std::move(matched[1])] = std::move(matched[2]);
-					else if(regex_match(line, matched, section)) current_section = std::move(matched[1]);
+					std::smatch matched;
+					if(std::regex_match(line, matched, comment_or_whitespace)) {} //nothing to do here
+					else if(std::regex_match(line, matched, key_value_pair)) result[current_section][std::move(matched[1])] = std::move(matched[2]);
+					else if(std::regex_match(line, matched, section)) current_section = std::move(matched[1]);
 					else throw std::logic_error{"invalid configuration file"};
 				}
 			}

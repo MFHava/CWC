@@ -26,7 +26,7 @@ namespace cwc {
 		virtual internal::error_code CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept =0;
 	public:
 		template<typename Implementation, typename TypeList>
-		class cwc_implementation : public internal::default_implementation_chaining<Implementation, TypeList>, internal::instance_counter {
+		class cwc_implementation : public internal::default_implementation_chaining<Implementation, TypeList> {
 			template<typename Type>
 			friend
 			struct intrusive_ptr;

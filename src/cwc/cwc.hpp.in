@@ -61,7 +61,6 @@ namespace cwc {
 #include "internal/call.hpp"
 #include "internal/default_implementation_chaining.hpp"
 #include "internal/cast_to_interface.hpp"
-#include "internal/instance_counter.hpp"
 
 #include "public/component.hpp"
 #include "public/enumerator.hpp"

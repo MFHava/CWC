@@ -5,7 +5,6 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include "cwc.sample.fibonacci.h"
-#include <cstring>
 using namespace cwc::sample::fibonacci;
 
 namespace {
@@ -15,8 +14,6 @@ namespace {
 }
 
 auto ::cwc::this_context() -> ::cwc::intrusive_ptr<context> { return cwc_context; }
-
-extern "C" CWC_EXPORT::cwc::boolean CWC_CALL cwc_unloadable() { return ::cwc::internal::instance_counter::get() == 0; }
 
 extern "C" CWC_EXPORT void CWC_CALL cwc_init(::cwc::intrusive_ptr<::cwc::context> context) {
 	assert(!cwc_context);

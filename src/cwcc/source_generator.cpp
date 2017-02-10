@@ -36,7 +36,6 @@ namespace cwcc {
 	void generate_source(std::istream & is, std::ostream & os, const bundle & b) {
 		file_disclaimer(os, false);
 		os << "#include \"" << base_file_name(b.name) << ".h\"\n"
-		      "#include <cstring>\n"
 		      "using namespace " << b.name << ";\n"
 		      "\n"
 		      "namespace {\n";
@@ -55,8 +54,6 @@ namespace cwcc {
 		      "}\n"
 		      "\n"
 		      "auto ::cwc::this_context() -> ::cwc::intrusive_ptr<context> { return cwc_context; }\n"
-		      "\n"
-		      "extern \"C\" CWC_EXPORT::cwc::boolean CWC_CALL cwc_unloadable() { return ::cwc::internal::instance_counter::get() == 0; }\n"
 		      "\n"
 		      "extern \"C\" CWC_EXPORT void CWC_CALL cwc_init(::cwc::intrusive_ptr<::cwc::context> context) {\n"
 		      "\tassert(!cwc_context);\n"

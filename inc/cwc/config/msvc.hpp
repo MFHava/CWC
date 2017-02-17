@@ -18,14 +18,8 @@
 //support for autolinking
 #define CWC_AUTOLINK_SUPPORTED
 
-#define CWC_DO_STRINGIFY(str) #str
-#define CWC_STRINGIFY(str) CWC_DO_STRINGIFY(str)
-
 #define CWC_AUTOLINK_TOOLKIT "msvc" CWC_STRINGIFY(_MSC_VER)
 
 #ifdef _DEBUG
 	#define CWC_AUTOLINK_DEBUG
 #endif
-
-#undef CWC_DO_STRINGIFY
-#undef CWC_STRINGIFY

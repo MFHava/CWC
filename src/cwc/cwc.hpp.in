@@ -15,6 +15,9 @@
 	#error "Unknown compiler!"
 #endif
 
+#define CWC_DO_STRINGIFY(str) #str
+#define CWC_STRINGIFY(str) CWC_DO_STRINGIFY(str)
+
 #if defined(CWC_AUTOLINK_SUPPORTED) && !defined(CWC_BUILDING) && defined(CWC_HOST)
 	#ifdef CWC_AUTOLINK_DEBUG
 		#define CWC_LIB_DEBUG "@CWC_LIB_DEBUG_POSTFIX@"
@@ -26,6 +29,9 @@
 
 	#undef CWC_LIB_DEBUG
 #endif
+
+#undef CWC_DO_STRINGIFY
+#undef CWC_STRINGIFY
 
 #include <atomic>
 #include <memory>

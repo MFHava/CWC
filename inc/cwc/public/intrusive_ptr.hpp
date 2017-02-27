@@ -25,7 +25,7 @@ namespace cwc {
 
 		explicit intrusive_ptr(Type * ptr) noexcept : ptr{ptr} {}
 
-		intrusive_ptr(const intrusive_ptr & other) noexcept : ptr{other.ptr} { ptr->cwc$component$new$0(); }
+		intrusive_ptr(const intrusive_ptr & other) noexcept : ptr{other.ptr} { if(ptr) ptr->cwc$component$new$0(); }
 		intrusive_ptr(intrusive_ptr && other) noexcept { swap(other); }
 
 		auto operator=(const intrusive_ptr & other) -> intrusive_ptr & {
@@ -37,7 +37,7 @@ namespace cwc {
 
 		~intrusive_ptr() noexcept { if(ptr) ptr->cwc$component$delete$1(); }
 
-		auto operator->() const noexcept -> Type * { assert(ptr); return  ptr; }
+		auto operator->() const noexcept -> Type * { assert(ptr); return ptr; }
 
 		explicit operator bool() const noexcept { return ptr != nullptr; }
 		auto operator!() const noexcept -> bool { return ptr == nullptr; }

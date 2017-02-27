@@ -119,6 +119,6 @@ namespace cwc {
 
 	namespace literals {
 		inline
-		auto operator""_sv(const ascii * ptr, std::size_t) noexcept -> string_view { return{ptr}; }
+		auto operator""_sv(const ascii * ptr, std::size_t) noexcept -> string_view { return {ptr}; }
 	}
 }

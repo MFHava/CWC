@@ -105,7 +105,7 @@ namespace {
 
 			auto get() const -> cwc::config_entry {
 				if(end()) throw std::runtime_error{"at end"};
-				return{it->first.c_str(), it->second.c_str()};
+				return {it->first.c_str(), it->second.c_str()};
 			}
 		};
 
@@ -123,7 +123,7 @@ namespace {
 
 			auto get() const -> cwc::config_section {
 				if(end()) throw std::runtime_error{"at end"};
-				return{it->first.c_str(), cwc::make_intrusive<config_section_enumerator>(it->second)};
+				return {it->first.c_str(), cwc::make_intrusive<config_section_enumerator>(it->second)};
 			}
 		};
 

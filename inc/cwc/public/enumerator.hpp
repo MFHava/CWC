@@ -63,22 +63,19 @@ namespace cwc {
 			internal::error_code CWC_CALL cwc$enumerator$next$1() noexcept final { return internal::call_and_return_error([&] { static_cast<CWCImplementation &>(*this).next(); }); }
 			internal::error_code CWC_CALL cwc$enumerator$get$2(Type * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).get(); }); }
 		};
-		static auto cwc_uuid() -> uuid { return{Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
+		static auto cwc_uuid() -> uuid { return {Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
 	};
-#if 0//TODO
-	template<typename Enumerator>
-	class enumerator_iterator final : std::iterator<std::input_iterator_tag, decltype(std::declval<Enumerator>().get())> {
-		intrusive_ptr<Enumerator> enumerator;
-		value_type value;
 
-		void next() {
-			if(!enumerator) return;
-			if(enumerator->end()) enumerator = nullptr;//reset to empty enumerator
-			else value = enumerator->get();//retrieve copy of value
-		}
-	public:
+	template<typename Enumerator>
+	struct enumerator_iterator final {
+		using iterator_category = std::input_iterator_tag;
+		using value_type        = decltype(std::declval<Enumerator>().get());
+		using difference_type   = std::ptrdiff_t;
+		using pointer           = const value_type *;
+		using reference         = const value_type &;
+
 		enumerator_iterator() =default;
-		enumerator_iterator(intrusive_ptr<Enumerator> && enumerator) : enumerator{std::move(enumerator)} { next(); }
+		enumerator_iterator(intrusive_ptr<Enumerator> && enumerator) : enumerator{std::move(enumerator)} { if(this->enumerator) next(); }
 
 		enumerator_iterator(const enumerator_iterator &) =default;
 		enumerator_iterator(enumerator_iterator &&) noexcept =default;
@@ -95,22 +92,35 @@ namespace cwc {
 			return dummy;
 		}
 
-		auto operator*()  const noexcept -> const value_type & { assert(enumerator); return  value; }
-		auto operator->() const noexcept -> const value_type * { assert(enumerator); return &value; }
+		auto operator*()  const noexcept -> reference { assert(enumerator); return  value; }
+		auto operator->() const noexcept -> pointer   { assert(enumerator); return &value; }
 
 		//! @note as modifying one copy of an input_iterator invalidates all others => this should be valid
 		friend
 		auto operator==(const enumerator_iterator & lhs, const enumerator_iterator & rhs) -> bool { return lhs.enumerator == rhs.enumerator; }
 		friend
 		auto operator!=(const enumerator_iterator & lhs, const enumerator_iterator & rhs) -> bool { return !(lhs == rhs); }
+
+	private:
+		intrusive_ptr<Enumerator> enumerator;
+		value_type value;
+
+		void next() {
+			assert(enumerator);
+			if(enumerator->end()) enumerator.reset();
+			else {
+				value = enumerator->get();//retrieve copy of value
+				enumerator->next();
+			}
+		}
 	};
 
 	template<typename Enumerator>
 	struct enumerator_range final {
 		using iterator = enumerator_iterator<Enumerator>;
 
-		enumerator_range() =default;
-		enumerator_range(intrusive_ptr<Enumerator> && enumerator) : it{std::move(enumerator)} {}
+		enumerator_range() =delete;
+		enumerator_range(intrusive_ptr<Enumerator> && enumerator) : enumerator{std::move(enumerator)} {}
 
 		enumerator_range(const enumerator_range &) =delete;
 		enumerator_range(enumerator_range &&) noexcept =delete;
@@ -120,18 +130,12 @@ namespace cwc {
 
 		~enumerator_range() =default;
 
-		auto begin() -> iterator {
-			iterator tmp;
-			using std::swap;
-			swap(tmp, it);
-			return tmp;
-		}
-		auto end() -> iterator { return{}; }
+		auto begin() -> iterator { return {std::move(enumerator)}; }
+		auto end() -> iterator { return {}; }
 	private:
-		enumerator_iterator<Enumerator> it;
+		intrusive_ptr<Enumerator> enumerator;
 	};
 
 	template<typename Enumerator>
-	auto make_enumerator_range(intrusive_ptr<Enumerator> && enumerator) -> enumerator_range<Enumerator> { return enumerator; }
-#endif
+	auto as_range(intrusive_ptr<Enumerator> && enumerator) -> enumerator_range<Enumerator> { return {std::move(enumerator)}; }
 }

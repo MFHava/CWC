@@ -28,10 +28,10 @@ int main() try {
 	const auto context = cwc::this_context();
 
 	std::cout << "CWC " << context->version() << std::endl;
-#if 0
-	for(auto section : cwc::make_enumerator_range(context->config())) {
+#if 1
+	for(auto section : cwc::as_range(context->config())) {
 		std::cout << '[' << section.name << "]\n";
-		for(const auto & entry : cwc::make_enumerator_range(std::move(section.enumerator))) {
+		for(const auto & entry : cwc::as_range(std::move(section.enumerator))) {
 			std::cout << entry.key << " = " << entry.value << std::endl;
 		}
 		std::cout << std::endl;

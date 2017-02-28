@@ -23,12 +23,12 @@ namespace cwc {
 	
 		//! @brief construct string_view from c-string
 		//! @param[in] ptr string to reference
-		string_view(const ascii * ptr) noexcept : array{ptr, std::strlen(ptr) + 1} {}
+		string_view(const ascii * ptr) noexcept : array{ptr, std::strlen(ptr)} {}
 
 		//! @brief construct string_view from reference to array (most likely a string literal)
 		//! @param[in] ptr string to reference
 		template<std::size_t Size>
-		string_view(const ascii (&ptr)[Size]) noexcept : array{ptr, Size} {}
+		string_view(const ascii (&ptr)[Size]) noexcept : array{ptr, Size - 1} {}
 	
 		auto begin()  const noexcept -> const ascii * { return array.begin(); }
 		auto cbegin() const noexcept -> const ascii * { return array.cbegin(); }

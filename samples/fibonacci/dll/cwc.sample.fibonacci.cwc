@@ -25,7 +25,7 @@ extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::c
 	assert(result);
 	return ::cwc::internal::call_and_return_error([&] {
 		switch(fqn->size()) {
-			case 34: {
+			case 33: {
 				if(*fqn == cwc::sample::fibonacci::generator$::cwc_fqn()) return *result = cwc::make_intrusive<typename cwc::sample::fibonacci::generator$::cwc_component_factory>();
 			} break;
 		}

@@ -66,7 +66,7 @@ namespace cwcc {
 		      "\treturn ::cwc::internal::call_and_return_error([&] {\n"
 		      "\t\tswitch(fqn->size()) {\n";
 		for(const auto & pair : components) {
-			os << "\t\t\tcase " << (pair.first - 1) << ": {\n";//fqns are NOT prepended with double colons, but contain \0
+			os << "\t\t\tcase " << (pair.first - 2) << ": {\n";//fqns are NOT prepended with double colons, but contain \0
 			for(auto & fqn : pair.second) os << "\t\t\t\tif(*fqn == " << fqn << "$::cwc_fqn()) return *result = cwc::make_intrusive<typename " << fqn << "$::cwc_component_factory>();\n";
 			os << "\t\t\t} break;\n";
 		}

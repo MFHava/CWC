@@ -13,7 +13,7 @@
 namespace cwc {
 	//! @defgroup cwc_abi_types Fundamental ABI types
 	//! @{
-	using ascii   = char;//!< @brief only the lower 7 bits are interpreted (as signedness of char is implementation defined)
+	using utf8    = char;//!< @brief utf8 character (@attention utf8 is a variable length encoding)
 	using int8    = std::int8_t;//!< @brief signed 8bit integer
 	using uint8   = std::uint8_t;//!< @brief unsigned  8bit integer
 	using int16   = std::int16_t;//!< @brief signed 16bit integer
@@ -26,6 +26,12 @@ namespace cwc {
 	using float64 = double;//!< @brief double precision (64bit) floating point
 	using boolean = std::conditional<sizeof(bool) == 1, bool, uint8>::type;//!< @brief portable boolean (as bool lacks size guarantee)
 	//! @}
+
+	//! @brief helper to determine if UTF-8 character is a valid ASCII character
+	//! @param[in] c character to test
+	//! @returns true iff c is a valid ASCII character
+	inline
+	auto is_ascii(const utf8 & c) -> bool { return (c >= 0 && c < 128); }
 
 	//! @brief universally unique identifier
 	CWC_PACK_BEGIN

@@ -13,7 +13,7 @@
 namespace cwc {
 	//! @defgroup cwc_abi_types Fundamental ABI types
 	//! @{
-	using utf8    = char;//!< @brief utf8 character (@attention utf8 is a variable length encoding)
+	using utf8    = char;//!< @brief UTF-8 character
 	using int8    = std::int8_t;//!< @brief signed 8bit integer
 	using uint8   = std::uint8_t;//!< @brief unsigned  8bit integer
 	using int16   = std::int16_t;//!< @brief signed 16bit integer

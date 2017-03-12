@@ -152,8 +152,6 @@ namespace {
 
 		auto version() const noexcept -> cwc::string_view { return "@CWC_VERSION@"; }
 
-		auto factory(const cwc::string_view & fqn, const cwc::optional<const cwc::string_view> & id) const -> cwc::intrusive_ptr<cwc::component> { return id ? plugin_factories.at(fqn.c_str()).at(id->c_str()) : component_factories.at(fqn.c_str()); }
-
 		void error(cwc::string_view msg) const noexcept {
 			last_message[0] = '\0';
 			std::strncat(last_message, msg.c_str(), sizeof(last_message) - 1);
@@ -161,7 +159,9 @@ namespace {
 
 		auto error() const noexcept -> cwc::string_view { return last_message; }
 
-		auto config() const noexcept -> cwc::intrusive_ptr<cwc::config_sections_enumerator> { return cwc::make_intrusive<config_sections_enumerator>(configuration); }
+		auto config() const -> cwc::intrusive_ptr<cwc::config_sections_enumerator> { return cwc::make_intrusive<config_sections_enumerator>(configuration); }
+
+		auto factory(const cwc::string_view & fqn, const cwc::optional<const cwc::string_view> & id) const -> cwc::intrusive_ptr<cwc::component> { return id ? plugin_factories.at(fqn.c_str()).at(id->c_str()) : component_factories.at(fqn.c_str()); }
 	};
 
 	std::atomic<bool> initialized{false};

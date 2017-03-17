@@ -57,6 +57,7 @@ namespace cwc {
 
 #include "internal/error_code.hpp"
 
+#include "public/array.hpp"
 #include "public/array_ref.hpp"
 #include "public/optional.hpp"
 #include "public/string_view.hpp"

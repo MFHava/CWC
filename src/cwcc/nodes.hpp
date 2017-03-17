@@ -36,6 +36,7 @@ namespace cwcc {
 	};
 
 	struct array_ref;
+	struct array;
 	struct optional;
 	struct intrusive_ptr;
 	//TODO: struct variant;
@@ -43,6 +44,7 @@ namespace cwcc {
 	using templated_type = boost::variant<
 		untemplated_type,
 		boost::recursive_wrapper<array_ref>,
+		boost::recursive_wrapper<array>,
 		boost::recursive_wrapper<optional>,
 		//TODO: boost::recursive_wrapper<variant>.
 		boost::recursive_wrapper<intrusive_ptr>
@@ -56,6 +58,16 @@ namespace cwcc {
 		auto operator==(const array_ref & lhs, const array_ref & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
 		friend
 		auto operator<<(std::ostream & os, const array_ref & self) -> std::ostream & { return os << "::cwc::array_ref<" << self.mutable_ << self.type << '>'; }
+	};
+
+	struct array final {
+		templated_type type;
+		std::size_t size;
+
+		friend
+		auto operator==(const array & lhs, const array & rhs) -> bool { return (lhs.type == rhs.type) && (lhs.size == rhs.size); }
+		friend
+		auto operator<<(std::ostream & os, const array & self) -> std::ostream & { return os << "::cwc::array<" << self.type << ", " << self.size << '>'; }
 	};
 
 	struct optional final {
@@ -244,6 +256,7 @@ namespace cwcc {
 }
 
 BOOST_FUSION_ADAPT_STRUCT(cwcc::untemplated_type, name)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::array, type, size)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::array_ref, mutable_, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::optional, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::intrusive_ptr, mutable_, type)

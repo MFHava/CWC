@@ -89,12 +89,13 @@ namespace {
 			existing_type      %= local_identifier[phx::bind(&bundle_parser::validate_local_type, this, _1)]
 			                    | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
 
-			templated_type     %= array_ref | optional /*TODO: | variant*/ | intrusive_ptr | untemplated_type;
+			templated_type     %= array_ref | array | optional /*TODO: | variant*/ | intrusive_ptr | untemplated_type;
 			untemplated_type   %= existing_type;
-			array_ref          %= keyword["array_ref"]     > '<' > mutable_ >> templated_type       > '>';
-			optional           %= keyword["optional"]      > '<' >             templated_type       > '>';
-			//TODO: variant            %= keyword["variant"]       > '<' >             templated_type % ',' > '>';
-			intrusive_ptr      %= keyword["intrusive_ptr"] > '<' > mutable_ >> templated_type       > '>';
+			array_ref          %= keyword["array_ref"]     > '<' > mutable_ >> templated_type                        > '>';
+			array              %= keyword["array"]         > '<' >             templated_type > ',' > qi::uint_      > '>';
+			optional           %= keyword["optional"]      > '<' >             templated_type                        > '>';
+			//TODO: variant            %= keyword["variant"]       > '<' >             templated_type % ','                  > '>';
+			intrusive_ptr      %= keyword["intrusive_ptr"] > '<' > mutable_ >> templated_type                        > '>';
 
 			struct_members     %= *documentation >> templated_type >> local_identifier % ',' > qi::lit(';');
 			struct_            %= *documentation >> keyword["struct"] > new_type > '{' > +struct_members > '}';
@@ -136,6 +137,7 @@ namespace {
 			BOOST_SPIRIT_DEBUG_NODE(untemplated_type);
 			BOOST_SPIRIT_DEBUG_NODE(templated_type);
 			BOOST_SPIRIT_DEBUG_NODE(array_ref);
+			BOOST_SPIRIT_DEBUG_NODE(array);
 			BOOST_SPIRIT_DEBUG_NODE(optional);
 			/*BOOST_SPIRIT_DEBUG_NODE(variant);*/
 			BOOST_SPIRIT_DEBUG_NODE(intrusive_ptr);
@@ -204,6 +206,7 @@ namespace {
 		qi::rule<Iterator, cwcc::untemplated_type(), Skipper> untemplated_type;
 		qi::rule<Iterator, cwcc::templated_type(), Skipper> templated_type;
 		qi::rule<Iterator, cwcc::array_ref(), Skipper> array_ref;
+		qi::rule<Iterator, cwcc::array(), Skipper> array;
 		qi::rule<Iterator, cwcc::optional(), Skipper> optional;
 		//TODO: qi::rule<Iterator, cwcc::variant(), Skipper> variant;
 		qi::rule<Iterator, cwcc::intrusive_ptr(), Skipper> intrusive_ptr;

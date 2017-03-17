@@ -9,18 +9,21 @@
 BOOST_AUTO_TEST_CASE(typedef_) {
 	const auto & b = parse(
 		"bundle UT {\n"
-		"	using Type0 =                   ::cwc::int ;\n"
-		"	using Type1 = array_ref<        ::cwc::int>;\n"
-		"	using Type2 = array_ref<mutable ::cwc::int>;\n"
-		"	using Type3 =  optional<        ::cwc::int>;\n"
+		"	using Type0 =                   ::cwc::int    ;\n"
+		"	using Type1 = array_ref<        ::cwc::int   >;\n"
+		"	using Type2 = array_ref<mutable ::cwc::int   >;\n"
+		"	using Type3 = optional <        ::cwc::int   >;\n"
+		"	using Type4 = array    <        ::cwc::int, 1>;\n"
 		"	//test\n"
-		"	using Type4 =                   ::cwc::int ;\n"
+		"	using Type5 =                   ::cwc::int    ;\n"
 		"	//test\n"
-		"	using Type5 = array_ref<        ::cwc::int>;\n"
+		"	using Type6 = array_ref<        ::cwc::int   >;\n"
 		"	//test\n"
-		"	using Type6 = array_ref<mutable ::cwc::int>;\n"
+		"	using Type7 = array_ref<mutable ::cwc::int   >;\n"
 		"	//test\n"
-		"	using Type7 =  optional<        ::cwc::int>;\n"
+		"	using Type8 = optional <        ::cwc::int   >;\n"
+		"	//test\n"
+		"	using Type9 =  array   <        ::cwc::int, 1>;\n"
 		"}"
 	);
 
@@ -38,11 +41,13 @@ BOOST_AUTO_TEST_CASE(typedef_) {
 	append({},         "Type1", cwcc::array_ref{false, cwcc::untemplated_type{"::cwc::int"}});
 	append({},         "Type2", cwcc::array_ref{true, cwcc::untemplated_type{"::cwc::int"}});
 	append({},         "Type3", cwcc::optional{cwcc::untemplated_type{"::cwc::int"}});
+	append({},         "Type4", cwcc::array{cwcc::untemplated_type{"::cwc::int"}, 1});
 
-	append({{"test"}}, "Type4", cwcc::untemplated_type{"::cwc::int"});
-	append({{"test"}}, "Type5", cwcc::array_ref{false, cwcc::untemplated_type{"::cwc::int"}});
-	append({{"test"}}, "Type6", cwcc::array_ref{true, cwcc::untemplated_type{"::cwc::int"}});
-	append({{"test"}}, "Type7", cwcc::optional{cwcc::untemplated_type{"::cwc::int"}});
+	append({{"test"}}, "Type5", cwcc::untemplated_type{"::cwc::int"});
+	append({{"test"}}, "Type6", cwcc::array_ref{false, cwcc::untemplated_type{"::cwc::int"}});
+	append({{"test"}}, "Type7", cwcc::array_ref{true, cwcc::untemplated_type{"::cwc::int"}});
+	append({{"test"}}, "Type8", cwcc::optional{cwcc::untemplated_type{"::cwc::int"}});
+	append({{"test"}}, "Type9", cwcc::array{cwcc::untemplated_type{"::cwc::int"}, 1});
 
 	BOOST_TEST((b == reference));
 }

@@ -65,27 +65,27 @@ namespace cwc {
 
 		template<typename OtherType>
 		friend
-		auto operator==(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept ->  bool { return lhs.ptr == rhs.ptr; }
+		auto operator==(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return lhs.ptr == rhs.ptr; }
 
 		template<typename OtherType>
 		friend
-		auto operator!=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept ->  bool { return !(lhs == rhs); }
+		auto operator!=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return !(lhs == rhs); }
 
 		template<typename OtherType>
 		friend
-		auto operator<(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept ->  bool { lhs.ptr < rhs.ptr; }
+		auto operator< (const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { lhs.ptr < rhs.ptr; }
 
 		template<typename OtherType>
 		friend
-		auto operator>(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept ->  bool { return rhs < lhs; }
+		auto operator> (const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return rhs < lhs; }
 
 		template<typename OtherType>
 		friend
-		auto operator<=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept ->  bool { return !(rhs < lhs); }
+		auto operator<=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return !(rhs < lhs); }
 
 		template<typename OtherType>
 		friend
-		auto operator>=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept ->  bool { return !(lhs < rhs); }
+		auto operator>=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return !(lhs < rhs); }
 	private:
 		Type * ptr{nullptr};
 	};

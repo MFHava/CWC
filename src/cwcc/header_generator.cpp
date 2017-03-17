@@ -164,6 +164,7 @@ namespace cwcc {
 			}
 			void operator()(const untemplated_type & self) { (*this)(self.name); }
 			void operator()(const array_ref & self) { self.type.apply_visitor(*this); }
+			void operator()(const array & self) { self.type.apply_visitor(*this); }
 			void operator()(const optional & self) { self.type.apply_visitor(*this); }
 			void operator()(const intrusive_ptr & self) { self.type.apply_visitor(*this); }
 			void operator()(const param & self) { self.type.apply_visitor(*this); }

@@ -11,6 +11,7 @@
 #pragma once
 
 namespace cwc {
+	CWC_PACK_BEGIN
 	//! @brief a fixed-size array
 	//! @tparam Type type of the stored array
 	//! @tparam Size size of the stored array
@@ -112,6 +113,7 @@ namespace cwc {
 
 		Type values[Size];
 	};
+	CWC_PACK_END
 
 	template<typename Type, std::size_t Size>
 	void swap(array<Type, Size> & lhs, array<Type, Size> & rhs) noexcept { lhs.swap(rhs); }

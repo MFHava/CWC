@@ -89,8 +89,8 @@ namespace cwc {
 		auto operator*() const -> const Type & { assert(initialized); return reinterpret_cast<const Type &>(data); }
 		auto operator*()       ->       Type & { assert(initialized); return reinterpret_cast<      Type &>(data); }
 
-		explicit operator bool() const noexcept { return initialized; }
-		auto operator!() const noexcept -> bool { return !**this; }
+		explicit operator bool() const noexcept { return  initialized; }
+		auto operator!() const noexcept -> bool { return !initialized; }
 
 		void swap(optional & other) noexcept {
 			if(!*this && !other) return;

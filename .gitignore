@@ -51,3 +51,4 @@ Temporary Items
 .svn*
 build*
 inc/cwc/cwc.hpp
+*.patch

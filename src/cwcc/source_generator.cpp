@@ -60,7 +60,7 @@ namespace cwcc {
 		      "\tcwc_context = context;\n"
 		      "}\n"
 		      "\n"
-		      "extern \"C\" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_view * fqn, cwc::intrusive_ptr<cwc::component> * result) {\n"
+		      "extern \"C\" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * result) {\n"
 		      "\tassert(cwc_context);\n"
 		      "\tassert(result);\n"
 		      "\treturn ::cwc::internal::call_and_return_error([&] {\n"
@@ -75,7 +75,7 @@ namespace cwcc {
 		      "\t});\n"
 		      "}\n"
 		      "\n"
-		      "extern \"C\" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_view * definition) {\n"
+		      "extern \"C\" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_ref * definition) {\n"
 		      "\t*definition =\n";
 		std::transform(std::istream_iterator<line>{is}, std::istream_iterator<line>{}, std::ostream_iterator<std::string>{os}, [](const std::string & str) {
 			std::stringstream ss;

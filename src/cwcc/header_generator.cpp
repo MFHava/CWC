@@ -96,7 +96,7 @@ namespace cwcc {
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				os << " {\n"
 				      "\t\tstatic void cwc_uuid() {}\n"
-				      "\t\tstatic auto cwc_fqn() -> ::cwc::string_view { return \"" << b.name << "\"; }\n"
+				      "\t\tstatic auto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
 				      "\t\tusing cwc_interfaces = ::cwc::internal::make_base_list<" << self.interfaces[0];
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				os << ">::type;\n\n";

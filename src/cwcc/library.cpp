@@ -47,9 +47,9 @@ namespace cwcc {
 		if(!init) throw std::logic_error{"could not find entry point 'cwc_init' in bundle \"" + name + '"'};
 		init(cwc::this_context());
 		
-		const auto definitionPtr = reinterpret_cast<void(CWC_CALL *)(cwc::string_view *)>(GetProcAddress(instance.handle, "cwc_reflect"));
+		const auto definitionPtr = reinterpret_cast<void(CWC_CALL *)(cwc::string_ref *)>(GetProcAddress(instance.handle, "cwc_reflect"));
 		if(!definitionPtr) throw std::logic_error{"could not find entry point 'cwc_reflect' in bundle \"" + name + '"'};
-		cwc::string_view definition;
+		cwc::string_ref definition;
 		definitionPtr(&definition);
 		definition_ = definition.c_str();
 	}

@@ -20,7 +20,7 @@ extern "C" CWC_EXPORT void CWC_CALL cwc_init(::cwc::intrusive_ptr<::cwc::context
 	cwc_context = context;
 }
 
-extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_view * fqn, cwc::intrusive_ptr<cwc::component> * result) {
+extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * result) {
 	assert(cwc_context);
 	assert(result);
 	return ::cwc::internal::call_and_return_error([&] {
@@ -33,7 +33,7 @@ extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::c
 	});
 }
 
-extern "C" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_view * definition) {
+extern "C" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_ref * definition) {
 	*definition =
 		"//! @brief CWC Sample \"Fibonacci Generator\"\n"
 		"//! @author Michael Florian Hava\n"

@@ -52,7 +52,7 @@ int main() try {
 	auto factory = cwc::this_context()->factory<cwc::sample::fibonacci::generator>();
 #else
 	using namespace cwc::literals;
-	auto factory = cwc::this_context()->factory<cwc::sample::fibonacci::generator>("ID"_sv);
+	auto factory = cwc::this_context()->factory<cwc::sample::fibonacci::generator>("ID"_sr);
 #endif
 	cwc::intrusive_ptr<cwc::sample::fibonacci::sequence> generator{factory->create()};
 

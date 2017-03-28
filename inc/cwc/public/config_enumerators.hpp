@@ -14,8 +14,8 @@ namespace cwc {
 	//! @brief entry in the configuration
 	CWC_PACK_BEGIN
 	struct config_entry final {
-		string_view key;//!< @brief key in configuration
-		string_view value;//!< @brief associated value
+		string_ref key;//!< @brief key in configuration
+		string_ref value;//!< @brief associated value
 	};
 	CWC_PACK_END
 
@@ -25,7 +25,7 @@ namespace cwc {
 	//! @brief entry in the configuration
 	CWC_PACK_BEGIN
 	struct config_section final {
-		string_view name;//!< @brief name of section
+		string_ref name;//!< @brief name of section
 		intrusive_ptr<config_section_enumerator> enumerator;//!< @brief enumerator for the section
 	};
 	CWC_PACK_END

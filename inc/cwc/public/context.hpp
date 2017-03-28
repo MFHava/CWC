@@ -29,11 +29,11 @@ namespace cwc {
 #endif
 	//! @brief interface of the global context
 	class context : public component {
-		virtual void                 CWC_CALL cwc$context$version$0(string_view * cwc_ret) const noexcept =0;
-		virtual void                 CWC_CALL cwc$context$error$1(const string_view * msg) const noexcept =0;
-		virtual void                 CWC_CALL cwc$context$error$2(string_view * cwc_ret) const noexcept =0;
+		virtual void                 CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept =0;
+		virtual void                 CWC_CALL cwc$context$error$1(const string_ref * msg) const noexcept =0;
+		virtual void                 CWC_CALL cwc$context$error$2(string_ref * cwc_ret) const noexcept =0;
 		virtual internal::error_code CWC_CALL cwc$context$config$3(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept =0;
-		virtual internal::error_code CWC_CALL cwc$context$factory$4(const string_view * fqn, const optional<const string_view> * id, intrusive_ptr<component> * cwc_ret) const noexcept =0;
+		virtual internal::error_code CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept =0;
 
 		friend
 		void internal::validate(error_code code);
@@ -42,20 +42,20 @@ namespace cwc {
 		friend
 		auto internal::call_and_return_error(Func func) noexcept -> error_code;
 
-		void error(const string_view & msg) {
+		void error(const string_ref & msg) {
 			cwc$context$error$1(&msg);
 		}
 
-		auto error() const -> string_view {
-			string_view cwc_ret;
+		auto error() const -> string_ref {
+			string_ref cwc_ret;
 			cwc$context$error$2(&cwc_ret);
 			return cwc_ret;
 		}
 	public:
 		//! @brief get the version information of the context
 		//! @returns version information of the context
-		auto version() const -> string_view {
-			string_view cwc_ret;
+		auto version() const -> string_ref {
+			string_ref cwc_ret;
 			cwc$context$version$0(&cwc_ret);
 			return cwc_ret;
 		}
@@ -73,7 +73,7 @@ namespace cwc {
 		//! @param[in] id optional id of the plugin
 		//! @returns factory for requested type
 		template<typename Component>
-		auto factory(const optional<const string_view> & id = nullopt) const -> intrusive_ptr<typename Component::cwc_factory> {
+		auto factory(const optional<const string_ref> & id = nullopt) const -> intrusive_ptr<typename Component::cwc_factory> {
 			intrusive_ptr<component> cwc_ret;
 			const auto & fqn = Component::cwc_fqn();
 			internal::call(*this, &context::cwc$context$factory$4, &fqn, &id, &cwc_ret);
@@ -85,7 +85,7 @@ namespace cwc {
 		//! @param[in] id identifier qualifying the tested implementation
 		//! @returns true iff implementation is available
 		template<typename Component>
-		auto plugin_available(const string_view & id) const -> bool try {
+		auto plugin_available(const string_ref & id) const -> bool try {
 			factory<Component>(id);
 			return true;
 		} catch(...) {
@@ -94,11 +94,11 @@ namespace cwc {
 
 		template<typename CWCImplementation, typename CWCTypeList>
 		class cwc_implementation : public internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			void                 CWC_CALL cwc$context$version$0(string_view * cwc_ret) const noexcept final { *cwc_ret = static_cast<const CWCImplementation &>(*this).version(); }
-			void                 CWC_CALL cwc$context$error$1(const string_view * msg) const noexcept final { static_cast<const CWCImplementation &>(*this).error(*msg); }
-			void                 CWC_CALL cwc$context$error$2(string_view * cwc_ret) const noexcept final { *cwc_ret = static_cast<const CWCImplementation &>(*this).error(); }
+			void                 CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept final { *cwc_ret = static_cast<const CWCImplementation &>(*this).version(); }
+			void                 CWC_CALL cwc$context$error$1(const string_ref * msg) const noexcept final { static_cast<const CWCImplementation &>(*this).error(*msg); }
+			void                 CWC_CALL cwc$context$error$2(string_ref * cwc_ret) const noexcept final { *cwc_ret = static_cast<const CWCImplementation &>(*this).error(); }
 			internal::error_code CWC_CALL cwc$context$config$3(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).config(); }); }
-			internal::error_code CWC_CALL cwc$context$factory$4(const string_view * fqn, const optional<const string_view> * id, intrusive_ptr<component> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).factory(*fqn, *id); }); }
+			internal::error_code CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).factory(*fqn, *id); }); }
 		};
 		static auto cwc_uuid() -> uuid { return {0xEA, 0x2E, 0xA7, 0x81, 0x7F, 0xF8, 0x5D, 0xB8, 0xBE, 0xC1, 0xC1, 0x2, 0x4A, 0x74, 0x4E, 0xC8}; }
 	};

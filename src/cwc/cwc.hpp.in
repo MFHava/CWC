@@ -60,7 +60,7 @@ namespace cwc {
 #include "public/array.hpp"
 #include "public/array_ref.hpp"
 #include "public/optional.hpp"
-#include "public/string_view.hpp"
+#include "public/string_ref.hpp"
 #include "public/intrusive_ptr.hpp"
 
 #include "internal/type_list.hpp"

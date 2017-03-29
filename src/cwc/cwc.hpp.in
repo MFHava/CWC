@@ -7,12 +7,20 @@
 #pragma once
 #define CWC_HPP_HEADER_INCLUDED
 
+#include "config/compiler_detection.hpp"
+
 #if defined(_MSC_VER)
-	#include "cwc/config/msvc.hpp"
+	#include "config/msvc.hpp"
 #elif defined(__GNUG__)
-	#include "cwc/config/gcc.hpp"
+	#include "config/gcc.hpp"
 #else
 	#error "Unknown compiler!"
+#endif
+
+#ifdef CWC_COMPILER_CXX_RELAXED_CONSTEXPR
+	#define CWC_CXX_RELAXED_CONSTEXPR constexpr
+#else
+	#define CWC_CXX_RELAXED_CONSTEXPR
 #endif
 
 #define CWC_DO_STRINGIFY(str) #str

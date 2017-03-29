@@ -26,50 +26,50 @@ namespace cwc {
 		auto operator=(const array &) -> array & =default;
 		~array() noexcept =default;
 
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto operator[](std::size_t index)       noexcept ->       Type & { return values[index]; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto operator[](std::size_t index) const noexcept -> const Type & { return values[index]; }
 
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto at(std::size_t index)       ->       Type & { return validate_index(index), values[index]; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto at(std::size_t index) const -> const Type & { return validate_index(index), values[index]; }
 
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto data()       noexcept ->       Type * { return values; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto data() const noexcept -> const Type * { return values; }
 
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto size()  const noexcept -> std::size_t { return Size; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto empty() const noexcept -> bool { return size() == 0; }
 
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto begin()        noexcept ->       Type * { return values; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto begin()  const noexcept -> const Type * { return values; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto cbegin() const noexcept -> const Type * { return values; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto end()          noexcept ->       Type * { return values + Size; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto end()    const noexcept -> const Type * { return values + Size; }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto cend()   const noexcept -> const Type * { return values + Size; }
 
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto rbegin()        noexcept -> std::reverse_iterator<      Type *> { return std::reverse_iterator<      Type *>(end()); }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto rbegin()  const noexcept -> std::reverse_iterator<const Type *> { return std::reverse_iterator<const Type *>(end()); }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto crbegin() const noexcept -> std::reverse_iterator<const Type *> { return std::reverse_iterator<const Type *>(cend()); }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto rend()          noexcept -> std::reverse_iterator<      Type *> { return std::reverse_iterator<      Type *>(begin()); }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto rend()    const noexcept -> std::reverse_iterator<const Type *> { return std::reverse_iterator<const Type *>(begin()); }
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		auto crend()   const noexcept -> std::reverse_iterator<const Type *> { return std::reverse_iterator<const Type *>(cbegin()); }
 
 		void fill(const Type & value) { for(auto & v : values) v = value; }
@@ -108,7 +108,7 @@ namespace cwc {
 		friend
 		auto operator>=(const array & lhs, const array & rhs) noexcept -> bool { return !(lhs < rhs); }
 	private:
-		constexpr
+		CWC_CXX_RELAXED_CONSTEXPR
 		void validate_index(std::size_t index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 
 		Type values[Size];
@@ -119,14 +119,14 @@ namespace cwc {
 	void swap(array<Type, Size> & lhs, array<Type, Size> & rhs) noexcept { lhs.swap(rhs); }
 
 	template<typename Type, std::size_t Size, std::size_t Index>
-	constexpr
+	CWC_CXX_RELAXED_CONSTEXPR
 	auto get(      array<Type, Size> & self) noexcept ->       Type & {
 		static_assert(Index < Size, "index out of range");
 		return self[Index];
 	}
 
 	template<typename Type, std::size_t Size, std::size_t Index>
-	constexpr
+	CWC_CXX_RELAXED_CONSTEXPR
 	auto get(const array<Type, Size> & self) noexcept -> const Type & {
 		static_assert(Index < Size, "index out of range");
 		return self[Index];

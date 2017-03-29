@@ -14,11 +14,28 @@ OPTION(CWC_BUILD_DOCUMENTATION "Build documentation" OFF)
 SET(CWC_MAX_EXCEPTION_MESSAGE_LENGTH 256 CACHE STRING "Control maximum length of exception messages across DLL boundaries")
 #END configuration
 
-iNCLUDE_DIRECTORIES(inc)
+INCLUDE_DIRECTORIES(inc)
 
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/static)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+#BEGIN compiler feature detection
+#the following code is disabled because it doesn't interact nicely with feature detection
+#CWC requires a minimum of C++11
+#SET(CMAKE_CXX_STANDARD 11)
+#SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_EXTENSIONS OFF)
+
+INCLUDE(WriteCompilerDetectionHeader)
+WRITE_COMPILER_DETECTION_HEADER(
+	FILE "${CMAKE_CURRENT_SOURCE_DIR}/inc/cwc/config/compiler_detection.hpp"
+	PREFIX CWC
+	COMPILERS MSVC GNU
+	FEATURES
+		cxx_relaxed_constexpr
+)
+#END compiler feature detection
 
 SET(CWC_VERSION "2.3.0-alpha")
 SET(CWC_LIB_DEBUG_POSTFIX "-debug")
@@ -32,7 +49,6 @@ IF(${MSVC})
 		SET(CWC_LIB_NAME ${CWC_LIB_NAME}-msvc${MSVC_VERSION})
 	ENDIF()
 ENDIF()
-
 
 SET(CWC_HOST_LIBS ${CWC_LIB_NAME})
 
@@ -58,8 +74,6 @@ FILE(GLOB_RECURSE CWC_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/src/cwc/*)
 ADD_LIBRARY(${CWC_LIB_NAME} STATIC ${CWC_HEADERS} ${CWC_SOURCES} ${CWC_GENERATED_SOURCES})
 SET_TARGET_PROPERTIES(${CWC_LIB_NAME} PROPERTIES
 	DEBUG_POSTFIX  ${CWC_LIB_DEBUG_POSTFIX}
-	CXX_STANDARD 14
-	CXX_STANDARD_REQUIRED ON
 	COMPILE_DEFINITIONS "CWC_BUILDING;CWC_HOST"
 )
 #END CWC-library
@@ -73,11 +87,7 @@ TARGET_LINK_LIBRARIES(cwcc ${CWC_HOST_LIBS} ${Boost_FILESYSTEM_LIBRARY} ${Boost_
 SET_SOURCE_FILES_PROPERTIES(src/cwcc/parser.cpp PROPERTIES
 	COMPILE_FLAGS "-O3"#NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)
 )
-SET_TARGET_PROPERTIES(cwcc PROPERTIES
-	CXX_STANDARD 14
-	CXX_STANDARD_REQUIRED ON
-	COMPILE_DEFINITIONS CWC_HOST
-)
+SET_TARGET_PROPERTIES(cwcc PROPERTIES COMPILE_DEFINITIONS "CWC_HOST")
 #END CWCC-application + test
 
 IF(CWC_BUILD_DOCUMENTATION)
@@ -106,11 +116,7 @@ IF(CWC_BUILD_TESTS)
 		COMPILE_FLAGS "-O3"#NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)
 	)
 
-	SET_TARGET_PROPERTIES(test-cwc test-cwcc PROPERTIES
-		CXX_STANDARD 14
-		CXX_STANDARD_REQUIRED ON
-		COMPILE_DEFINITIONS CWC_HOST
-	)
+	SET_TARGET_PROPERTIES(test-cwc test-cwcc PROPERTIES COMPILE_DEFINITIONS "CWC_HOST")
 ENDIF()
 
 IF(CWC_BUILD_SAMPLES)
@@ -125,10 +131,4 @@ IF(CWC_BUILD_SAMPLES)
 		LANGUAGE CXX
 		COMPILE_FLAGS "-xc++"#NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise GCC won't compile this file
 	)
-
-	SET_TARGET_PROPERTIES(sample-fibonacci-dll sample-fibonacci PROPERTIES
-		CXX_STANDARD 14
-		CXX_STANDARD_REQUIRED ON
-	)
-
 ENDIF()

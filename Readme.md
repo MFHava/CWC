@@ -12,4 +12,4 @@ CWC introduces a stable binary representation of components and related types. B
 
 Requirements
 ============ 
-CWC uses CMake as its build system and requires a conformant C++14 implementation and (fairly) complete C++14 standard library. Whereas CWC and projects using it have no external dependencies, tools and tests depend heavily on several (precompiled) Boost libraries. The documentation is based on Doxygen.
+CWC uses CMake as its build system and requires a conformant C++11 implementation and (fairly) complete C++11 standard library. Whereas CWC and projects using it have no external dependencies, tools and tests depend heavily on several (precompiled) Boost libraries. The documentation is based on Doxygen.

@@ -7,14 +7,18 @@
 #pragma once
 #define CWC_HPP_HEADER_INCLUDED
 
-#include "config/compiler_detection.hpp"
+#include "internal/compiler_detection.hpp"
 
-#if defined(_MSC_VER)
-	#include "config/msvc.hpp"
-#elif defined(__GNUG__)
-	#include "config/gcc.hpp"
-#else
-	#error "Unknown compiler!"
+#if CWC_COMPILER_IS_MSVC
+	#define CWC_CALL       __cdecl
+	#define CWC_EXPORT     __declspec(dllexport)
+	#define CWC_PACK_BEGIN __pragma(pack(push, 1))
+	#define CWC_PACK_END   __pragma(pack(pop))
+#elif CWC_COMPILER_IS_GNU
+	#define CWC_CALL       __attribute__((__cdecl__))
+	#define CWC_EXPORT     __attribute__((visibility("default")))
+	#define CWC_PACK_BEGIN _Pragma("pack(push, 1)")
+	#define CWC_PACK_END   _Pragma("pack(pop)")
 #endif
 
 #ifdef CWC_COMPILER_CXX_RELAXED_CONSTEXPR
@@ -22,24 +26,6 @@
 #else
 	#define CWC_CXX_RELAXED_CONSTEXPR
 #endif
-
-#define CWC_DO_STRINGIFY(str) #str
-#define CWC_STRINGIFY(str) CWC_DO_STRINGIFY(str)
-
-#if defined(CWC_AUTOLINK_SUPPORTED) && !defined(CWC_BUILDING) && defined(CWC_HOST)
-	#ifdef CWC_AUTOLINK_DEBUG
-		#define CWC_LIB_DEBUG "@CWC_LIB_DEBUG_POSTFIX@"
-	#else
-		#define CWC_LIB_DEBUG ""
-	#endif
-
-	#pragma comment(lib, "cwc-@CWC_VERSION@-" CWC_AUTOLINK_TOOLKIT CWC_LIB_DEBUG ".lib")
-
-	#undef CWC_LIB_DEBUG
-#endif
-
-#undef CWC_DO_STRINGIFY
-#undef CWC_STRINGIFY
 
 #include <atomic>
 #include <memory>

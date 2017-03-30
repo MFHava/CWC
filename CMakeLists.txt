@@ -31,7 +31,7 @@ INCLUDE(WriteCompilerDetectionHeader)
 WRITE_COMPILER_DETECTION_HEADER(
 	FILE "${CMAKE_CURRENT_SOURCE_DIR}/inc/cwc/internal/compiler_detection.hpp"
 	PREFIX CWC
-	COMPILERS MSVC GNU
+	COMPILERS MSVC GNU Intel
 	FEATURES
 		cxx_relaxed_constexpr
 )

@@ -131,12 +131,19 @@ namespace cwc {
 			swap(last,  other.last);
 		}
 
-		//TODO: switch to value comparison?! (=> generate comparison operators for all structs automagically?!)
 		friend
-		auto operator==(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return (lhs.begin() == rhs.begin()) && (lhs.end() == rhs.end()); }
+		auto operator==(const array_ref & lhs, const array_ref & rhs) noexcept -> bool {
+			if(lhs.size() != rhs.size()) return false;
+			for(size_type i{0}; i < lhs.size(); ++i)
+				if(lhs[i] != rhs[i])
+					return false;
+			return true;
+		}
 
 		friend
 		auto operator!=(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return !(lhs == rhs); }
+
+		//TODO: add operator< <= => > ?!
 	private:
 		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 

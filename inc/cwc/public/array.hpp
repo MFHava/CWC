@@ -39,9 +39,14 @@ namespace cwc {
 		~array() noexcept =default;
 
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto data()       noexcept ->       pointer { return values; }
+		auto operator[](size_type index)       noexcept ->       reference { assert(Size); return values[index]; }
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto data() const noexcept -> const_pointer { return values; }
+		auto operator[](size_type index) const noexcept -> const_reference { assert(Size); return values[index]; }
+
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto at(size_type index)       ->       reference { return validate_index(index), (*this)[index]; }
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto at(size_type index) const -> const_reference { return validate_index(index), (*this)[index]; }
 
 		CWC_CXX_RELAXED_CONSTEXPR
 		auto size()  const noexcept -> size_type { return Size; }
@@ -49,14 +54,9 @@ namespace cwc {
 		auto empty() const noexcept -> bool { return size() == 0; }
 
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto operator[](size_type index)       noexcept ->       reference { return values[index]; }
+		auto data()       noexcept ->       pointer { return values; }
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto operator[](size_type index) const noexcept -> const_reference { return values[index]; }
-
-		CWC_CXX_RELAXED_CONSTEXPR
-		auto at(size_type index)       ->       reference { return validate_index(index), values[index]; }
-		CWC_CXX_RELAXED_CONSTEXPR
-		auto at(size_type index) const -> const_reference { return validate_index(index), values[index]; }
+		auto data() const noexcept -> const_pointer { return values; }
 
 		CWC_CXX_RELAXED_CONSTEXPR
 		auto begin()        noexcept ->       iterator { return values; }

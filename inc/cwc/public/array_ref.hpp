@@ -99,17 +99,17 @@ namespace cwc {
 			return *this;
 		}
 
-		auto data()       noexcept ->       pointer { return first; }
-		auto data() const noexcept -> const_pointer { return first; }
+		auto operator[](size_type index)       noexcept ->       reference { assert(!empty()); return first[index]; }
+		auto operator[](size_type index) const noexcept -> const_reference { assert(!empty()); return first[index]; }
+
+		auto at(size_type index)       ->       reference { return validate_index(index), (*this)[index]; }
+		auto at(size_type index) const -> const_reference { return validate_index(index), (*this)[index]; }
 
 		auto size()  const noexcept -> size_type { return last - first; }
 		auto empty() const noexcept -> bool { return size() == 0; }
 
-		auto operator[](size_type index)       noexcept ->       reference { return first[index]; }
-		auto operator[](size_type index) const noexcept -> const_reference { return first[index]; }
-
-		auto at(size_type index)       ->       reference { return validate_index(index), (*this)[index]; }
-		auto at(size_type index) const -> const_reference { return validate_index(index), (*this)[index]; }
+		auto data()       noexcept ->       pointer { return first; }
+		auto data() const noexcept -> const_pointer { return first; }
 
 		auto begin()        noexcept ->       iterator { return first; }
 		auto begin()  const noexcept -> const_iterator { return first; }

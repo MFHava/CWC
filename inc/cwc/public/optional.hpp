@@ -83,11 +83,11 @@ namespace cwc {
 
 		~optional() noexcept { reset(); }
 
-		auto operator->() const -> const Type * { return &**this; }
 		auto operator->()       ->       Type * { return &**this; }
+		auto operator->() const -> const Type * { return &**this; }
 
-		auto operator*() const -> const Type & { assert(initialized); return reinterpret_cast<const Type &>(data); }
 		auto operator*()       ->       Type & { assert(initialized); return reinterpret_cast<      Type &>(data); }
+		auto operator*() const -> const Type & { assert(initialized); return reinterpret_cast<const Type &>(data); }
 
 		explicit operator bool() const noexcept { return  initialized; }
 		auto operator!() const noexcept -> bool { return !initialized; }

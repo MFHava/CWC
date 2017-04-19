@@ -32,6 +32,7 @@ namespace cwc {
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 		template<typename... Args>
+		CWC_CXX_RELAXED_CONSTEXPR
 		array(Args &&... args) : values{std::forward<Args>(args)...} {}
 
 		array(const array &) =default;
@@ -130,14 +131,14 @@ namespace cwc {
 	template<typename Type, std::size_t Size>
 	void swap(array<Type, Size> & lhs, array<Type, Size> & rhs) noexcept { lhs.swap(rhs); }
 
-	template<typename Type, std::size_t Size, std::size_t Index>
+	template<std::size_t Index, typename Type, std::size_t Size>
 	CWC_CXX_RELAXED_CONSTEXPR
 	auto get(      array<Type, Size> & self) noexcept ->       Type & {
 		static_assert(Index < Size, "index out of range");
 		return self[Index];
 	}
 
-	template<typename Type, std::size_t Size, std::size_t Index>
+	template<std::size_t Index, typename Type, std::size_t Size>
 	CWC_CXX_RELAXED_CONSTEXPR
 	auto get(const array<Type, Size> & self) noexcept -> const Type & {
 		static_assert(Index < Size, "index out of range");

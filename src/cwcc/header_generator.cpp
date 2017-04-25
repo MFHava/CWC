@@ -83,6 +83,7 @@ namespace cwcc {
 					os << "); }); }\n";
 				}
 				os << "\t\t};\n"
+				      "\t\tCWC_CXX_RELAXED_CONSTEXPR\n"
 				      "\t\tstatic auto cwc_uuid() -> ::cwc::uuid { return {" << name_to_uuid(self.name) << "}; }\n"
 				      "\t};\n";
 			}
@@ -95,6 +96,7 @@ namespace cwcc {
 				os << "\tstruct " << self.name << " : " << self.interfaces[0];
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				os << " {\n"
+				      "\t\tCWC_CXX_RELAXED_CONSTEXPR\n"
 				      "\t\tstatic void cwc_uuid() {}\n"
 				      "\t\tstatic auto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
 				      "\t\tusing cwc_interfaces = ::cwc::internal::make_base_list<" << self.interfaces[0];
@@ -146,8 +148,9 @@ namespace cwcc {
 				const auto uuid = uuid_generator(this_bundle.name + "::" + s);
 				std::stringstream ss;
 				const auto last = std::end(uuid.data) - 1;
-				std::copy(std::begin(uuid.data), last, std::ostream_iterator<int>{ss << std::hex << std::uppercase << "0x", ", 0x"});
+				std::copy(std::begin(uuid.data), last, std::ostream_iterator<int>{ss << std::hex << std::uppercase << "static_cast<cwc::uint8>(0x", "), static_cast<cwc::uint8>(0x"});
 				ss << static_cast<int>(*last);
+				ss << ')';
 				return ss.str();
 			}
 		};

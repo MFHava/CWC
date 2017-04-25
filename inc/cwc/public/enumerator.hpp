@@ -63,6 +63,7 @@ namespace cwc {
 			internal::error_code CWC_CALL cwc$enumerator$next$1() noexcept final { return internal::call_and_return_error([&] { static_cast<CWCImplementation &>(*this).next(); }); }
 			internal::error_code CWC_CALL cwc$enumerator$get$2(Type * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).get(); }); }
 		};
+		CWC_CXX_RELAXED_CONSTEXPR
 		static auto cwc_uuid() -> uuid { return {Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
 	};
 

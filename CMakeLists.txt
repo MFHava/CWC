@@ -37,7 +37,7 @@ WRITE_COMPILER_DETECTION_HEADER(
 )
 #END compiler feature detection
 
-SET(CWC_VERSION "2.3.0-alpha")
+SET(CWC_VERSION "2.4.0-alpha")
 SET(CWC_LIB_NAME cwc-${CWC_VERSION})
 
 #BEGIN find required Boost libraries

@@ -100,7 +100,8 @@ namespace cwc {
 			internal::error_code CWC_CALL cwc$context$config$3(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).config(); }); }
 			internal::error_code CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).factory(*fqn, *id); }); }
 		};
-		static auto cwc_uuid() -> uuid { return {0xEA, 0x2E, 0xA7, 0x81, 0x7F, 0xF8, 0x5D, 0xB8, 0xBE, 0xC1, 0xC1, 0x2, 0x4A, 0x74, 0x4E, 0xC8}; }
+		CWC_CXX_RELAXED_CONSTEXPR
+		static auto cwc_uuid() -> uuid { return {static_cast<uint8>(0xEA), static_cast<uint8>(0x2E), static_cast<uint8>(0xA7), static_cast<uint8>(0x81), static_cast<uint8>(0x7F), static_cast<uint8>(0xF8), static_cast<uint8>(0x5D), static_cast<uint8>(0xB8), static_cast<uint8>(0xBE), static_cast<uint8>(0xC1), static_cast<uint8>(0xC1), static_cast<uint8>(0x2), static_cast<uint8>(0x4A), static_cast<uint8>(0x74), static_cast<uint8>(0x4E), static_cast<uint8>(0xC8)}; }
 	};
 
 	//! @brief retrieve global context

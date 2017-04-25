@@ -59,13 +59,13 @@ namespace cwc {
 	//! @attention no member of this namespace is part of the public CWC API
 	namespace internal {}
 }
+#include "public/array.hpp"
+#include "public/array_ref.hpp"
 
 #include "public/types.hpp"
 
 #include "internal/error_code.hpp"
 
-#include "public/array.hpp"
-#include "public/array_ref.hpp"
 #include "public/optional.hpp"
 #include "public/string_ref.hpp"
 #include "public/intrusive_ptr.hpp"

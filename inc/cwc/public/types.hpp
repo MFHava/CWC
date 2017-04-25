@@ -27,36 +27,11 @@ namespace cwc {
 	using boolean = std::conditional<sizeof(bool) == 1, bool, uint8>::type;//!< @brief portable boolean (as bool lacks size guarantee)
 	//! @}
 
+	using uuid = array<uint8, 16>;//!< @brief universally unique identifier
+
 	//! @brief helper to determine if UTF-8 character is a valid ASCII character
 	//! @param[in] c character to test
 	//! @returns true iff c is a valid ASCII character
 	inline
 	auto is_ascii(const utf8 & c) -> bool { return (c >= 0 && c < 128); }
-
-	//! @brief universally unique identifier
-	CWC_PACK_BEGIN
-	struct uuid final {
-		uint8 data[16];//!< @brief plain storage of 128bit UUID
-	};
-	CWC_PACK_END
-	static_assert(sizeof(uuid) == 16, "unexpected size of uuid detected");
-
-	//! @brief compares two uuids for equality
-	//! @param[in] lhs first uuid
-	//! @param[in] rhs second uuid
-	//! @returns true iff the two uuids are equal
-	inline
-	auto operator==(const uuid & lhs, const uuid & rhs) -> bool {
-		for(auto i = 0; i < sizeof(uuid::data); ++i)
-			if(lhs.data[i] != rhs.data[i])
-				return false;
-		return true;
-	}
-
-	//! @brief compares two uuids for inequality
-	//! @param[in] lhs first uuid
-	//! @param[in] rhs second uuid
-	//! @returns true iff the two uuids are not equal
-	inline
-	auto operator!=(const uuid & lhs, const uuid & rhs) -> bool { return !(lhs == rhs); }
 }

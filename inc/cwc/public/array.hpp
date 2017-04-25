@@ -36,7 +36,9 @@ namespace cwc {
 		array(Args &&... args) : values{std::forward<Args>(args)...} {}
 
 		array(const array &) =default;
+		array(array && other) noexcept { swap(other); }
 		auto operator=(const array &) -> array & =default;
+		auto operator=(array && other) noexcept -> array & { swap(other); return *this; }
 		~array() noexcept =default;
 
 		CWC_CXX_RELAXED_CONSTEXPR

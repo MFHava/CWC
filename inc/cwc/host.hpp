@@ -4,13 +4,43 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+#pragma once
 #include <cwc/cwc.hpp>
 #include <regex>
+#include <limits>
+#include <climits>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
 
-#ifdef _WIN32
+/*!
+	@page context_init Context Initialization
+	In order to use CWC-based components the CWC host (in most cases an executable that uses components) must initialize the CWC context.
+	The context is statically initialized by including <cwc/host.hpp>. Note that this header may only be included once by the CWC host and may never be included by a CWC component.
+
+	Several aspects of the context initialization are configurable:
+	| Flag | Description | Default |
+	| --- | --- | --- |
+	| @c CWC_CONTEXT_INIT_STRING | source of the context initialization | @c "cwc.ini" <br/> (iff @c CWC_CONTEXT_INIT_IS_NOT_FILE is not defined) |
+	| @c CWC_CONTEXT_INIT_IS_NOT_FILE | controls how @c CWC_CONTEXT_INIT_STRING is interpreted <br/> if not defined: @c CWC_CONTEXT_INIT_STRING is name of an INI-file <br/> if defined: @c CWC_CONTEXT_INIT_STRING is string with complete configuration in INI-format | not defined |
+	| @c CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH | maximum length of exceptions messages - longer exception messages will be truncated when transfered by CWC | @c 256 |
+
+	@attention No static object may depend on the CWC context as this may lead to Static-Initialization-Order-Fiasco!
+*/
+
+#if !defined(CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH)
+	#define CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH 256
+#endif
+
+#if !defined(CWC_CONTEXT_INIT_IS_NOT_FILE) && !defined(CWC_CONTEXT_INIT_STRING)
+	#define CWC_CONTEXT_INIT_STRING "cwc.ini"
+#endif
+
+#if !defined(CWC_CONTEXT_INIT_STRING)
+	#error CWC_CONTEXT_INIT_STRING must be set!
+#endif
+
+#if CWC_OS_WINDOWS
 	#define WIN32_LEAN_AND_MEAN
 	#define NOSERVICE
 	#define NOMCX
@@ -19,15 +49,31 @@
 		#define NOMINMAX
 	#endif
 	#include <Windows.h>
-#else
+#elif CWC_OS_LINUX
 	#include <dlfcn.h>
 	#define HMODULE void *
 	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
 	#define GetProcAddress(dll, function) dlsym(dll, function)
+#else
+	#error unknown operating system
 #endif
 
 namespace {
-	thread_local cwc::utf8 last_message[@CWC_MAX_EXCEPTION_MESSAGE_LENGTH@]{0};
+	//validate that platform conforms to basic CWC ABI requirements
+	template<typename FloatingPoint, size_t ExpectedSize>
+	struct validate_floating_point final {
+		enum {
+			value = sizeof(FloatingPoint) == ExpectedSize
+			     && std::numeric_limits<FloatingPoint>::is_specialized
+			     && std::numeric_limits<FloatingPoint>::is_iec559
+			     && std::is_floating_point<FloatingPoint>::value
+		};
+	};
+	static_assert(CHAR_BIT == 8, "unsupported character type (not 8 bits)");
+	static_assert(validate_floating_point<cwc::float32, 4>::value, "unsupported single precision floating point");
+	static_assert(validate_floating_point<cwc::float64, 8>::value, "unsupported double precision floating point");
+
+	thread_local cwc::utf8 last_message[CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH]{0};
 
 	class context_impl final : public cwc::interface_implementation<cwc::context, context_impl> {
 		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(const cwc::string_ref *, cwc::intrusive_ptr<cwc::component> *);
@@ -150,7 +196,7 @@ namespace {
 			for(const auto & p : plugins) load_plugins(map, p.first, p.second);
 		}
 
-		auto version() const noexcept -> cwc::string_ref { return "@CWC_VERSION@"; }
+		auto version() const noexcept -> cwc::string_ref { return CWC_VERSION; }
 
 		void error(cwc::string_ref msg) const noexcept {
 			last_message[0] = '\0';
@@ -164,35 +210,18 @@ namespace {
 		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> { return id ? plugin_factories.at(fqn.c_str()).at(id->c_str()) : component_factories.at(fqn.c_str()); }
 	};
 
-	std::atomic<bool> initialized{false};
-	cwc::intrusive_ptr<cwc::context> instance;
+	const cwc::intrusive_ptr<cwc::context> instance = [] {
+#ifdef CWC_CONTEXT_INIT_IS_NOT_FILE
+		std::istringstream is{CWC_CONTEXT_INIT_STRING};
+		return cwc::make_intrusive<context_impl>(is);
+#else
+		std::ifstream is{CWC_CONTEXT_INIT_STRING};
+		if(!is) throw std::invalid_argument{"could not open file \"" + std::string{CWC_CONTEXT_INIT_STRING} +"\" for context initialization"};
+		return cwc::make_intrusive<context_impl>(is);
+#endif
+	}();
 }
 
 namespace cwc {
-	void init(init_mode mode, const char * str) {
-		auto expected = false;
-		if(!initialized.compare_exchange_strong(expected, true)) throw std::logic_error{"context already initialized"};
-		try {
-			switch(mode) {
-				case cwc::init_mode::file: {
-					std::ifstream is{str};
-					if(!is) throw std::invalid_argument{"could not open file \"" + std::string{str} +"\" for context initialization"};
-					instance = cwc::make_intrusive<context_impl>(is);
-				} break;
-				case cwc::init_mode::string: {
-					std::istringstream is{str};
-					instance = cwc::make_intrusive<context_impl>(is);
-				} break;
-				default: throw std::invalid_argument{"unknown context initialization mode"};
-			}
-		} catch(...) {
-			initialized = false;
-			throw;
-		}
-	}
-
-	auto this_context() -> intrusive_ptr<context> {
-		if(!initialized) throw std::logic_error{"context is not initialized"};
-		return instance;
-	}
+	auto this_context() -> intrusive_ptr<context> { return instance; }
 }

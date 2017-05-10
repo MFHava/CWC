@@ -11,22 +11,6 @@
 #pragma once
 
 namespace cwc {
-#if defined(CWC_HOST)
-	//! @brief modes of context initialization
-	enum class init_mode {
-		file,//!< @brief initialize from INI-file
-		string//!< @brief initialize from INI-string
-	};
-
-	//! @brief initialization of the context
-	//! @param[in] mode mode of initialization
-	//! @param[in] str string to be used in initialization
-	//! @note this function must be called before interacting in any way with the context
-	//! @attention this function is only available when building a host application
-	//! @attention this function may only be called once
-	//! @attention invoking this function multiple times or in parallel is undefined behaviour
-	void init(init_mode mode, const char * str);
-#endif
 	//! @brief interface of the global context
 	class context : public component {
 		virtual void                 CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept =0;
@@ -105,6 +89,5 @@ namespace cwc {
 	};
 
 	//! @brief retrieve global context
-	//! @attention this function may only be called after the context has been initialized
 	auto this_context() -> intrusive_ptr<context>;
 }

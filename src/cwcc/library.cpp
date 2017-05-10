@@ -26,13 +26,6 @@
 #include "library.hpp"
 
 namespace cwcc {
-	namespace {
-		const auto dummy = [] {
-			cwc::init(cwc::init_mode::string, "");//empty init
-			return 0;
-		}();
-	}
-
 	library::library(const std::string & name) {
 		struct guard {
 			HMODULE handle;
@@ -54,3 +47,7 @@ namespace cwcc {
 		definition_ = definition.c_str();
 	}
 }
+
+#define CWC_CONTEXT_INIT_STRING ""
+#define CWC_CONTEXT_INIT_IS_NOT_FILE
+#include <cwc/host.hpp>

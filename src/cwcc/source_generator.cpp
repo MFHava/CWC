@@ -35,52 +35,31 @@ namespace cwcc {
 
 	void generate_source(std::istream & is, std::ostream & os, const bundle & b) {
 		file_disclaimer(os, false);
-		os << "#include \"" << base_file_name(b.name) << ".h\"\n"
-		      "#include <cwc/internal/error_handling.hpp>\n"
-		      "using namespace " << b.name << ";\n"
-		      "\n"
-		      "namespace {\n";
-		std::map<std::size_t, std::vector<std::string>> components;//TODO: could be replaced with a multimap
+		os << "#include <map>\n"
+		      "#include \"" << base_file_name(b.name) << ".h\"\n"
+		      "using namespace " << b.name << ";\n";
+		std::vector<std::string> components;
 		{
 			std::vector<std::pair<std::string, std::string>> componentAndExport;
 			component_visitor visitor(b.name, componentAndExport);
 			for(auto & m : b.members) m.apply_visitor(visitor);
 			for(const auto & tmp : componentAndExport) {
-				os << "\tstatic_assert(std::is_base_of<" << tmp.first << ", " << tmp.second << "$>::value, \"Implementation '" << tmp.second << "$' does not fulfill the requirements of component '" << tmp.first << "'\");\n";
-				components[tmp.first.size()].push_back(tmp.second);
+				os << "static_assert(std::is_base_of<" << tmp.first << ", " << tmp.second << "$>::value, \"Implementation '" << tmp.second << "$' does not fulfill the requirements of component '" << tmp.first << "'\");\n";
+				components.push_back(tmp.second);
 			}
 		}
-		os << "\n"
-		      "\t::cwc::intrusive_ptr<::cwc::context> cwc_context;\n"
-		      "}\n"
-		      "\n"
-		      "auto ::cwc::this_context() -> ::cwc::intrusive_ptr<context> { return cwc_context; }\n"
-		      "\n"
-		      "extern \"C\" CWC_EXPORT void CWC_CALL cwc_init(::cwc::intrusive_ptr<::cwc::context> context) {\n"
-		      "\tassert(!cwc_context);\n"
-		      "\tcwc_context = context;\n"
-		      "}\n"
-		      "\n"
-		      "extern \"C\" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * result) {\n"
-		      "\tassert(cwc_context);\n"
-		      "\tassert(result);\n"
-		      "\treturn ::cwc::internal::call_and_return_error([&] {\n"
-		      "\t\tswitch(fqn->size()) {\n";
-		for(const auto & pair : components) {
-			os << "\t\t\tcase " << (pair.first - 2) << ": {\n";//fqns are NOT prepended with double colons, but contain \0
-			for(auto & fqn : pair.second) os << "\t\t\t\tif(*fqn == " << fqn << "$::cwc_fqn()) return *result = cwc::make_intrusive<typename " << fqn << "$::cwc_component_factory>();\n";
-			os << "\t\t\t} break;\n";
+		os << "\nstatic const std::map<::cwc::string_ref, ::cwc::intrusive_ptr<cwc::component>> cwc_factories{\n";
+		for(auto it{std::begin(components)}; it != std::end(components); ++it) {
+			os << "\t{" << *it << "$::cwc_fqn(), cwc::make_intrusive<typename " << *it << "$::cwc_component_factory>()}";
+			if(std::next(it) != std::end(components)) os << ',';
+			os << "\n";
 		}
-		os << "\t\t}\n"
-		      "\t\tthrow std::logic_error{\"unsupported component\"};\n"
-		      "\t});\n"
-		      "}\n"
+		os << "};\n"
 		      "\n"
-		      "extern \"C\" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_ref * definition) {\n"
-		      "\t*definition =\n";
+		      "static const char * cwc_definition =\n";
 		std::transform(std::istream_iterator<line>{is}, std::istream_iterator<line>{}, std::ostream_iterator<std::string>{os}, [](const std::string & str) {
 			std::stringstream ss;
-			ss << "\t\t\"";
+			ss << "\t\"";
 			for(auto c : str) {
 				if(c == '"') ss << '\\';
 				ss << c;
@@ -88,7 +67,7 @@ namespace cwcc {
 			ss << "\\n\"\n";
 			return ss.str();
 		});//copy content of BDL-file
-		os << "\t;\n"
-		      "}";
+		os << ";\n"
+		      "#include <cwc/internal/bundle.hpp>";
 	}
 }

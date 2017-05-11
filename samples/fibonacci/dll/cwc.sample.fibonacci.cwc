@@ -4,49 +4,27 @@
 //    (See accompanying file ../../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+#include <map>
 #include "cwc.sample.fibonacci.h"
-#include <cwc/internal/error_handling.hpp>
 using namespace cwc::sample::fibonacci;
+static_assert(std::is_base_of<::cwc::sample::fibonacci::generator, cwc::sample::fibonacci::generator$>::value, "Implementation 'cwc::sample::fibonacci::generator$' does not fulfill the requirements of component '::cwc::sample::fibonacci::generator'");
 
-namespace {
-	static_assert(std::is_base_of<::cwc::sample::fibonacci::generator, cwc::sample::fibonacci::generator$>::value, "Implementation 'cwc::sample::fibonacci::generator$' does not fulfill the requirements of component '::cwc::sample::fibonacci::generator'");
+static const std::map<::cwc::string_ref, ::cwc::intrusive_ptr<cwc::component>> cwc_factories{
+	{cwc::sample::fibonacci::generator$::cwc_fqn(), cwc::make_intrusive<typename cwc::sample::fibonacci::generator$::cwc_component_factory>()}
+};
 
-	::cwc::intrusive_ptr<::cwc::context> cwc_context;
-}
-
-auto ::cwc::this_context() -> ::cwc::intrusive_ptr<context> { return cwc_context; }
-
-extern "C" CWC_EXPORT void CWC_CALL cwc_init(::cwc::intrusive_ptr<::cwc::context> context) {
-	assert(!cwc_context);
-	cwc_context = context;
-}
-
-extern "C" CWC_EXPORT ::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * result) {
-	assert(cwc_context);
-	assert(result);
-	return ::cwc::internal::call_and_return_error([&] {
-		switch(fqn->size()) {
-			case 33: {
-				if(*fqn == cwc::sample::fibonacci::generator$::cwc_fqn()) return *result = cwc::make_intrusive<typename cwc::sample::fibonacci::generator$::cwc_component_factory>();
-			} break;
-		}
-		throw std::logic_error{"unsupported component"};
-	});
-}
-
-extern "C" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_ref * definition) {
-	*definition =
-		"//! @brief CWC Sample \"Fibonacci Generator\"\n"
-		"//! @author Michael Florian Hava\n"
-		"bundle cwc::sample::fibonacci {\n"
-		"	interface sequence {\n"
-		"		auto calculate(::cwc::uint8 no) -> ::cwc::uint64;\n"
-		"		void calculate(array_ref<::cwc::uint8> nos, array_ref<mutable ::cwc::uint64> results);\n"
-		"	};\n"
-		"\n"
-		"	component generator : sequence {};\n"
-		"\n"
-		"	export generator;\n"
-		"}\n"
-	;
-}
+static const char * cwc_definition =
+	"//! @brief CWC Sample \"Fibonacci Generator\"\n"
+	"//! @author Michael Florian Hava\n"
+	"bundle cwc::sample::fibonacci {\n"
+	"	interface sequence {\n"
+	"		auto calculate(::cwc::uint8 no) -> ::cwc::uint64;\n"
+	"		void calculate(array_ref<::cwc::uint8> nos, array_ref<mutable ::cwc::uint64> results);\n"
+	"	};\n"
+	"\n"
+	"	component generator : sequence {};\n"
+	"\n"
+	"	export generator;\n"
+	"}\n"
+;
+#include <cwc/internal/bundle.hpp>

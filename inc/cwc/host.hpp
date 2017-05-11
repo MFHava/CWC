@@ -5,13 +5,14 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#include <cwc/cwc.hpp>
 #include <regex>
 #include <limits>
 #include <climits>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include "cwc/cwc.hpp"
+#include "cwc/internal/error_handling.hpp"
 
 /*!
 	@page context_init Context Initialization

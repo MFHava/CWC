@@ -22,9 +22,8 @@ namespace cwc {
 		friend
 		void internal::validate(error_code code);
 
-		template<typename Func>
 		friend
-		auto internal::call_and_return_error(Func func) noexcept -> error_code;
+		auto internal::store_exception(std::exception_ptr eptr) noexcept -> error_code;
 
 		void error(const string_ref & msg) {
 			cwc$context$error$1(&msg);

@@ -12,9 +12,8 @@
 
 namespace cwc {
 	namespace internal {
-		template<typename Func>
-		auto call_and_return_error(Func func) noexcept -> error_code
-			try                                                  { return func(),                            error_code::no_error;                   }
+		auto store_exception(std::exception_ptr eptr) noexcept -> error_code
+			try                                                  { std::rethrow_exception(eptr);                                                     }
 			//NOTE: currently not available: catch(const std::bad_variant_access           &    ) { return                                    error_code::std17_bad_variant_access;   }
 			catch(const std::bad_function_call            &    ) { return                                    error_code::std11_bad_function_call;    }
 			catch(const std::bad_weak_ptr                 &    ) { return                                    error_code::std11_bad_weak_ptr;         }
@@ -42,7 +41,6 @@ namespace cwc {
 			catch(const std::exception                    & exc) { return this_context()->error(exc.what()), error_code::std98_exception;            }
 			catch(                                          ...) { return                                    error_code::std98_exception;            }
 
-		inline
 		void validate(error_code code) {
 			if(code == error_code::no_error) return;
 

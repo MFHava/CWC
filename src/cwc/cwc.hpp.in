@@ -82,5 +82,3 @@ namespace cwc {
 #include "public/config_enumerators.hpp"
 #include "public/context.hpp"
 #include "public/default_implementations.hpp"
-
-#include "internal/error_handling.hpp"

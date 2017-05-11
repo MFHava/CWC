@@ -5,6 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include "cwc.sample.fibonacci.h"
+#include <cwc/internal/error_handling.hpp>
 using namespace cwc::sample::fibonacci;
 
 namespace {

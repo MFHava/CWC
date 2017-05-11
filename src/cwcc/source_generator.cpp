@@ -36,6 +36,7 @@ namespace cwcc {
 	void generate_source(std::istream & is, std::ostream & os, const bundle & b) {
 		file_disclaimer(os, false);
 		os << "#include \"" << base_file_name(b.name) << ".h\"\n"
+		      "#include <cwc/internal/error_handling.hpp>\n"
 		      "using namespace " << b.name << ";\n"
 		      "\n"
 		      "namespace {\n";

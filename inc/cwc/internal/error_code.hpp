@@ -42,9 +42,12 @@ namespace cwc {
 				std17_bad_variant_access       = +std98_exception | static_cast<uint32>(9) << 23,
 		};
 
-		template<typename Func>
-		auto call_and_return_error(Func func) noexcept -> error_code;
-
+		auto store_exception(std::exception_ptr eptr) noexcept -> error_code;
 		void validate(error_code code);
+
+		template<typename Func>
+		auto call_and_return_error(Func func) noexcept -> error_code
+			try { return func(), error_code::no_error; }
+			catch(...) { return store_exception(std::current_exception()); }
 	}
 }

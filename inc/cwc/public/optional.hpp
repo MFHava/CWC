@@ -72,12 +72,18 @@ namespace cwc {
 
 		auto operator=(const Type & value) -> optional & {
 			if(initialized) **this = value;
-			else new(data) Type{value};
+			else {
+				new(data) Type{value};
+				initialized = true;
+			}
 			return *this;
 		}
 		auto operator=(Type && value) noexcept -> optional & {
 			if(initialized) **this = std::move(value);
-			else new(data) Type{std::move(value)};
+			else {
+				new(data) Type{std::move(value)};
+				initialized = true;
+			}
 			return *this;
 		}
 

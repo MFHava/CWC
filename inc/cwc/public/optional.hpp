@@ -169,16 +169,16 @@ namespace cwc {
 		auto operator==(internal::nullopt_t, const optional & opt) noexcept -> bool { return !opt; }
 
 		friend
-		auto operator!=(const optional & opt, internal::nullopt_t) noexcept -> bool { return opt; }
+		auto operator!=(const optional & opt, internal::nullopt_t) noexcept -> bool { return static_cast<bool>(opt); }
 
 		friend
-		auto operator!=(internal::nullopt_t, const optional & opt) noexcept -> bool { return opt; }
+		auto operator!=(internal::nullopt_t, const optional & opt) noexcept -> bool { return static_cast<bool>(opt); }
 
 		friend
 		auto operator< (const optional & opt, internal::nullopt_t) noexcept -> bool { return false; }
 
 		friend
-		auto operator< (internal::nullopt_t, const optional & opt) noexcept -> bool { return opt; }
+		auto operator< (internal::nullopt_t, const optional & opt) noexcept -> bool { return static_cast<bool>(opt); }
 
 		friend
 		auto operator<=(const optional & opt, internal::nullopt_t) noexcept -> bool { return !opt; }
@@ -187,7 +187,7 @@ namespace cwc {
 		auto operator<=(internal::nullopt_t, const optional & opt) noexcept -> bool { return true; }
 
 		friend
-		auto operator> (const optional & opt, internal::nullopt_t) noexcept -> bool { return opt; }
+		auto operator> (const optional & opt, internal::nullopt_t) noexcept -> bool { return static_cast<bool>(opt); }
 
 		friend
 		auto operator> (internal::nullopt_t, const optional & opt) noexcept -> bool { return false; }

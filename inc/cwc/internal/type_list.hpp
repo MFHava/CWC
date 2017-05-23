@@ -167,6 +167,19 @@ namespace cwc {
 					Index - 1
 				>::type;
 			};
+
+			template<typename TypeList>
+			struct size;
+
+			template<>
+			struct size<empty_type_list> {
+				enum { value = 0 };
+			};
+
+			template<typename Head, typename Tail>
+			struct size<type_list<Head, Tail>> {
+				enum { value = 1 + size<Tail>::value };
+			};
 		}
 	}
 }

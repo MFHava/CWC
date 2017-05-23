@@ -14,8 +14,7 @@ namespace cwc {
 	//! @brief default implementation of basic operations for use with simple interface-implementations
 	//! @tparam Interface interface to implement
 	//! @tparam Implementation name of the class that implements the interface
-	//! @tparam CastTable mapping for custom casts (needed for ambiguous base classes)
-	template<typename Interface, typename Implementation, typename CastTable = internal::TL::empty_type_list>
+	template<typename Interface, typename Implementation>
 	struct interface_implementation :
 		internal::default_implementation_chaining<
 			Implementation,
@@ -25,15 +24,13 @@ namespace cwc {
 			>::type
 		> {
 
-		using cwc_cast_table = CastTable;
 		using cwc_interfaces = typename internal::make_base_list<Interface>::type;
 	};
 
 	//! @brief default implementation of basic operations for use with component implementations
 	//! @tparam Component component to implement
 	//! @tparam Implementation name of the class that implements the component
-	//! @tparam CastTable mapping for custom casts (needed for ambiguous base classes)
-	template<typename Component, typename Implementation, typename CastTable = internal::TL::empty_type_list>
+	template<typename Component, typename Implementation>
 	struct component_implementation :
 		internal::default_implementation_chaining<
 			Implementation,
@@ -43,10 +40,9 @@ namespace cwc {
 			>::type
 		> {
 
-		using cwc_cast_table = CastTable;
 		struct cwc_component_factory : interface_implementation<typename Component::cwc_factory, cwc_component_factory> {
 			template<typename... Params>
-			auto create(Params &&... params) const -> intrusive_ptr<component> { return intrusive_ptr<component>(new Implementation{std::forward<Params>(params)...}); }
+			auto create(Params &&... params) const -> intrusive_ptr<component> { return intrusive_ptr<Implementation>{new Implementation{std::forward<Params>(params)...}}; }
 		};
 	};
 }

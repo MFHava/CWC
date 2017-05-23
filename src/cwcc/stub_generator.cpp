@@ -22,13 +22,7 @@ namespace cwcc {
 
 			void operator()(const export_ & self) {
 				os << "\t//implementation for component '" << self.component << "' - feel free to move this class to any file\n"
-				      "\tclass %IMPLEMENTATION_NAME_HERE% : public ::cwc::component_implementation<" << self.component << ", %IMPLEMENTATION_NAME_HERE%\n"
-				      "\t\t//TODO: add custom cast table if implementing from more than one interface hierarchy\n"
-				      "\t\t//::cwc::make_type_list<\n"
-				      "\t\t//\tstd::pair<%AMBIGUOUS_INTERFACE_0%, %UNAMBIGUOUS_INTERFACE_0%>,\n"
-				      "\t\t//\tstd::pair<%AMBIGUOUS_INTERFACE_1%, %UNAMBIGUOUS_INTERFACE_1%>\n"
-				      "\t\t//>\n"
-				      "\t> {\n"
+				      "\tclass %IMPLEMENTATION_NAME_HERE% : public ::cwc::component_implementation<" << self.component << ", %IMPLEMENTATION_NAME_HERE%> {\n"
 				      "\t\t//TODO: members\n"
 				      "\tpublic:\n"
 				      "\t\t//TODO: constructors\n"

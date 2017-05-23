@@ -19,7 +19,7 @@ namespace cwc {
 
 		template<typename Self, typename TypeList>
 		friend
-		struct internal::cast_to_interface;
+		class internal::cast_to_interface;
 
 		virtual void                 CWC_CALL cwc$component$new$0() const noexcept =0;
 		virtual void                 CWC_CALL cwc$component$delete$1() const noexcept =0;

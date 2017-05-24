@@ -82,6 +82,11 @@ namespace cwcc {
 					}
 					os << "); }); }\n";
 				}
+				os << "\t\t\t//detect missing methods:\n";
+				std::vector<std::string> methods;
+				std::transform(std::begin(self.methods), std::end(self.methods), std::back_inserter(methods), [](const auto & method) { return method.name; });
+				methods.erase(std::unique(std::begin(methods), std::end(methods)), std::end(methods));
+				for(const auto & method : methods) os << "\t\t\tvoid " << method << "();\n";
 				os << "\t\t};\n"
 				      "\t\tCWC_CXX_RELAXED_CONSTEXPR\n"
 				      "\t\tstatic auto cwc_uuid() -> ::cwc::uuid { return {" << name_to_uuid(self.name) << "}; }\n"

@@ -26,6 +26,8 @@ namespace cwc {namespace sample {namespace fibonacci {
 		class cwc_implementation : public ::cwc::internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
 			::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).calculate(*no); }); }
 			::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept final { return ::cwc::internal::call_and_return_error([&] { static_cast<const CWCImplementation &>(*this).calculate(*nos, *results); }); }
+			//detect missing methods:
+			void calculate();
 		};
 		CWC_CXX_RELAXED_CONSTEXPR
 		static auto cwc_uuid() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x55), static_cast<cwc::uint8>(0x9), static_cast<cwc::uint8>(0x67), static_cast<cwc::uint8>(0x3D), static_cast<cwc::uint8>(0x71), static_cast<cwc::uint8>(0x7), static_cast<cwc::uint8>(0x51), static_cast<cwc::uint8>(0xC5), static_cast<cwc::uint8>(0x97), static_cast<cwc::uint8>(0xAA), static_cast<cwc::uint8>(0x1F), static_cast<cwc::uint8>(0xE8), static_cast<cwc::uint8>(0xA8), static_cast<cwc::uint8>(0x2A), static_cast<cwc::uint8>(0x1A), static_cast<cwc::uint8>(0x6)}; }
@@ -48,6 +50,8 @@ namespace cwc {namespace sample {namespace fibonacci {
 		template<typename CWCImplementation, typename CWCTypeList>
 		class cwc_implementation : public ::cwc::internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
 			::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).create(); }); }
+			//detect missing methods:
+			void create();
 		};
 		CWC_CXX_RELAXED_CONSTEXPR
 		static auto cwc_uuid() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x12), static_cast<cwc::uint8>(0xEC), static_cast<cwc::uint8>(0x4A), static_cast<cwc::uint8>(0x37), static_cast<cwc::uint8>(0x93), static_cast<cwc::uint8>(0xBB), static_cast<cwc::uint8>(0x54), static_cast<cwc::uint8>(0x62), static_cast<cwc::uint8>(0x81), static_cast<cwc::uint8>(0x3E), static_cast<cwc::uint8>(0xFA), static_cast<cwc::uint8>(0xF0), static_cast<cwc::uint8>(0x48), static_cast<cwc::uint8>(0xD3), static_cast<cwc::uint8>(0x64), static_cast<cwc::uint8>(0x59)}; }

@@ -42,7 +42,7 @@ namespace cwc {
 
 		struct cwc_component_factory : interface_implementation<typename Component::cwc_factory, cwc_component_factory> {
 			template<typename... Params>
-			auto create(Params &&... params) const -> intrusive_ptr<component> { return intrusive_ptr<Implementation>{new Implementation{std::forward<Params>(params)...}}; }
+			auto create(Params &&... params) const -> intrusive_ptr<component> { return make_intrusive<Implementation>(std::forward<Params>(params)...); }
 		};
 	};
 }

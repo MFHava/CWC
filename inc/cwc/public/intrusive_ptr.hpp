@@ -37,6 +37,9 @@ namespace cwc {
 
 		~intrusive_ptr() noexcept { if(ptr) ptr->cwc$component$delete$1(); }
 
+		auto get() const noexcept -> Type * { return ptr; }
+
+		auto operator*() const noexcept -> Type & { assert(ptr); return *ptr; }
 		auto operator->() const noexcept -> Type * { assert(ptr); return ptr; }
 
 		explicit operator bool() const noexcept { return ptr != nullptr; }
@@ -62,34 +65,28 @@ namespace cwc {
 			using std::swap;
 			swap(ptr, other.ptr);
 		}
-
-		template<typename OtherType>
-		friend
-		auto operator==(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return lhs.ptr == rhs.ptr; }
-
-		template<typename OtherType>
-		friend
-		auto operator!=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return !(lhs == rhs); }
-
-		template<typename OtherType>
-		friend
-		auto operator< (const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { lhs.ptr < rhs.ptr; }
-
-		template<typename OtherType>
-		friend
-		auto operator> (const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return rhs < lhs; }
-
-		template<typename OtherType>
-		friend
-		auto operator<=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return !(rhs < lhs); }
-
-		template<typename OtherType>
-		friend
-		auto operator>=(const intrusive_ptr & lhs, const intrusive_ptr<OtherType> & rhs) noexcept -> bool { return !(lhs < rhs); }
 	private:
 		Type * ptr{nullptr};
 	};
 	CWC_PACK_END
+
+	inline
+	auto operator==(const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return lhs.get() == rhs.get(); }
+
+	inline
+	auto operator!=(const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return !(lhs == rhs); }
+
+	inline
+	auto operator< (const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return lhs.get() < rhs.get(); }
+
+	inline
+	auto operator> (const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return rhs < lhs; }
+
+	inline
+	auto operator<=(const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return !(rhs < lhs); }
+
+	inline
+	auto operator>=(const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return !(lhs < rhs); }
 
 	template<typename Type, typename... Args>
 	auto make_intrusive(Args &&... args) -> intrusive_ptr<Type> { return intrusive_ptr<Type>{new Type{std::forward<Args>(args)...}}; }

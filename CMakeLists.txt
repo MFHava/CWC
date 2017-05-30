@@ -20,12 +20,7 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #BEGIN compiler feature detection
-#the following code is disabled because it doesn't interact nicely with feature detection
-#CWC requires a minimum of C++11
-#SET(CMAKE_CXX_STANDARD 11)
-#SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_EXTENSIONS OFF)
-
 INCLUDE(WriteCompilerDetectionHeader)
 WRITE_COMPILER_DETECTION_HEADER(
 	FILE "${CMAKE_CURRENT_SOURCE_DIR}/inc/cwc/internal/compiler_detection.hpp"

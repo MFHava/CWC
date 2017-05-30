@@ -42,13 +42,11 @@
 #endif
 
 #include <atomic>
-#include <memory>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <ostream>
-#include <stdexcept>
-#include <functional>
+#include <typeinfo>
 #include <type_traits>
 
 //! @brief public API of C++ with Components

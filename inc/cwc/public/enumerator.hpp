@@ -36,6 +36,54 @@ namespace cwc {
 		virtual internal::error_code CWC_CALL cwc$enumerator$next$1() noexcept =0;
 		virtual internal::error_code CWC_CALL cwc$enumerator$get$2(Type * cwc_ret) const noexcept =0;
 	public:
+		struct cwc_iterator final {
+			using iterator_category = std::input_iterator_tag;
+			using value_type        = Type;
+			using difference_type   = std::ptrdiff_t;
+			using pointer           = const value_type *;
+			using reference         = const value_type &;
+
+			cwc_iterator() =default;
+			cwc_iterator(intrusive_ptr<enumerator> && enum_) : enum_{std::move(enum_)} { if(this->enum_) next(); }
+
+			cwc_iterator(const cwc_iterator &) =default;
+			cwc_iterator(cwc_iterator &&) noexcept =default;
+
+			auto operator=(const cwc_iterator &) -> cwc_iterator & =default;
+			auto operator=(cwc_iterator &&) noexcept -> cwc_iterator & =default;
+
+			~cwc_iterator() =default;
+
+			auto operator++() -> cwc_iterator & { next(); return *this; }
+			auto operator++(int) -> cwc_iterator {
+				auto dummy = *this;
+				++(*this);
+				return dummy;
+			}
+
+			auto operator*()  const noexcept -> reference { assert(enum_); return  value; }
+			auto operator->() const noexcept -> pointer   { assert(enum_); return &value; }
+
+			//! @note as modifying one copy of an input_iterator invalidates all others => this should be valid
+			friend
+			auto operator==(const cwc_iterator & lhs, const cwc_iterator & rhs) -> bool { return lhs.enum_ == rhs.enum_; }
+			friend
+			auto operator!=(const cwc_iterator & lhs, const cwc_iterator & rhs) -> bool { return !(lhs == rhs); }
+
+		private:
+			intrusive_ptr<enumerator> enum_;
+			value_type value;
+
+			void next() {
+				assert(enum_);
+				if(enum_->end()) enum_.reset();
+				else {
+					value = enum_->get();//retrieve copy of value
+					enum_->next();
+				}
+			}
+		};
+
 		//! @brief test if enumerator reached end
 		//! @returns true iff end was reached
 		auto end() const -> boolean {
@@ -71,76 +119,9 @@ namespace cwc {
 		static auto cwc_uuid() -> uuid { return {Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
 	};
 
-	template<typename Enumerator>
-	struct enumerator_iterator final {
-		using iterator_category = std::input_iterator_tag;
-		using value_type        = decltype(std::declval<Enumerator>().get());
-		using difference_type   = std::ptrdiff_t;
-		using pointer           = const value_type *;
-		using reference         = const value_type &;
+	template<typename Type, uint8 Byte0, uint8 Byte1, uint8 Byte2, uint8 Byte3, uint8 Byte4, uint8 Byte5, uint8 Byte6, uint8 Byte7, uint8 Byte8, uint8 Byte9, uint8 ByteA, uint8 ByteB, uint8 ByteC, uint8 ByteD, uint8 ByteE, uint8 ByteF>
+	auto begin(intrusive_ptr<enumerator<Type, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF>> enum_) -> typename enumerator<Type, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF>::cwc_iterator { return {std::move(enum_)}; }
 
-		enumerator_iterator() =default;
-		enumerator_iterator(intrusive_ptr<Enumerator> && enumerator) : enumerator{std::move(enumerator)} { if(this->enumerator) next(); }
-
-		enumerator_iterator(const enumerator_iterator &) =default;
-		enumerator_iterator(enumerator_iterator &&) noexcept =default;
-
-		auto operator=(const enumerator_iterator &) -> enumerator_iterator & =default;
-		auto operator=(enumerator_iterator &&) noexcept -> enumerator_iterator & =default;
-
-		~enumerator_iterator() =default;
-
-		auto operator++() -> enumerator_iterator & { next(); return *this; }
-		auto operator++(int) -> enumerator_iterator {
-			auto dummy = *this;
-			++(*this);
-			return dummy;
-		}
-
-		auto operator*()  const noexcept -> reference { assert(enumerator); return  value; }
-		auto operator->() const noexcept -> pointer   { assert(enumerator); return &value; }
-
-		//! @note as modifying one copy of an input_iterator invalidates all others => this should be valid
-		friend
-		auto operator==(const enumerator_iterator & lhs, const enumerator_iterator & rhs) -> bool { return lhs.enumerator == rhs.enumerator; }
-		friend
-		auto operator!=(const enumerator_iterator & lhs, const enumerator_iterator & rhs) -> bool { return !(lhs == rhs); }
-
-	private:
-		intrusive_ptr<Enumerator> enumerator;
-		value_type value;
-
-		void next() {
-			assert(enumerator);
-			if(enumerator->end()) enumerator.reset();
-			else {
-				value = enumerator->get();//retrieve copy of value
-				enumerator->next();
-			}
-		}
-	};
-
-	template<typename Enumerator>
-	struct enumerator_range final {
-		using iterator = enumerator_iterator<Enumerator>;
-
-		enumerator_range() =delete;
-		enumerator_range(intrusive_ptr<Enumerator> && enumerator) : enumerator{std::move(enumerator)} {}
-
-		enumerator_range(const enumerator_range &) =delete;
-		enumerator_range(enumerator_range &&) noexcept =delete;
-
-		auto operator=(const enumerator_range &) -> enumerator_range & =delete;
-		auto operator=(enumerator_range &&) noexcept -> enumerator_range & =delete;
-
-		~enumerator_range() =default;
-
-		auto begin() -> iterator { return {std::move(enumerator)}; }
-		auto end() -> iterator { return {}; }
-	private:
-		intrusive_ptr<Enumerator> enumerator;
-	};
-
-	template<typename Enumerator>
-	auto as_range(intrusive_ptr<Enumerator> && enumerator) -> enumerator_range<Enumerator> { return {std::move(enumerator)}; }
+	template<typename Type, uint8 Byte0, uint8 Byte1, uint8 Byte2, uint8 Byte3, uint8 Byte4, uint8 Byte5, uint8 Byte6, uint8 Byte7, uint8 Byte8, uint8 Byte9, uint8 ByteA, uint8 ByteB, uint8 ByteC, uint8 ByteD, uint8 ByteE, uint8 ByteF>
+	auto end(const intrusive_ptr<enumerator<Type, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF>> &) -> typename enumerator<Type, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF>::cwc_iterator { return {}; }
 }

@@ -39,14 +39,14 @@ namespace cwcc {
 	struct array;
 	struct optional;
 	struct intrusive_ptr;
-	//TODO: struct variant;
+	struct variant;
 
 	using templated_type = boost::variant<
 		untemplated_type,
 		boost::recursive_wrapper<array_ref>,
 		boost::recursive_wrapper<array>,
 		boost::recursive_wrapper<optional>,
-		//TODO: boost::recursive_wrapper<variant>.
+		boost::recursive_wrapper<variant>,
 		boost::recursive_wrapper<intrusive_ptr>
 	>;
 
@@ -88,7 +88,7 @@ namespace cwcc {
 		friend
 		auto operator<<(std::ostream & os, const intrusive_ptr & self) -> std::ostream & { return os << "::cwc::intrusive_ptr<" << self.mutable_ << self.type << '>'; }
 	};
-/*TODO:
+
 	struct variant final {
 		std::vector<templated_type> types;
 
@@ -97,14 +97,13 @@ namespace cwcc {
 		friend
 		auto operator<<(std::ostream & os, const variant & self) -> std::ostream & {
 			assert(!self.types.empty());
-			os << "::cwc::variant<";
-			auto it = std::begin(self.types);
-			os << *it++;
-			while(it != std::end(self.types)) os << *it++;
-			'>';
+			os << "::cwc::variant<" << self.types[0];
+			for(std::size_t i{1}; i < self.types.size(); ++i) os << ", " << self.types[i];
+			os << '>';
+			return os;
 		}
 	};
-*/
+
 	struct documentation final {
 		std::string line;
 
@@ -260,7 +259,7 @@ BOOST_FUSION_ADAPT_STRUCT(cwcc::array, type, size)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::array_ref, mutable_, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::optional, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::intrusive_ptr, mutable_, type)
-//TODO: BOOST_FUSION_ADAPT_STRUCT(cwcc::variant, types)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::variant, types)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::documentation, line)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member, lines, type, fields)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_, lines, name, members)

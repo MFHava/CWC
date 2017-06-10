@@ -64,12 +64,13 @@ namespace cwc {
 #include "public/types.hpp"
 
 #include "internal/error_code.hpp"
+#include "internal/type_list.hpp"
 
 #include "public/optional.hpp"
+#include "public/variant.hpp"
 #include "public/string_ref.hpp"
 #include "public/intrusive_ptr.hpp"
 
-#include "internal/type_list.hpp"
 #include "internal/make_base_list.hpp"
 #include "internal/call.hpp"
 #include "internal/default_implementation_chaining.hpp"

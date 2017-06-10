@@ -152,6 +152,9 @@ namespace cwc {
 				};
 			};
 
+			template<typename TypeList, typename Type>
+			using find = find_if<TypeList, Type, std::is_same>;
+
 			template<typename TypeList, int Index>
 			struct at;
 

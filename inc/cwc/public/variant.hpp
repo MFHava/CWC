@@ -74,7 +74,7 @@ namespace cwc {
 		variant(const variant & other) : type{other.type} { if(!valueless_by_exception()) other.visit(copy_ctor{data}); }
 		variant(variant && other) noexcept : type{other.type} { if(!valueless_by_exception()) other.visit(move_ctor{data}); }
 
-		template<typename Type>
+		template<typename Type, typename = typename std::enable_if<!std::is_same<typename std::decay<Type>::type, variant>::value>::type>
 		variant(Type && value) noexcept {
 			static_assert(determine_type<Type>::value != invalid_type, "Type is not stored in variant");
 			new(data) Type{std::forward<Type>(value)};
@@ -103,7 +103,7 @@ namespace cwc {
 		}
 
 		template<typename Type>
-		auto operator=(Type && value) -> variant & {
+		auto operator=(Type && value) -> typename std::enable_if<!std::is_same<typename std::decay<Type>::type, variant>::value, variant &>::type {
 			static_assert(determine_type<Type>::value != invalid_type, "Type is not stored in variant");
 			if(type == determine_type<Type>::value) {
 				*reinterpret_cast<Type *>(data) = std::forward<Type>(value);

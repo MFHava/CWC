@@ -261,7 +261,8 @@ namespace cwc {
 				subcompare(const ValueType & lhs) : lhs{lhs} {}
 
 				template<typename Type>
-				auto operator()(const Type & rhs) const -> bool { return Comparator<ValueType>{}(lhs, rhs); }
+				auto operator()(const Type &) const -> bool { throw std::logic_error{""};/*TODO*/ }
+				auto operator()(const ValueType & rhs) const -> bool { return Comparator<ValueType>{}(lhs, rhs); }
 			private:
 				const ValueType & lhs;
 			};

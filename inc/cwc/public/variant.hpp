@@ -29,28 +29,28 @@ namespace cwc {
 			using type = Type;
 		};
 
-		template<typename TypeList>
+		template<typename ResultType, typename TypeList>
 		struct visit_dispatch {
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
-			static auto visit(uint8 index,       uint8 * ptr, Visitor && visitor) {
-				return index ? visit_dispatch<typename TypeList::tail>::visit(index - 1, ptr, std::forward<Visitor>(visitor))
-				             : visitor(*reinterpret_cast<typename TypeList::head *>(ptr));
+			static auto visit(uint8 index,       void * ptr, Visitor && visitor) -> ResultType {
+				return index ? visit_dispatch<ResultType, typename TypeList::tail>::visit(index - 1, ptr, std::forward<Visitor>(visitor))
+				             : visitor(*reinterpret_cast<      typename TypeList::head *>(ptr));
 			}
 
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
-			static auto visit(uint8 index, const uint8 * ptr, Visitor && visitor) {
-				return index ? visit_dispatch<typename TypeList::tail>::visit(index - 1, ptr, std::forward<Visitor>(visitor))
+			static auto visit(uint8 index, const void * ptr, Visitor && visitor) -> ResultType {
+				return index ? visit_dispatch<ResultType, typename TypeList::tail>::visit(index - 1, ptr, std::forward<Visitor>(visitor))
 				             : visitor(*reinterpret_cast<const typename TypeList::head *>(ptr));
 			}
 		};
 
-		template<>
-		struct visit_dispatch<TL::empty_type_list> {
+		template<typename ResultType>
+		struct visit_dispatch<ResultType, TL::empty_type_list> {
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
-			static auto visit(uint8 index, const uint8 * ptr, Visitor && visitor) {
+			static auto visit(uint8 index, const void * ptr, Visitor && visitor) -> ResultType {
 				throw std::runtime_error{""};//TODO: bad_variant_access
 			}
 		};
@@ -64,12 +64,13 @@ namespace cwc {
 		static_assert(sizeof...(Types), "A variant cannot store 0 types");
 		static_assert(sizeof...(Types) < 128, "A variant stops at most 128 different types");
 
-		using types = typename internal::TL::make_type_list<Types...>::type;
+		using all_types = typename internal::TL::make_type_list<Types...>::type;
+		using default_type = typename internal::TL::at<all_types, 0>::type;
 		//TODO: static assert that all types are distinct
 		//TODO: all operations must be validated!
 
 		CWC_CXX_RELAXED_CONSTEXPR
-		variant() : type{0} { new(data) typename internal::TL::at<types, 0>::type{}; }
+		variant() : type{0} { new(data) default_type{}; }
 
 		variant(const variant & other) : type{other.type} { if(!valueless_by_exception()) other.visit(copy_ctor{data}); }
 		variant(variant && other) noexcept : type{other.type} { if(!valueless_by_exception()) other.visit(move_ctor{data}); }
@@ -129,16 +130,16 @@ namespace cwc {
 
 		template<typename Visitor>
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto visit(Visitor && visitor) const {
+		auto visit(Visitor && visitor) const -> decltype(std::declval<Visitor>()(std::declval<const default_type &>())) {
 			if(valueless_by_exception()) throw std::runtime_error{""};//TODO: bad_variant_access
-			return internal::visit_dispatch<types>::visit(type, data, std::forward<Visitor>(visitor));
+			return internal::visit_dispatch<decltype(visit(std::forward<Visitor>(visitor))), all_types>::visit(type, data, std::forward<Visitor>(visitor));
 		}
 
 		template<typename Visitor>
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto visit(Visitor && visitor)       {
+		auto visit(Visitor && visitor)       -> decltype(std::declval<Visitor>()(std::declval<      default_type &>())) {
 			if(valueless_by_exception()) throw std::runtime_error{""};//TODO: bad_variant_access
-			return internal::visit_dispatch<types>::visit(type, data, std::forward<Visitor>(visitor));
+			return internal::visit_dispatch<decltype(visit(std::forward<Visitor>(visitor))), all_types>::visit(type, data, std::forward<Visitor>(visitor));
 		}
 
 		void swap(variant & other) noexcept {
@@ -243,7 +244,7 @@ namespace cwc {
 			copy_ctor(void * data) : data{data} {}
 
 			template<typename Type>
-			void operator()(const Type & value) { new(data) Type{value}; }
+			void operator()(const Type & value) const { new(data) Type{value}; }
 		private:
 			void * data;
 		};
@@ -251,7 +252,7 @@ namespace cwc {
 			move_ctor(void * data) : data{data} {}
 
 			template<typename Type>
-			void operator()(Type & value) { new(data) Type{std::move(value)}; }
+			void operator()(Type & value) const { new(data) Type{std::move(value)}; }
 		private:
 			void * data;
 		};
@@ -260,7 +261,7 @@ namespace cwc {
 			copy_assign(void * data) : data{data} {}
 
 			template<typename Type>
-			void operator()(const Type & value) { *reinterpret_cast<Type *>(data) = value; }
+			void operator()(const Type & value) const { *reinterpret_cast<Type *>(data) = value; }
 		private:
 			void * data;
 		};
@@ -268,21 +269,21 @@ namespace cwc {
 			move_assign(void * data) : data{data} {}
 
 			template<typename Type>
-			void operator()(Type & value) { *reinterpret_cast<Type *>(data) = std::move(value); }
+			void operator()(Type & value) const { *reinterpret_cast<Type *>(data) = std::move(value); }
 		private:
 			void * data;
 		};
 
 		struct dtor final {
 			template<typename Type>
-			void operator()(Type & value) { value.~Type(); }
+			void operator()(Type & value) const { value.~Type(); }
 		};
 
 		template<typename Type>
-		using determine_type = internal::TL::find<types, Type>;
+		using determine_type = internal::TL::find<all_types, Type>;
 
 		static const int8 invalid_type{-1};
-		uint8 data[sizeof(typename internal::biggest_type<types>::type)];
+		uint8 data[sizeof(typename internal::biggest_type<all_types>::type)];
 		int8 type{invalid_type};
 	};
 	CWC_PACK_END

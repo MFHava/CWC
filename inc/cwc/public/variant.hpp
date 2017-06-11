@@ -34,20 +34,26 @@ namespace cwc {
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
 			static auto visit(uint8 index,       uint8 * ptr, Visitor && visitor) {
-				return index ? visit_dispatch<typename TypeList::Tail>::visit(index - 1, ptr, std::forward(visitor))
-				             : visitor(*reinterpret_cast<typename TypeList::Head *>(ptr));
+				return index ? visit_dispatch<typename TypeList::tail>::visit(index - 1, ptr, std::forward<Visitor>(visitor))
+				             : visitor(*reinterpret_cast<typename TypeList::head *>(ptr));
 			}
 
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
 			static auto visit(uint8 index, const uint8 * ptr, Visitor && visitor) {
-				return index ? visit_dispatch<typename TypeList::Tail>::visit(index - 1, ptr, std::forward(visitor))
-				             : visitor(*reinterpret_cast<const typename TypeList::Head *>(ptr));
+				return index ? visit_dispatch<typename TypeList::tail>::visit(index - 1, ptr, std::forward<Visitor>(visitor))
+				             : visitor(*reinterpret_cast<const typename TypeList::head *>(ptr));
 			}
 		};
 
 		template<>
-		struct visit_dispatch<TL::empty_type_list> {};
+		struct visit_dispatch<TL::empty_type_list> {
+			template<typename Visitor>
+			CWC_CXX_RELAXED_CONSTEXPR
+			static auto visit(uint8 index, const uint8 * ptr, Visitor && visitor) {
+				throw std::runtime_error{""};//TODO: bad_variant_access
+			}
+		};
 	}
 	CWC_PACK_BEGIN
 
@@ -83,16 +89,16 @@ namespace cwc {
 		template<typename Type>
 		variant(Type && value) noexcept : type{determine_type<Type>::value} {
 			static_assert(determine_type<Type>::value != invalid_type, "Type is not stored in variant");
-			new(data) Type{std::forward(value)};
+			new(data) Type{std::forward<Type>(value)};
 		}
 
 		auto operator=(const variant & other) -> variant & {
 			if(other.valueless_by_exception()) reset();
 			else if(type == other.type)
 				other.visit([&](const auto & value) {
-					using Type = decltype(value);
-					*reinterpret_cast<Type *>(data) = value;
-				});
+				using Type = decltype(value);
+				*reinterpret_cast<Type *>(data) = value;
+			});
 			else {
 				reset();
 				other.visit([&](const auto & value) {
@@ -107,9 +113,9 @@ namespace cwc {
 			if(other.valueless_by_exception()) reset();
 			else if(type == other.type)
 				other.visit([&](const auto & value) {
-					using Type = decltype(value);
-					*reinterpret_cast<Type *>(data) = std::move(value);
-				});
+				using Type = decltype(value);
+				*reinterpret_cast<Type *>(data) = std::move(value);
+			});
 			else {
 				reset();
 				other.visit([&](const auto & value) {
@@ -125,10 +131,10 @@ namespace cwc {
 		auto operator=(Type && value) -> variant & {
 			static_assert(determine_type<Type>::value != invalid_type, "Type is not stored in variant");
 			if(type == determine_type<Type>::value) {
-				*reinterpret_cast<Type *>(data) = std::forward(value);
+				*reinterpret_cast<Type *>(data) = std::forward<Type>(value);
 			} else {
 				reset();
-				new(data) Type{std::forward(value)};
+				new(data) Type{std::forward<Type>(value)};
 				type = determine_type<Type>::value;
 			}
 			return *this;
@@ -150,14 +156,14 @@ namespace cwc {
 		CWC_CXX_RELAXED_CONSTEXPR
 		auto visit(Visitor && visitor) const {
 			if(valueless_by_exception()) throw std::runtime_error{""};//TODO: bad_variant_access
-			return internal::visit_dispatch<types>::visit(type, data, std::forward(visitor));
+			return internal::visit_dispatch<types>::visit(type, data, std::forward<Visitor>(visitor));
 		}
 
 		template<typename Visitor>
 		CWC_CXX_RELAXED_CONSTEXPR
 		auto visit(Visitor && visitor)       {
 			if(valueless_by_exception()) throw std::runtime_error{""};//TODO: bad_variant_access
-			return internal::visit_dispatch<types>::visit(type, data, std::forward(visitor));
+			return internal::visit_dispatch<types>::visit(type, data, std::forward<Visitor>(visitor));
 		}
 
 		void swap(variant & other) noexcept {
@@ -252,7 +258,7 @@ namespace cwc {
 			});
 		}
 	private:
-		void reset() {
+		void reset() noexcept {
 			if(type == invalid_type) return;
 			visit([&](auto & value) {
 				using Type = decltype(value);
@@ -263,7 +269,7 @@ namespace cwc {
 
 		template<typename Type>
 		using determine_type = internal::TL::find<types, Type>;
-		static const uint8 invalid_type{-1};
+		static const auto invalid_type{std::numeric_limits<uint8>::max()};
 		uint8 data[sizeof(typename internal::biggest_type<types>::type)], type{invalid_type};
 	};
 	CWC_PACK_END

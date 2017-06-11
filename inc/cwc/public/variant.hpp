@@ -144,13 +144,7 @@ namespace cwc {
 
 		void swap(variant & other) noexcept {
 			if(valueless_by_exception() && other.valueless_by_exception()) return;
-			if(type == other.type)
-				visit([&](auto & l) {
-					other.visit([&](auto & r) {
-						using std::swap;
-						swap(l, r);
-					});
-				});
+			if(type == other.type) visit(swapper{other});
 			else std::swap(*this, other);
 		}
 
@@ -272,6 +266,28 @@ namespace cwc {
 				const ValueType & lhs;
 			};
 			const variant & other;
+		};
+
+		struct swapper final {
+			swapper(variant & other) : other{other} {}
+
+			template<typename Type>
+			void operator()(Type & value) { return other.visit(subswapper<Type>{value}); }
+		private:
+			template<typename ValueType>
+			struct subswapper final {
+				subswapper(ValueType & lhs) : lhs{lhs} {}
+
+				template<typename Type>
+				void operator()(Type &) { throw std::logic_error{""};/*TODO*/ }
+				void operator()(ValueType & rhs) {
+					using std::swap;
+					swap(lhs, rhs);
+				}
+			private:
+				ValueType & lhs;
+			};
+			variant & other;
 		};
 
 		template<typename Type>

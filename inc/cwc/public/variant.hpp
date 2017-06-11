@@ -71,57 +71,32 @@ namespace cwc {
 		CWC_CXX_RELAXED_CONSTEXPR
 		variant() : type{0} { new(data) typename internal::TL::at<types, 0>::type{}; }
 
-		variant(const variant & other) : type{other.type} {
-			if(valueless_by_exception()) return;
-			other.visit([&](const auto & value) {
-				using Type = decltype(value);
-				new(data) Type{value};
-			});
-		}
-		variant(variant && other) noexcept : type{other.type} {
-			if(valueless_by_exception()) return;
-			other.visit([&](auto & value) {
-				using Type = decltype(value);
-				new(data) Type{std::move(value)};
-			});
-		}
+		variant(const variant & other) : type{other.type} { if(!valueless_by_exception()) other.visit(copy_ctor{data}); }
+		variant(variant && other) noexcept : type{other.type} { if(!valueless_by_exception()) other.visit(move_ctor{data}); }
 
 		template<typename Type>
-		variant(Type && value) noexcept : type{determine_type<Type>::value} {
+		variant(Type && value) noexcept {
 			static_assert(determine_type<Type>::value != invalid_type, "Type is not stored in variant");
 			new(data) Type{std::forward<Type>(value)};
+			type = determine_type<Type>::value;
 		}
 
 		auto operator=(const variant & other) -> variant & {
 			if(other.valueless_by_exception()) reset();
-			else if(type == other.type)
-				other.visit([&](const auto & value) {
-				using Type = decltype(value);
-				*reinterpret_cast<Type *>(data) = value;
-			});
+			else if(type == other.type) other.visit(copy_assign{data});
 			else {
 				reset();
-				other.visit([&](const auto & value) {
-					using Type = decltype(value);
-					new(data) Type{value};
-				});
+				other.visit(copy_ctor{data});
 				type = other.type;
 			}
 			return *this;
 		}
 		auto operator=(variant && other) noexcept -> variant & {
 			if(other.valueless_by_exception()) reset();
-			else if(type == other.type)
-				other.visit([&](const auto & value) {
-				using Type = decltype(value);
-				*reinterpret_cast<Type *>(data) = std::move(value);
-			});
+			else if(type == other.type) other.visit(move_assign{data});
 			else {
 				reset();
-				other.visit([&](const auto & value) {
-					using Type = decltype(value);
-					new(data) Type{std::move(value)};
-				});
+				other.visit(move_ctor{data});
 				type = other.type;
 			}
 			return *this;
@@ -260,17 +235,55 @@ namespace cwc {
 	private:
 		void reset() noexcept {
 			if(type == invalid_type) return;
-			visit([&](auto & value) {
-				using Type = decltype(value);
-				value.~Type();
-				type = invalid_type;
-			});
+			visit(dtor{});
+			type = invalid_type;
 		}
+
+		struct copy_ctor final {
+			copy_ctor(void * data) : data{data} {}
+
+			template<typename Type>
+			void operator()(const Type & value) { new(data) Type{value}; }
+		private:
+			void * data;
+		};
+		struct move_ctor final {
+			move_ctor(void * data) : data{data} {}
+
+			template<typename Type>
+			void operator()(Type & value) { new(data) Type{std::move(value)}; }
+		private:
+			void * data;
+		};
+
+		struct copy_assign final {
+			copy_assign(void * data) : data{data} {}
+
+			template<typename Type>
+			void operator()(const Type & value) { *reinterpret_cast<Type *>(data) = value; }
+		private:
+			void * data;
+		};
+		struct move_assign final {
+			move_assign(void * data) : data{data} {}
+
+			template<typename Type>
+			void operator()(Type & value) { *reinterpret_cast<Type *>(data) = std::move(value); }
+		private:
+			void * data;
+		};
+
+		struct dtor final {
+			template<typename Type>
+			void operator()(Type & value) { value.~Type(); }
+		};
 
 		template<typename Type>
 		using determine_type = internal::TL::find<types, Type>;
-		static const auto invalid_type{std::numeric_limits<uint8>::max()};
-		uint8 data[sizeof(typename internal::biggest_type<types>::type)], type{invalid_type};
+
+		static const int8 invalid_type{-1};
+		uint8 data[sizeof(typename internal::biggest_type<types>::type)];
+		int8 type{invalid_type};
 	};
 	CWC_PACK_END
 

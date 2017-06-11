@@ -55,12 +55,12 @@ namespace cwc {
 			}
 		};
 	}
-	CWC_PACK_BEGIN
 
+	CWC_PACK_BEGIN
 	//TODO: documentation
 	template<typename... Types>
 	struct variant final {
-		static_assert(std::is_standard_layout<Types...>::value, "variant only supports standard layout types");
+		//TODO: static_assert(std::is_standard_layout<Types...>::value, "variant only supports standard layout types");
 		static_assert(sizeof...(Types), "A variant cannot store 0 types");
 		static_assert(sizeof...(Types) < 128, "A variant stops at most 128 different types");
 
@@ -159,11 +159,7 @@ namespace cwc {
 		auto operator==(const variant & lhs, const variant & rhs) -> bool {
 			if(lhs.type != rhs.type) return false;
 			if(lhs.valueless_by_exception()) return true;
-			return lhs.visit([&](const auto & l) {
-				return rhs.visit([&](const auto & r) {
-					return l == r;
-				});
-			});
+			return lhs.visit(compare<std::equal_to>{rhs});
 		}
 
 		friend
@@ -171,11 +167,7 @@ namespace cwc {
 		auto operator!=(const variant & lhs, const variant & rhs) -> bool {
 			if(lhs.type != rhs.type) return true;
 			if(lhs.valueless_by_exception()) return false;
-			return lhs.visit([&](const auto & l) {
-				return rhs.visit([&](const auto & r) {
-					return l != r;
-				});
-			});
+			return lhs.visit(compare<std::not_equal_to>{rhs});
 		}
 
 		friend
@@ -185,11 +177,7 @@ namespace cwc {
 			if(lhs.valueless_by_exception()) return true;
 			if(lhs.type < rhs.type) return true;
 			if(lhs.type > rhs.type) return false;
-			return lhs.visit([&](const auto & l) {
-				return rhs.visit([&](const auto & r) {
-					return l <  r; 
-				});
-			});
+			return lhs.visit(compare<std::less>{rhs});
 		}
 
 		friend
@@ -199,11 +187,7 @@ namespace cwc {
 			if(rhs.valueless_by_exception()) return true;
 			if(lhs.type > rhs.type) return true;
 			if(lhs.type < rhs.type) return false;
-			return lhs.visit([&](const auto & l) {
-				return rhs.visit([&](const auto & r) {
-					return l >  r;
-				});
-			});
+			return lhs.visit(compare<std::greater>{rhs});
 		}
 
 		friend
@@ -213,11 +197,7 @@ namespace cwc {
 			if(rhs.valueless_by_exception()) return false;
 			if(lhs.type < rhs.type) return true;
 			if(lhs.type > rhs.type) return false;
-			return lhs.visit([&](const auto & l) {
-				return rhs.visit([&](const auto & r) {
-					return l <= r;
-				});
-			});
+			return lhs.visit(compare<std::less_equal>{rhs});
 		}
 
 		friend
@@ -227,11 +207,7 @@ namespace cwc {
 			if(lhs.valueless_by_exception()) return false;
 			if(lhs.type > rhs.type) return true;
 			if(lhs.type < rhs.type) return false;
-			return lhs.visit([&](const auto & l) {
-				return rhs.visit([&](const auto & r) {
-					return l >= r;
-				});
-			});
+			return lhs.visit(compare<std::greater_equal>{rhs});
 		}
 	private:
 		void reset() noexcept {
@@ -277,6 +253,25 @@ namespace cwc {
 		struct dtor final {
 			template<typename Type>
 			void operator()(Type & value) const { value.~Type(); }
+		};
+
+		template<template<typename> class Comparator>
+		struct compare final {
+			compare(const variant & other) : other{other} {}
+
+			template<typename Type>
+			auto operator()(const Type & value) const -> bool { return other.visit(subcompare<Type>{value}); }
+		private:
+			template<typename ValueType>
+			struct subcompare final {
+				subcompare(const ValueType & lhs) : lhs{lhs} {}
+
+				template<typename Type>
+				auto operator()(const Type & rhs) const -> bool { return Comparator<ValueType>{}(lhs, rhs); }
+			private:
+				const ValueType & lhs;
+			};
+			const variant & other;
 		};
 
 		template<typename Type>

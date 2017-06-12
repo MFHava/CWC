@@ -142,10 +142,11 @@ namespace cwc {
 			return internal::visit_dispatch<decltype(visit(std::forward<Visitor>(visitor))), all_types>::visit(type, data, std::forward<Visitor>(visitor));
 		}
 
-		void swap(variant & other) noexcept {
-			if(valueless_by_exception() && other.valueless_by_exception()) return;
-			if(type == other.type) visit(swapper{other});
-			else std::swap(*this, other);
+		friend
+		void swap(variant & lhs, variant & rhs) noexcept {
+			if(lhs.valueless_by_exception() && rhs.valueless_by_exception()) return;
+			if(lhs.type == rhs.type) lhs.visit(swapper{rhs});
+			else std::swap(lhs, rhs);
 		}
 
 		friend
@@ -299,7 +300,4 @@ namespace cwc {
 		int8 type{invalid_type};
 	};
 	CWC_PACK_END
-
-	template<typename... Types>
-	void swap(variant<Types...> & lhs, variant<Types...> & rhs) noexcept { lhs.swap(rhs); }
 }

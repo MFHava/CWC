@@ -26,14 +26,14 @@ namespace cwc {
 		explicit intrusive_ptr(Type * ptr) noexcept : ptr{ptr} {}
 
 		intrusive_ptr(const intrusive_ptr & other) noexcept : ptr{other.ptr} { if(ptr) ptr->cwc$component$new$0(); }
-		intrusive_ptr(intrusive_ptr && other) noexcept { swap(other); }
+		intrusive_ptr(intrusive_ptr && other) noexcept { swap(*this, other); }
 
 		auto operator=(const intrusive_ptr & other) -> intrusive_ptr & {
 			intrusive_ptr tmp{other};
-			swap(tmp);
+			swap(*this, tmp);
 			return *this;
 		}
-		auto operator=(intrusive_ptr && other) noexcept -> intrusive_ptr & { swap(other); return *this; }
+		auto operator=(intrusive_ptr && other) noexcept -> intrusive_ptr & { swap(*this, other); return *this; }
 
 		~intrusive_ptr() noexcept { if(ptr) ptr->cwc$component$delete$1(); }
 
@@ -58,12 +58,13 @@ namespace cwc {
 		void reset() noexcept {
 			if(!ptr) return;
 			intrusive_ptr tmp;
-			swap(tmp);
+			swap(*this, tmp);
 		}
 
-		void swap(intrusive_ptr & other) noexcept {
+		friend
+		void swap(intrusive_ptr & lhs, intrusive_ptr & rhs) noexcept {
 			using std::swap;
-			swap(ptr, other.ptr);
+			swap(lhs.ptr, rhs.ptr);
 		}
 	private:
 		Type * ptr{nullptr};
@@ -90,7 +91,4 @@ namespace cwc {
 
 	template<typename Type, typename... Args>
 	auto make_intrusive(Args &&... args) -> intrusive_ptr<Type> { return intrusive_ptr<Type>{new Type{std::forward<Args>(args)...}}; }
-
-	template<typename Type>
-	void swap(intrusive_ptr<Type> & lhs, intrusive_ptr<Type> & rhs) noexcept { lhs.swap(rhs); }
 }

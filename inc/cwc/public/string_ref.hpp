@@ -66,10 +66,11 @@ namespace cwc {
 		auto rend()    const noexcept -> const_reverse_iterator { return const_reverse_iterator{begin()}; }
 		auto crend()   const noexcept -> const_reverse_iterator { return const_reverse_iterator{cbegin()}; }
 
-		void swap(string_ref & other) noexcept {
+		friend
+		void swap(string_ref & lhs, string_ref & rhs) noexcept {
 			using std::swap;
-			swap(first, other.first);
-			swap(last,  other.last);
+			swap(lhs.first, rhs.first);
+			swap(lhs.last,  rhs.last);
 		}
 
 		friend
@@ -134,9 +135,6 @@ namespace cwc {
 		pointer first{nullptr}, last{nullptr};
 	};
 	CWC_PACK_END
-
-	inline
-	void swap(string_ref & lhs, string_ref & rhs) noexcept { lhs.swap(rhs); }
 
 	//! @brief helper function to test if a string_ref is referencing only ASCII characters
 	//! @param[in] str string to test

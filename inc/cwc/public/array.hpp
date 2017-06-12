@@ -36,9 +36,9 @@ namespace cwc {
 		array(Args &&... args) : values{std::forward<Args>(args)...} {}
 
 		array(const array &) =default;
-		array(array && other) noexcept { swap(other); }
+		array(array && other) noexcept { swap(*this, other); }
 		auto operator=(const array &) -> array & =default;
-		auto operator=(array && other) noexcept -> array & { swap(other); return *this; }
+		auto operator=(array && other) noexcept -> array & { swap(*this, other); return *this; }
 		~array() noexcept =default;
 
 		CWC_CXX_RELAXED_CONSTEXPR
@@ -89,10 +89,11 @@ namespace cwc {
 
 		void fill(const_reference value) { for(auto & v : values) v = value; }
 
-		void swap(array & other) noexcept {
+		friend
+		void swap(array & lhs, array & rhs) noexcept {
 			using std::swap;
 			for(size_type i{0}; i < Size; ++i)
-				swap(values[i], other.values[i]);
+				swap(lhs.values[i], rhs.values[i]);
 		}
 
 		friend
@@ -129,9 +130,6 @@ namespace cwc {
 		value_type values[Size];
 	};
 	CWC_PACK_END
-
-	template<typename Type, std::size_t Size>
-	void swap(array<Type, Size> & lhs, array<Type, Size> & rhs) noexcept { lhs.swap(rhs); }
 
 	template<std::size_t Index, typename Type, std::size_t Size>
 	CWC_CXX_RELAXED_CONSTEXPR

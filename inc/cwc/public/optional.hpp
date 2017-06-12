@@ -98,26 +98,27 @@ namespace cwc {
 		explicit operator bool() const noexcept { return  initialized; }
 		auto operator!() const noexcept -> bool { return !initialized; }
 
-		void swap(optional & other) noexcept {
-			if(!*this && !other) return;
-			else if(*this && !other) {
-				other = std::move(*this);
-				reset();
-			} else if(!*this && other) {
-				*this = std::move(other);
-				other.reset();
-			} else {
-				assert(*this && other);
-				using std::swap;
-				swap(**this, *other);
-			}
-		}
-
 		//! @brief releases the contained object
 		void reset() noexcept {
 			if(!initialized) return;
 			(**this).~Type();
 			initialized = false;
+		}
+
+		friend
+		void swap(optional & lhs, optional & rhs) noexcept {
+			if(!lhs && !rhs) return;
+			else if(lhs && !rhs) {
+				rhs = std::move(lhs);
+				lhs.reset();
+			} else if(!lhs && rhs) {
+				lhs = std::move(rhs);
+				rhs.reset();
+			} else {
+				assert(lhs && rhs);
+				using std::swap;
+				swap(lhs, rhs);
+			}
 		}
 
 		friend
@@ -238,7 +239,4 @@ namespace cwc {
 		boolean initialized{false};
 	};
 	CWC_PACK_END
-
-	template<typename Type>
-	void swap(optional<Type> & lhs, optional<Type> & rhs) noexcept { lhs.swap(rhs); }
 }

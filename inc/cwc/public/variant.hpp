@@ -29,6 +29,19 @@ namespace cwc {
 			using type = Type;
 		};
 
+		template<typename... Types>
+		struct all_are_standard_layout;
+		
+		template<typename Type, typename... Types>
+		struct all_are_standard_layout<Type, Types...> {
+			enum { value = std::is_standard_layout<Type>::value && all_are_standard_layout<Types...>::value };
+		};
+
+		template<>
+		struct all_are_standard_layout<> {
+			enum { value = true };
+		};
+
 		template<typename ResultType, typename TypeList>
 		struct visit_dispatch {
 			template<typename Visitor>
@@ -60,7 +73,7 @@ namespace cwc {
 	//TODO: documentation
 	template<typename... Types>
 	struct variant final {
-		//TODO: static_assert(std::is_standard_layout<Types...>::value, "variant only supports standard layout types");
+		static_assert(internal::all_are_standard_layout<Types...>::value, "variant only supports standard layout types");
 		static_assert(sizeof...(Types), "A variant cannot store 0 types");
 		static_assert(sizeof...(Types) < 128, "A variant stops at most 128 different types");
 

@@ -58,6 +58,9 @@ namespace cwc {
 	//! @attention no member of this namespace is part of the public CWC API
 	namespace internal {}
 }
+
+#include "internal/type_checks.hpp"
+
 #include "public/array.hpp"
 #include "public/array_ref.hpp"
 

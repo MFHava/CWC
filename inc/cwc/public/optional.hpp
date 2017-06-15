@@ -25,7 +25,7 @@ namespace cwc {
 	//! @note the design of this class is derived from C++17
 	template<typename Type>
 	struct optional final {
-		static_assert(std::is_standard_layout<Type>::value, "optional only supports standard layout types");
+		static_assert(is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
 
 		//! @brief construct an empty optional
 		optional() noexcept =default;

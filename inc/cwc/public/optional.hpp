@@ -22,29 +22,18 @@ namespace cwc {
 	CWC_PACK_BEGIN
 	//! @brief an optional value
 	//! @tparam Type type of the potentially contained object
-	//! @note the design of this class is derived from C++17
 	template<typename Type>
 	struct optional final {
 		static_assert(is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
 
-		//! @brief construct an empty optional
 		optional() noexcept =default;
-
-		//! @brief construct an empty optional
 		optional(internal::nullopt_t) noexcept {}
 
-		//! @brief copy constructor
-		//! @param[in] other optional to copy
-		//! @note iff other contains a value, that value will be copied into this instance
 		optional(const optional & other) {
 			if(!other) return;
 			new(data) Type{*other};
 			initialized = true;
 		}
-
-		//! @brief move constructor
-		//! @param[in] other optional to move
-		//! @note iff other contains a value, that value will be moved into this instance
 		optional(optional && other) noexcept {
 			if(!other) return;
 			new(data) Type{std::move(*other)};
@@ -98,7 +87,6 @@ namespace cwc {
 		explicit operator bool() const noexcept { return  initialized; }
 		auto operator!() const noexcept -> bool { return !initialized; }
 
-		//! @brief releases the contained object
 		void reset() noexcept {
 			if(!initialized) return;
 			(**this).~Type();

@@ -70,7 +70,8 @@ namespace cwc {
 	}
 
 	CWC_PACK_BEGIN
-	//TODO: documentation
+	//! @brief a type-safe union, storing one of multipe types
+	//! @tparam Types all types that may be stored in the variant
 	template<typename... Types>
 	struct variant final {
 		using all_types = typename internal::TL::make_type_list<Types...>::type;

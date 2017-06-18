@@ -77,7 +77,7 @@ namespace cwc {
 		array_ref(ContiguousRange & range) noexcept : array_ref{internal::data(range), internal::size(range)} {}
 
 		template<typename ContiguousRange>
-		array_ref(const ContiguousRange && range) =delete;
+		array_ref(const ContiguousRange &&) =delete;
 
 		template<typename OtherType>
 		array_ref(const array_ref<OtherType> & other) noexcept : first{other.begin()}, last{other.end()} {}

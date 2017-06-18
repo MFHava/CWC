@@ -16,7 +16,7 @@ namespace cwc {
 		struct biggest_type;
 
 		template<typename Head, typename Tail>
-		struct biggest_type<TL::type_list<Head, Tail>> {
+		struct biggest_type<TL::type_list<Head, Tail>> final {
 			using type = typename std::conditional<
 				(sizeof(Head) > sizeof(typename biggest_type<Tail>::type)),
 				Head,
@@ -25,12 +25,12 @@ namespace cwc {
 		};
 
 		template<typename Type>
-		struct biggest_type<TL::type_list<Type, TL::empty_type_list>> {
+		struct biggest_type<TL::type_list<Type, TL::empty_type_list>> final {
 			using type = Type;
 		};
 
 		template<typename ResultType, typename TypeList>
-		struct visit_dispatch {
+		struct visit_dispatch final {
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
 			static auto visit(uint8 index,       void * ptr, Visitor && visitor) -> ResultType {
@@ -47,12 +47,25 @@ namespace cwc {
 		};
 
 		template<typename ResultType>
-		struct visit_dispatch<ResultType, TL::empty_type_list> {
+		struct visit_dispatch<ResultType, TL::empty_type_list> final {
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
 			static auto visit(uint8 index, const void * ptr, Visitor && visitor) -> ResultType {
 				throw std::runtime_error{""};//TODO: bad_variant_access
 			}
+		};
+
+		template<typename TypeList>
+		struct is_unique;
+
+		template<typename Head, typename Tail>
+		struct is_unique<TL::type_list<Head, Tail>> final {
+			enum { value = (TL::find_if<Tail, Head, std::is_same>::value == -1) && is_unique<Tail>::value };
+		};
+
+		template<>
+		struct is_unique<TL::empty_type_list> final {
+			enum { value = 1 };
 		};
 	}
 
@@ -60,13 +73,13 @@ namespace cwc {
 	//TODO: documentation
 	template<typename... Types>
 	struct variant final {
+		using all_types = typename internal::TL::make_type_list<Types...>::type;
+		using default_type = typename internal::TL::at<all_types, 0>::type;
+
 		static_assert(are_abi_compatible<Types...>::value, "Types do not fulfill ABI requirements");
 		static_assert(sizeof...(Types) >   0, "A variant cannot store 0 types");
 		static_assert(sizeof...(Types) < 128, "A variant stores at most 127 different types");
-
-		using all_types = typename internal::TL::make_type_list<Types...>::type;
-		using default_type = typename internal::TL::at<all_types, 0>::type;
-		//TODO: static assert that all types are distinct
+		static_assert(internal::is_unique<all_types>::value, "variant does not support duplicated types");
 		//TODO: all operations must be validated!
 
 		CWC_CXX_RELAXED_CONSTEXPR

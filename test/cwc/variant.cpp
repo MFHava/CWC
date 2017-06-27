@@ -113,21 +113,21 @@ BOOST_AUTO_TEST_CASE(comparison) {
 	const cwc::variant<int, double> var1{10}, var2{10.};
 
 	BOOST_TEST(!(var1 == var2));
-	BOOST_TEST( (var1 != var2));
+	BOOST_TEST( var1 != var2);
 
 	const auto var3{var1};
 
-	BOOST_TEST( (var1 == var3));
+	BOOST_TEST(  var1 == var3);
 	BOOST_TEST(!(var1 != var3));
 
-	BOOST_TEST( (var1 < var2));
+	BOOST_TEST(  var1 < var2);
 	BOOST_TEST(!(var1 > var2));
-	BOOST_TEST( (var2 > var1));
+	BOOST_TEST(  var2 > var1);
 	BOOST_TEST(!(var2 < var1));
 
 	decltype(var1) var4{1};
-	BOOST_TEST((var1 > var4));
-	BOOST_TEST((var4 < var1));
+	BOOST_TEST(var1 > var4);
+	BOOST_TEST(var4 < var1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

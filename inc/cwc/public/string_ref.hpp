@@ -74,9 +74,6 @@ namespace cwc {
 		}
 
 		friend
-		auto operator<<(std::ostream & os, const string_ref & self) -> std::ostream & { return os << self.c_str(); }
-
-		friend
 		auto operator< (const string_ref & lhs, const string_ref & rhs) noexcept -> bool { return std::strcmp(lhs.c_str(), rhs.c_str()) <  0; }
 
 		friend
@@ -129,6 +126,9 @@ namespace cwc {
 
 		friend
 		auto operator!=(const string_ref & lhs, const_pointer rhs) noexcept -> bool { return std::strcmp(lhs.c_str(), rhs) != 0; }
+
+		friend
+		auto operator<<(std::basic_ostream<utf8> & os, const string_ref & self) -> std::basic_ostream<utf8> & { return os << self.c_str(); }
 	private:
 		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 

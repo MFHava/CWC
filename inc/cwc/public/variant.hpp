@@ -12,7 +12,7 @@
 
 namespace cwc {
 	//TODO: documentation
-	class bad_variant_access : public std::exception {
+	struct bad_variant_access : std::exception {
 		auto what() const noexcept -> const char * override { return "bad_variant_access"; }
 	};
 
@@ -246,6 +246,13 @@ namespace cwc {
 			if(lhs.type < rhs.type) return false;
 			return lhs.visit(compare<std::greater_equal>{rhs});
 		}
+
+		friend
+		auto operator<<(std::basic_ostream<utf8> & os, const variant & self) -> std::basic_ostream<utf8> & {
+			if(self.valueless_by_exception()) return os << "<valueless by exception>";
+			self.visit(printer{os});
+			return os;
+		}
 	private:
 		void reset() noexcept {
 			if(type == invalid_type) return;
@@ -332,6 +339,15 @@ namespace cwc {
 				ValueType & lhs;
 			};
 			variant & other;
+		};
+
+		struct printer final {
+			printer(std::basic_ostream<utf8> & os) : os{os} {}
+
+			template<typename Type>
+			void operator()(const Type & value) const { os << value; }
+		private:
+			std::basic_ostream<utf8> & os;
 		};
 
 		template<typename Type>

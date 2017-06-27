@@ -222,6 +222,12 @@ namespace cwc {
 
 		friend
 		auto operator>=(const Type & value, const optional & opt) -> bool { return opt ? value >= *opt : true; }
+
+		friend
+		auto operator<<(std::basic_ostream<utf8> & os, const optional & self) -> std::basic_ostream<utf8> & {
+			if(!self) return os << "<nullopt>";
+			return os << *self;
+		}
 	private:
 		uint8 data[sizeof(Type)];
 		boolean initialized{false};

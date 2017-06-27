@@ -66,6 +66,9 @@ namespace cwc {
 			using std::swap;
 			swap(lhs.ptr, rhs.ptr);
 		}
+
+		friend
+		auto operator<<(std::basic_ostream<utf8> & os, const intrusive_ptr & self) -> std::basic_ostream<utf8> & { return os << self.get();  }
 	private:
 		Type * ptr{nullptr};
 	};

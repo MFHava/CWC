@@ -11,6 +11,11 @@
 #pragma once
 
 namespace cwc {
+	//TODO: documentation
+	class bad_variant_access : public std::exception {
+		auto what() const noexcept -> const char * override { return "bad_variant_access"; }
+	};
+
 	namespace internal {
 		template<typename TypeList>
 		struct biggest_type;
@@ -50,9 +55,7 @@ namespace cwc {
 		struct visit_dispatch<ResultType, TL::empty_type_list> final {
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
-			static auto visit(uint8 index, const void * ptr, Visitor && visitor) -> ResultType {
-				throw std::runtime_error{""};//TODO: bad_variant_access
-			}
+			static auto visit(uint8 index, const void * ptr, Visitor && visitor) -> ResultType { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in visit detected (please report this)"}; }
 		};
 
 		template<typename TypeList>
@@ -70,7 +73,7 @@ namespace cwc {
 	}
 
 	CWC_PACK_BEGIN
-	//! @brief a type-safe union, storing one of multipe types
+	//! @brief a type-safe union, storing one of multiple types
 	//! @tparam Types all types that may be stored in the variant
 	template<typename... Types>
 	struct variant final {
@@ -81,7 +84,6 @@ namespace cwc {
 		static_assert(sizeof...(Types) >   0, "A variant cannot store 0 types");
 		static_assert(sizeof...(Types) < 128, "A variant stores at most 127 different types");
 		static_assert(internal::is_unique<all_types>::value, "variant does not support duplicated types");
-		//TODO: all operations must be validated!
 
 		CWC_CXX_RELAXED_CONSTEXPR
 		variant() : type{0} { new(data) default_type{}; }
@@ -137,22 +139,48 @@ namespace cwc {
 
 		template<typename Type>
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto holds() const noexcept -> bool {
+		auto holds_alternative() const noexcept -> bool {//TODO: should be free function
 			const auto tmp{determine_type<Type>::value};
 			return (tmp == invalid_type) ? false : type == tmp;
 		}
 
+		template<typename Type>
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto get_if() const noexcept -> const Type * {//TODO: should be free function
+			if(!holds_alternative<Type>()) return nullptr;
+			return reinterpret_cast<const Type *>(data);
+		}
+		template<typename Type>
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto get_if()       noexcept ->       Type * {//TODO: should be free function
+			if(!holds_alternative<Type>()) return nullptr;
+			return reinterpret_cast<      Type *>(data);
+		}
+
+		template<typename Type>
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto get()       -> const Type & {//TODO: should be free function
+			if(auto ptr = get_if<Type>()) return *ptr;
+			throw bad_variant_access{};
+		}
+		template<typename Type>
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto get() const ->       Type & {//TODO: should be free function
+			if(auto ptr = get_if<Type>()) return *ptr;
+			throw bad_variant_access{};
+		}
+
 		template<typename Visitor>
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto visit(Visitor && visitor) const -> decltype(std::declval<Visitor>()(std::declval<const default_type &>())) {
-			if(valueless_by_exception()) throw std::runtime_error{""};//TODO: bad_variant_access
+		auto visit(Visitor && visitor) const -> decltype(std::declval<Visitor>()(std::declval<const default_type &>())) {//TODO: should be free function
+			if(valueless_by_exception()) throw bad_variant_access{};
 			return internal::visit_dispatch<decltype(visit(std::forward<Visitor>(visitor))), all_types>::visit(type, data, std::forward<Visitor>(visitor));
 		}
 
 		template<typename Visitor>
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto visit(Visitor && visitor)       -> decltype(std::declval<Visitor>()(std::declval<      default_type &>())) {
-			if(valueless_by_exception()) throw std::runtime_error{""};//TODO: bad_variant_access
+		auto visit(Visitor && visitor)       -> decltype(std::declval<Visitor>()(std::declval<      default_type &>())) {//TODO: should be free function
+			if(valueless_by_exception()) throw bad_variant_access{};
 			return internal::visit_dispatch<decltype(visit(std::forward<Visitor>(visitor))), all_types>::visit(type, data, std::forward<Visitor>(visitor));
 		}
 
@@ -276,7 +304,7 @@ namespace cwc {
 				subcompare(const ValueType & lhs) : lhs{lhs} {}
 
 				template<typename Type>
-				auto operator()(const Type &) const -> bool { throw std::logic_error{""};/*TODO*/ }
+				auto operator()(const Type &) const -> bool { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in subcompare detected (please report this)"}; }
 				auto operator()(const ValueType & rhs) const -> bool { return Comparator<ValueType>{}(lhs, rhs); }
 			private:
 				const ValueType & lhs;
@@ -295,7 +323,7 @@ namespace cwc {
 				subswapper(ValueType & lhs) : lhs{lhs} {}
 
 				template<typename Type>
-				void operator()(Type &) { throw std::logic_error{""};/*TODO*/ }
+				void operator()(Type &) { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in subswapper detected (please report this)"}; }
 				void operator()(ValueType & rhs) {
 					using std::swap;
 					swap(lhs, rhs);

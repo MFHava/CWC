@@ -93,9 +93,10 @@ namespace cwc {
 
 		template<typename Type, typename = typename std::enable_if<!std::is_same<typename std::decay<Type>::type, variant>::value>::type>
 		variant(Type && value) noexcept {
-			static_assert(determine_type<Type>::value != invalid_type, "Type is not stored in variant");
-			new(data) Type{std::forward<Type>(value)};
-			type = determine_type<Type>::value;
+			using DecayedType = typename std::decay<Type>::type;
+			static_assert(determine_type<DecayedType>::value != invalid_type, "Type is not stored in variant");
+			new(data) DecayedType{std::forward<Type>(value)};
+			type = determine_type<DecayedType>::value;
 		}
 
 		auto operator=(const variant & other) -> variant & {
@@ -121,13 +122,14 @@ namespace cwc {
 
 		template<typename Type>
 		auto operator=(Type && value) -> typename std::enable_if<!std::is_same<typename std::decay<Type>::type, variant>::value, variant &>::type {
-			static_assert(determine_type<Type>::value != invalid_type, "Type is not stored in variant");
-			if(type == determine_type<Type>::value) {
-				*reinterpret_cast<Type *>(data) = std::forward<Type>(value);
+			using DecayedType = typename std::decay<Type>::type;
+			static_assert(determine_type<DecayedType>::value != invalid_type, "Type is not stored in variant");
+			if(type == determine_type<DecayedType>::value) {
+				*reinterpret_cast<DecayedType *>(data) = std::forward<Type>(value);
 			} else {
 				reset();
-				new(data) Type{std::forward<Type>(value)};
-				type = determine_type<Type>::value;
+				new(data) DecayedType{std::forward<Type>(value)};
+				type = determine_type<DecayedType>::value;
 			}
 			return *this;
 		}

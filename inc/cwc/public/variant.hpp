@@ -70,6 +70,14 @@ namespace cwc {
 		struct is_unique<TL::empty_type_list> final {
 			enum { value = 1 };
 		};
+
+		template<typename TargetType>
+		struct get_if_visitor final {
+			auto operator()(TargetType & val) const noexcept -> TargetType * { return &val; }
+
+			template<typename Type>
+			auto operator()(Type &) const noexcept -> TargetType * { return nullptr; }
+		};
 	}
 
 	CWC_PACK_BEGIN
@@ -85,6 +93,8 @@ namespace cwc {
 		static_assert(sizeof...(Types) < 128, "A variant stores at most 127 different types");
 		static_assert(internal::is_unique<all_types>::value, "variant does not support duplicated types");
 
+		static const int8 variant_npos{-1};
+
 		CWC_CXX_RELAXED_CONSTEXPR
 		variant() : type{0} { new(data) default_type{}; }
 
@@ -94,7 +104,7 @@ namespace cwc {
 		template<typename Type, typename = typename std::enable_if<!std::is_same<typename std::decay<Type>::type, variant>::value>::type>
 		variant(Type && value) noexcept {
 			using DecayedType = typename std::decay<Type>::type;
-			static_assert(determine_type<DecayedType>::value != invalid_type, "Type is not stored in variant");
+			static_assert(determine_type<DecayedType>::value != variant_npos, "Type is not stored in variant");
 			new(data) DecayedType{std::forward<Type>(value)};
 			type = determine_type<DecayedType>::value;
 		}
@@ -123,7 +133,7 @@ namespace cwc {
 		template<typename Type>
 		auto operator=(Type && value) -> typename std::enable_if<!std::is_same<typename std::decay<Type>::type, variant>::value, variant &>::type {
 			using DecayedType = typename std::decay<Type>::type;
-			static_assert(determine_type<DecayedType>::value != invalid_type, "Type is not stored in variant");
+			static_assert(determine_type<DecayedType>::value != variant_npos, "Type is not stored in variant");
 			if(type == determine_type<DecayedType>::value) {
 				*reinterpret_cast<DecayedType *>(data) = std::forward<Type>(value);
 			} else {
@@ -137,40 +147,9 @@ namespace cwc {
 		~variant() noexcept { reset(); }
 
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto valueless_by_exception() const noexcept -> bool { return type == invalid_type; }
-
-		template<typename Type>
+		auto index() const noexcept -> int8 { return type; }
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto holds_alternative() const noexcept -> bool {//TODO: should be free function
-			const auto tmp{determine_type<Type>::value};
-			return (tmp == invalid_type) ? false : type == tmp;
-		}
-
-		template<typename Type>
-		CWC_CXX_RELAXED_CONSTEXPR
-		auto get_if() const noexcept -> const Type * {//TODO: should be free function
-			if(!holds_alternative<Type>()) return nullptr;
-			return reinterpret_cast<const Type *>(data);
-		}
-		template<typename Type>
-		CWC_CXX_RELAXED_CONSTEXPR
-		auto get_if()       noexcept ->       Type * {//TODO: should be free function
-			if(!holds_alternative<Type>()) return nullptr;
-			return reinterpret_cast<      Type *>(data);
-		}
-
-		template<typename Type>
-		CWC_CXX_RELAXED_CONSTEXPR
-		auto get()       -> const Type & {//TODO: should be free function
-			if(auto ptr = get_if<Type>()) return *ptr;
-			throw bad_variant_access{};
-		}
-		template<typename Type>
-		CWC_CXX_RELAXED_CONSTEXPR
-		auto get() const ->       Type & {//TODO: should be free function
-			if(auto ptr = get_if<Type>()) return *ptr;
-			throw bad_variant_access{};
-		}
+		auto valueless_by_exception() const noexcept -> bool { return index() == variant_npos; }
 
 		template<typename Visitor>
 		CWC_CXX_RELAXED_CONSTEXPR
@@ -257,9 +236,9 @@ namespace cwc {
 		}
 	private:
 		void reset() noexcept {
-			if(type == invalid_type) return;
+			if(type == variant_npos) return;
 			visit(dtor{});
-			type = invalid_type;
+			type = variant_npos;
 		}
 
 		struct copy_ctor final {
@@ -355,9 +334,43 @@ namespace cwc {
 		template<typename Type>
 		using determine_type = internal::TL::find<all_types, Type>;
 
-		static const int8 invalid_type{-1};
 		uint8 data[sizeof(typename internal::biggest_type<all_types>::type)];
-		int8 type{invalid_type};
+		int8 type{variant_npos};
 	};
 	CWC_PACK_END
+
+
+	template<typename Type, typename... Types>
+	CWC_CXX_RELAXED_CONSTEXPR
+	auto holds_alternative(const variant<Types...> & self) noexcept -> bool {
+		using Variant = variant<Types...>;
+		const auto tmp{internal::TL::find<typename Variant::all_types, Type>::value};
+		return (tmp == Variant::variant_npos) ? false : self.index() == tmp;
+	}
+
+	template<typename Type, typename... Types>
+	CWC_CXX_RELAXED_CONSTEXPR
+	auto get_if(const variant<Types...> & self) noexcept -> const Type * {
+		if(!holds_alternative<Type>(self)) return nullptr;
+		return self.visit(internal::get_if_visitor<const Type>{});
+	}
+	template<typename Type, typename... Types>
+	CWC_CXX_RELAXED_CONSTEXPR
+	auto get_if(      variant<Types...> & self) noexcept ->       Type * {
+		if(!holds_alternative<Type>(self)) return nullptr;
+		return self.visit(internal::get_if_visitor<Type>{});
+	}
+
+	template<typename Type, typename... Types>
+	CWC_CXX_RELAXED_CONSTEXPR
+	auto get(const variant<Types...> & self) -> const Type & {
+		if(auto ptr = get_if<Type>(self)) return *ptr;
+		throw bad_variant_access{};
+	}
+	template<typename Type, typename... Types>
+	CWC_CXX_RELAXED_CONSTEXPR
+	auto get(      variant<Types...> & self) ->       Type & {
+		if(auto ptr = get_if<Type>(self)) return *ptr;
+		throw bad_variant_access{};
+	}
 }

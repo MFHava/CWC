@@ -79,15 +79,15 @@ namespace {
 }
 BOOST_AUTO_TEST_CASE(visit) {
 	cwc::variant<int, double> var;
-	var.visit(expected_type_visitor<int>{});
+	cwc::visit(expected_type_visitor<int>{}, var);
 
 	var = 1.5;
 	var.visit(expected_type_visitor<double>{});
-	BOOST_TEST(var.visit([](const auto & value) -> double { return value; }) == 1.5);
+	BOOST_TEST(cwc::visit([](const auto & value) -> double { return value; }, var) == 1.5);
 
 	var = 1;
 	var.visit(expected_type_visitor<int>{});
-	BOOST_TEST(var.visit([](const auto & value) -> double { return value; }) == 1.0);
+	BOOST_TEST(cwc::visit([](const auto & value) -> double { return value; }, var) == 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(swapping) {

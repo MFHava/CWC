@@ -35,27 +35,35 @@ namespace cwc {
 		};
 
 		template<typename ResultType, typename TypeList>
-		struct visit_dispatch final {
+		struct visit final {
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
-			static auto visit(uint8 index,       void * ptr, Visitor && visitor) -> ResultType {
-				return index ? visit_dispatch<ResultType, typename TypeList::tail>::visit(index - 1, ptr, std::forward<Visitor>(visitor))
+			static auto dispatch(uint8 index,       void * ptr, Visitor && visitor) -> ResultType {
+				return index ? visit<ResultType, typename TypeList::tail>::dispatch(index - 1, ptr, std::forward<Visitor>(visitor))
 				             : visitor(*reinterpret_cast<      typename TypeList::head *>(ptr));
 			}
 
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
-			static auto visit(uint8 index, const void * ptr, Visitor && visitor) -> ResultType {
-				return index ? visit_dispatch<ResultType, typename TypeList::tail>::visit(index - 1, ptr, std::forward<Visitor>(visitor))
+			static auto dispatch(uint8 index, const void * ptr, Visitor && visitor) -> ResultType {
+				return index ? visit<ResultType, typename TypeList::tail>::dispatch(index - 1, ptr, std::forward<Visitor>(visitor))
 				             : visitor(*reinterpret_cast<const typename TypeList::head *>(ptr));
 			}
 		};
 
 		template<typename ResultType>
-		struct visit_dispatch<ResultType, TL::empty_type_list> final {
+		struct visit<ResultType, TL::empty_type_list> final {
 			template<typename Visitor>
 			CWC_CXX_RELAXED_CONSTEXPR
-			static auto visit(uint8 index, const void * ptr, Visitor && visitor) -> ResultType { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in visit detected (please report this)"}; }
+			static auto dispatch(uint8 index, const void * ptr, Visitor && visitor) -> ResultType { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in visit detected (please report this)"}; }
+		};
+
+		template<typename TargetType>
+		struct get_if_visitor final {
+			auto operator()(TargetType & val) const noexcept -> TargetType * { return &val; }
+
+			template<typename Type>
+			auto operator()(Type &) const noexcept -> TargetType * { return nullptr; }
 		};
 
 		template<typename TypeList>
@@ -80,6 +88,9 @@ namespace cwc {
 		using all_types = typename internal::TL::make_type_list<Types...>::type;
 		using default_type = typename internal::TL::at<all_types, 0>::type;
 
+		template<typename Type>
+		using type_index = internal::TL::find<all_types, Type>;
+
 		static_assert(are_abi_compatible<Types...>::value, "Types do not fulfill ABI requirements");
 		static_assert(sizeof...(Types) >   0, "A variant cannot store 0 types");
 		static_assert(sizeof...(Types) < 128, "A variant stores at most 127 different types");
@@ -96,9 +107,9 @@ namespace cwc {
 		template<typename Type, typename = typename std::enable_if<!std::is_same<typename std::decay<Type>::type, variant>::value>::type>
 		variant(Type && value) noexcept {
 			using DecayedType = typename std::decay<Type>::type;
-			static_assert(determine_type<DecayedType>::value != variant_npos, "Type is not stored in variant");
+			static_assert(type_index<DecayedType>::value != variant_npos, "Type is not stored in variant");
 			new(data) DecayedType{std::forward<Type>(value)};
-			type = determine_type<DecayedType>::value;
+			type = type_index<DecayedType>::value;
 		}
 
 		auto operator=(const variant & other) -> variant & {
@@ -125,13 +136,13 @@ namespace cwc {
 		template<typename Type>
 		auto operator=(Type && value) -> typename std::enable_if<!std::is_same<typename std::decay<Type>::type, variant>::value, variant &>::type {
 			using DecayedType = typename std::decay<Type>::type;
-			static_assert(determine_type<DecayedType>::value != variant_npos, "Type is not stored in variant");
-			if(type == determine_type<DecayedType>::value) {
+			static_assert(type_index<DecayedType>::value != variant_npos, "Type is not stored in variant");
+			if(type == type_index<DecayedType>::value) {
 				*reinterpret_cast<DecayedType *>(data) = std::forward<Type>(value);
 			} else {
 				reset();
 				new(data) DecayedType{std::forward<Type>(value)};
-				type = determine_type<DecayedType>::value;
+				type = type_index<DecayedType>::value;
 			}
 			return *this;
 		}
@@ -141,20 +152,89 @@ namespace cwc {
 		CWC_CXX_RELAXED_CONSTEXPR
 		auto index() const noexcept -> int8 { return type; }
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto valueless_by_exception() const noexcept -> bool { return index() == variant_npos; }
+		auto valueless_by_exception() const noexcept -> bool { return type == variant_npos; }
 
 		template<typename Visitor>
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto visit(Visitor && visitor) const -> decltype(std::declval<Visitor>()(std::declval<const default_type &>())) {//TODO: should be free function
+		auto visit(Visitor && visitor) const -> decltype(std::declval<Visitor>()(std::declval<const default_type &>())) {
 			if(valueless_by_exception()) throw bad_variant_access{};
-			return internal::visit_dispatch<decltype(visit(std::forward<Visitor>(visitor))), all_types>::visit(type, data, std::forward<Visitor>(visitor));
+			return internal::visit<decltype(visit(std::forward<Visitor>(visitor))), all_types>::dispatch(type, data, std::forward<Visitor>(visitor));
+		}
+		template<typename Visitor>
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto visit(Visitor && visitor)       -> decltype(std::declval<Visitor>()(std::declval<      default_type &>())) {
+			if(valueless_by_exception()) throw bad_variant_access{};
+			return internal::visit<decltype(visit(std::forward<Visitor>(visitor))), all_types>::dispatch(type, data, std::forward<Visitor>(visitor));
 		}
 
-		template<typename Visitor>
+		friend
+		void swap(variant & lhs, variant & rhs) noexcept {
+			if(lhs.valueless_by_exception() && rhs.valueless_by_exception()) return;
+			if(lhs.type == rhs.type) lhs.visit(swapper{rhs});
+			else std::swap(lhs, rhs);
+		}
+
+		friend
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto visit(Visitor && visitor)       -> decltype(std::declval<Visitor>()(std::declval<      default_type &>())) {//TODO: should be free function
-			if(valueless_by_exception()) throw bad_variant_access{};
-			return internal::visit_dispatch<decltype(visit(std::forward<Visitor>(visitor))), all_types>::visit(type, data, std::forward<Visitor>(visitor));
+		auto operator==(const variant & lhs, const variant & rhs) -> bool {
+			if(lhs.type != rhs.type) return false;
+			if(lhs.valueless_by_exception()) return true;
+			return lhs.visit(compare<std::equal_to>{rhs});
+		}
+
+		friend
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto operator!=(const variant & lhs, const variant & rhs) -> bool {
+			if(lhs.type != rhs.type) return true;
+			if(lhs.valueless_by_exception()) return false;
+			return lhs.visit(compare<std::not_equal_to>{rhs});
+		}
+
+		friend
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto operator< (const variant & lhs, const variant & rhs) -> bool {
+			if(rhs.valueless_by_exception()) return false;
+			if(lhs.valueless_by_exception()) return true;
+			if(lhs.type < rhs.type) return true;
+			if(lhs.type > rhs.type) return false;
+			return lhs.visit(compare<std::less>{rhs});
+		}
+
+		friend
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto operator> (const variant & lhs, const variant & rhs) -> bool {
+			if(lhs.valueless_by_exception()) return false;
+			if(rhs.valueless_by_exception()) return true;
+			if(lhs.type > rhs.type) return true;
+			if(lhs.type < rhs.type) return false;
+			return lhs.visit(compare<std::greater>{rhs});
+		}
+
+		friend
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto operator<=(const variant & lhs, const variant & rhs) -> bool {
+			if(lhs.valueless_by_exception()) return true;
+			if(rhs.valueless_by_exception()) return false;
+			if(lhs.type < rhs.type) return true;
+			if(lhs.type > rhs.type) return false;
+			return lhs.visit(compare<std::less_equal>{rhs});
+		}
+
+		friend
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto operator>=(const variant & lhs, const variant & rhs) -> bool {
+			if(rhs.valueless_by_exception()) return true;
+			if(lhs.valueless_by_exception()) return false;
+			if(lhs.type > rhs.type) return true;
+			if(lhs.type < rhs.type) return false;
+			return lhs.visit(compare<std::greater_equal>{rhs});
+		}
+
+		friend
+		auto operator<<(std::basic_ostream<utf8> & os, const variant & self) -> std::basic_ostream<utf8> & {
+			if(self.valueless_by_exception()) return os << "<valueless by exception>";
+			self.visit(printer{os});
+			return os;
 		}
 	private:
 		void reset() noexcept {
@@ -202,28 +282,38 @@ namespace cwc {
 			void operator()(Type & value) const { value.~Type(); }
 		};
 
-		template<typename Type>
-		using determine_type = internal::TL::find<all_types, Type>;
-
-		uint8 data[sizeof(typename internal::biggest_type<all_types>::type)];
-		int8 type{variant_npos};
-	};
-	CWC_PACK_END
-
-	namespace internal {
-		template<typename... Types>
-		struct swap_visitor final {
-			swap_visitor(variant<Types...> & other) : other{other} {}
+		template<template<typename> class Comparator>
+		struct compare final {
+			compare(const variant & other) : other{other} {}
 
 			template<typename Type>
-			void operator()(Type & value) { return other.visit(subswap<Type>{value}); }
+			auto operator()(const Type & value) const -> bool { return other.visit(subcompare<Type>{value}); }
 		private:
 			template<typename ValueType>
-			struct subswap final {
-				subswap(ValueType & lhs) : lhs{lhs} {}
+			struct subcompare final {
+				subcompare(const ValueType & lhs) : lhs{lhs} {}
 
 				template<typename Type>
-				void operator()(Type &) { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in subswap detected (please report this)"}; }
+				auto operator()(const Type &) const -> bool { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in subcompare detected (please report this)"}; }
+				auto operator()(const ValueType & rhs) const -> bool { return Comparator<ValueType>{}(lhs, rhs); }
+			private:
+				const ValueType & lhs;
+			};
+			const variant & other;
+		};
+
+		struct swapper final {
+			swapper(variant & other) : other{other} {}
+
+			template<typename Type>
+			void operator()(Type & value) { return other.visit(subswapper<Type>{value}); }
+		private:
+			template<typename ValueType>
+			struct subswapper final {
+				subswapper(ValueType & lhs) : lhs{lhs} {}
+
+				template<typename Type>
+				void operator()(Type &) { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in subswapper detected (please report this)"}; }
 				void operator()(ValueType & rhs) {
 					using std::swap;
 					swap(lhs, rhs);
@@ -231,142 +321,43 @@ namespace cwc {
 			private:
 				ValueType & lhs;
 			};
-			variant<Types...> & other;
+			variant & other;
 		};
-	}
 
-	template<typename... Types>
-	void swap(variant<Types...> & lhs, variant<Types...> & rhs) noexcept {
-		if(lhs.valueless_by_exception() && rhs.valueless_by_exception()) return;
-		if(lhs.index() == rhs.index()) lhs.visit(internal::swap_visitor<Types...>{rhs});
-		else std::swap(lhs, rhs);
-	}
-
-	namespace internal {
-		template<template<typename> class Comparator, typename... Types>
-		struct compare_visitor final {
-			compare_visitor(const variant<Types...> & other) : other{other} {}
-
-			template<typename Type>
-			auto operator()(const Type & value) const -> bool { return other.visit(sub_compare_visitor<Type>{value}); }
-		private:
-			template<typename ValueType>
-			struct sub_compare_visitor final {
-				sub_compare_visitor(const ValueType & lhs) : lhs{lhs} {}
-
-				template<typename Type>
-				auto operator()(const Type &) const -> bool { throw std::logic_error{"DESIGN-ERROR: invalid dispatch in sub_compare_visitor detected (please report this)"}; }
-				auto operator()(const ValueType & rhs) const -> bool { return Comparator<ValueType>{}(lhs, rhs); }
-			private:
-				const ValueType & lhs;
-			};
-			const variant<Types...> & other;
-		};
-	}
-
-	template<typename... Types>
-	CWC_CXX_RELAXED_CONSTEXPR
-	auto operator==(const variant<Types...> & lhs, const variant<Types...> & rhs) -> bool {
-		if(lhs.index() != rhs.index()) return false;
-		if(lhs.valueless_by_exception()) return true;
-		return lhs.visit(internal::compare_visitor<std::equal_to, Types...>{rhs});
-	}
-
-	template<typename... Types>
-	CWC_CXX_RELAXED_CONSTEXPR
-	auto operator!=(const variant<Types...> & lhs, const variant<Types...> & rhs) -> bool {
-		if(lhs.index() != rhs.index()) return true;
-		if(lhs.valueless_by_exception()) return false;
-		return lhs.visit(internal::compare_visitor<std::not_equal_to, Types...>{rhs});
-	}
-
-	template<typename... Types>
-	CWC_CXX_RELAXED_CONSTEXPR
-	auto operator< (const variant<Types...> & lhs, const variant<Types...> & rhs) -> bool {
-		if(rhs.valueless_by_exception()) return false;
-		if(lhs.valueless_by_exception()) return true;
-		if(lhs.index() < rhs.index()) return true;
-		if(lhs.index() > rhs.index()) return false;
-		return lhs.visit(internal::compare_visitor<std::less, Types...>{rhs});
-	}
-
-	template<typename... Types>
-	CWC_CXX_RELAXED_CONSTEXPR
-	auto operator> (const variant<Types...> & lhs, const variant<Types...> & rhs) -> bool {
-		if(lhs.valueless_by_exception()) return false;
-		if(rhs.valueless_by_exception()) return true;
-		if(lhs.index() > rhs.index()) return true;
-		if(lhs.index() < rhs.index()) return false;
-		return lhs.visit(internal::compare_visitor<std::greater, Types...>{rhs});
-	}
-
-	template<typename... Types>
-	CWC_CXX_RELAXED_CONSTEXPR
-	auto operator<=(const variant<Types...> & lhs, const variant<Types...> & rhs) -> bool {
-		if(lhs.valueless_by_exception()) return true;
-		if(rhs.valueless_by_exception()) return false;
-		if(lhs.index() < rhs.index()) return true;
-		if(lhs.index() > rhs.index()) return false;
-		return lhs.visit(internal::compare_visitor<std::less_equal, Types...>{rhs});
-	}
-
-	template<typename... Types>
-	CWC_CXX_RELAXED_CONSTEXPR
-	auto operator>=(const variant<Types...> & lhs, const variant<Types...> & rhs) -> bool {
-		if(rhs.valueless_by_exception()) return true;
-		if(lhs.valueless_by_exception()) return false;
-		if(lhs.index() > rhs.index()) return true;
-		if(lhs.index() < rhs.index()) return false;
-		return lhs.visit(internal::compare_visitor<std::greater_equal, Types...>{rhs});
-	}
-
-	namespace internal {
-		struct print_visitor final {
-			print_visitor(std::basic_ostream<utf8> & os) : os{os} {}
+		struct printer final {
+			printer(std::basic_ostream<utf8> & os) : os{os} {}
 
 			template<typename Type>
 			void operator()(const Type & value) const { os << value; }
 		private:
 			std::basic_ostream<utf8> & os;
 		};
-	}
 
-	template<typename... Types>
-	auto operator<<(std::basic_ostream<utf8> & os, const variant<Types...> & self) -> std::basic_ostream<utf8> & {
-		if(self.valueless_by_exception()) return os << "<valueless by exception>";
-		self.visit(internal::print_visitor{os});
-		return os;
-	}
+		uint8 data[sizeof(typename internal::biggest_type<all_types>::type)];
+		int8 type{variant_npos};
+	};
+	CWC_PACK_END
 
 	template<typename Type, typename... Types>
 	CWC_CXX_RELAXED_CONSTEXPR
 	auto holds_alternative(const variant<Types...> & self) noexcept -> bool {
 		using Variant = variant<Types...>;
-		const auto tmp{internal::TL::find<typename Variant::all_types, Type>::value};
-		return (tmp == Variant::variant_npos) ? false : self.index() == tmp;
-	}
-
-	namespace internal {
-		template<typename TargetType>
-		struct get_if_visitor final {
-			auto operator()(TargetType & val) const noexcept -> TargetType * { return &val; }
-
-			template<typename Type>
-			auto operator()(Type &) const noexcept -> TargetType * { return nullptr; }
-		};
+		const auto tmp{Variant::template type_index<Type>::value};
+		if(tmp == Variant::variant_npos) return false;
+		return self.index() == tmp;
 	}
 
 	template<typename Type, typename... Types>
 	CWC_CXX_RELAXED_CONSTEXPR
 	auto get_if(const variant<Types...> & self) noexcept -> const Type * {
-		if(!holds_alternative<Type>(self)) return nullptr;
+		if(self.valueless_by_exception()) return nullptr;
 		return self.visit(internal::get_if_visitor<const Type>{});
 	}
 	template<typename Type, typename... Types>
 	CWC_CXX_RELAXED_CONSTEXPR
 	auto get_if(      variant<Types...> & self) noexcept ->       Type * {
-		if(!holds_alternative<Type>(self)) return nullptr;
-		return self.visit(internal::get_if_visitor<Type>{});
+		if(self.valueless_by_exception()) return nullptr;
+		return self.visit(internal::get_if_visitor<      Type>{});
 	}
 
 	template<typename Type, typename... Types>
@@ -381,4 +372,11 @@ namespace cwc {
 		if(auto ptr = get_if<Type>(self)) return *ptr;
 		throw bad_variant_access{};
 	}
+
+	template<typename Visitor, typename... Types>
+	CWC_CXX_RELAXED_CONSTEXPR
+	auto visit(Visitor && visitor, const variant<Types...> & self) -> decltype(std::declval<Visitor>()(std::declval<const typename variant<Types...>::default_type &>())) { return self.visit(std::forward<Visitor>(visitor)); }
+	template<typename Visitor, typename... Types>
+	CWC_CXX_RELAXED_CONSTEXPR
+	auto visit(Visitor && visitor,       variant<Types...> & self) -> decltype(std::declval<Visitor>()(std::declval<      typename variant<Types...>::default_type &>())) { return self.visit(std::forward<Visitor>(visitor)); }
 }

@@ -31,7 +31,7 @@ WRITE_COMPILER_DETECTION_HEADER(
 )
 #END compiler feature detection
 
-SET(CWC_VERSION "2.5.0-alpha")
+SET(CWC_VERSION "WIP")
 
 #BEGIN find required Boost libraries
 SET(REQUIRED_BOOST_LIBS filesystem system)

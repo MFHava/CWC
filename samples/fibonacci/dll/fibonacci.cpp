@@ -7,18 +7,18 @@
 #include "fibonacci.h"
 
 namespace sample {
-	auto fibonacci::calculate(unsigned char no) const -> unsigned long long {
-		if(no > 93) throw std::out_of_range{"fibonacci number 93 is the last to fit into unsigned long long"};
-		auto a = 0ULL, b = 1ULL;
-		for(auto i = 0; i < no; ++i) {
-			const auto c = a + b;
+	auto fibonacci::calculate(::cwc::uint8 no) const -> ::cwc::uint64 {
+		if(no > 93) throw std::out_of_range{"fibonacci number 93 is the last to fit into uint64"};
+		::cwc::uint64 a{0}, b{1};
+		for(decltype(no) i{0}; i < no; ++i) {
+			const auto c{a + b};
 			a = b;
 			b = c;
 		}
 		return a;
 	}
 
-	void fibonacci::calculate(const ::cwc::array_ref<const unsigned char> & nos, ::cwc::array_ref<unsigned long long> results) const {
+	void fibonacci::calculate(const ::cwc::array_ref<const ::cwc::uint8> & nos, ::cwc::array_ref<::cwc::uint64> results) const {
 		if(nos.size() > results.size()) throw std::invalid_argument{"results is not big enough"};
 		for(std::size_t i{0}; i < nos.size(); ++i)
 			results[i] = calculate(nos[i]);

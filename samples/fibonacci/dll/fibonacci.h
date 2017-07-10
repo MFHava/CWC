@@ -12,7 +12,7 @@ namespace sample {
 		fibonacci() =default;
 		fibonacci(const ::cwc::int32 & dummy) {}
 
-		auto calculate(unsigned char no) const -> unsigned long long;
-		void calculate(const ::cwc::array_ref<const unsigned char> & nos, ::cwc::array_ref<unsigned long long> results) const;
+		auto calculate(::cwc::uint8 no) const -> ::cwc::uint64;
+		void calculate(const ::cwc::array_ref<const ::cwc::uint8> & nos, ::cwc::array_ref<::cwc::uint64> results) const;
 	};
 }

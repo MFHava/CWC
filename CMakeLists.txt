@@ -34,15 +34,14 @@ WRITE_COMPILER_DETECTION_HEADER(
 SET(CWC_VERSION "WIP")
 
 #BEGIN find required Boost libraries
-SET(REQUIRED_BOOST_LIBS filesystem system)
+SET(REQUIRED_BOOST_LIBS filesystem system)#TODO: these dependencies are not strictly required if CWCC-main is (slightly) adapted
 IF(CWC_BUILD_TESTS)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework)
 ENDIF()
 IF(REQUIRED_BOOST_LIBS)
-#TODO: add option to let user select kind of boost libs?!
-	SET(Boost_USE_STATIC_LIBS ON)
+	SET(Boost_USE_STATIC_LIBS ON)#TODO: add option to let user select kind of boost libs! (static libraries are rather uncommon on Unix)
 	SET(Boost_USE_MULTITHREADED ON)
-	FIND_PACKAGE(Boost 1.58.0 REQUIRED ${REQUIRED_BOOST_LIBS})
+	FIND_PACKAGE(Boost 1.58.0 REQUIRED ${REQUIRED_BOOST_LIBS})#TODO: can this requirement be lowered?
 ENDIF()
 #END find required Boost libraries
 

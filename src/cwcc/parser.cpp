@@ -86,8 +86,7 @@ namespace {
 			global_identifier  %= repeat(2)[ascii::char_(':')] > local_identifier > repeat(2)[ascii::char_(':')] > bundle_identifier;
 
 			new_type           %= local_identifier[phx::bind(&bundle_parser::add_new_type, this, _1)];
-			existing_type      %= local_identifier[phx::bind(&bundle_parser::validate_local_type, this, _1)]
-			                    | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
+			existing_type      %= local_identifier[phx::bind(&bundle_parser::validate_local_type, this, _1)] | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
 
 			templated_type     %= array_ref | array | optional | variant | intrusive_ptr | untemplated_type;
 			untemplated_type   %= existing_type;

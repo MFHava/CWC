@@ -51,11 +51,11 @@ namespace cwc {
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 		array_ref() =default;
-		array_ref(const array_ref & other) =default;
+		array_ref(const array_ref &) =default;
 		array_ref(array_ref &&) noexcept =default;
 		auto operator=(const array_ref &) -> array_ref & =default;
 		auto operator=(array_ref &&) noexcept -> array_ref & =default;
-		~array_ref() =default;
+		~array_ref() noexcept =default;
 
 		//! @brief construct array_ref from two pointers
 		//! @param[in] first start of the referenced array
@@ -132,6 +132,8 @@ namespace cwc {
 			swap(lhs.last,  rhs.last);
 		}
 
+		//TODO: add operator< <= => > ?!
+
 		friend
 		auto operator==(const array_ref & lhs, const array_ref & rhs) noexcept -> bool {
 			if(lhs.size() != rhs.size()) return false;
@@ -144,7 +146,7 @@ namespace cwc {
 		friend
 		auto operator!=(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return !(lhs == rhs); }
 
-		//TODO: add operator< <= => > ?!
+		//TODO: operator<<
 	private:
 		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 

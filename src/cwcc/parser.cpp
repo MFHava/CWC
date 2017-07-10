@@ -109,9 +109,9 @@ namespace {
 
 			constructor        %= *documentation >> keyword["constructor"] > params > ';';
 
-			void_method        %= *documentation >> keyword["void"] > local_identifier > params > mutable_;
-			auto_method        %= *documentation >> keyword["auto"] > local_identifier > params > mutable_ > "->" >> templated_type;
-			method             %= (void_method | auto_method) > ';';
+			void_method_       %= *documentation >> keyword["void"] > local_identifier > params > mutable_;
+			auto_method_       %= *documentation >> keyword["auto"] > local_identifier > params > mutable_ > "->" >> templated_type;
+			method             %= (void_method_ | auto_method_) > ';';
 
 			enumerator         %= *documentation >> keyword["enumerator"] > new_type > "->" > templated_type;
 
@@ -147,8 +147,8 @@ namespace {
 			BOOST_SPIRIT_DEBUG_NODE(params);
 			BOOST_SPIRIT_DEBUG_NODE(param);
 			BOOST_SPIRIT_DEBUG_NODE(method);
-			BOOST_SPIRIT_DEBUG_NODE(auto_method);
-			BOOST_SPIRIT_DEBUG_NODE(void_method);
+			BOOST_SPIRIT_DEBUG_NODE(auto_method_);
+			BOOST_SPIRIT_DEBUG_NODE(void_method_);
 			BOOST_SPIRIT_DEBUG_NODE(enumerator);
 			BOOST_SPIRIT_DEBUG_NODE(struct_members);
 			BOOST_SPIRIT_DEBUG_NODE(struct_);
@@ -216,8 +216,8 @@ namespace {
 		qi::rule<Iterator, std::vector<cwcc::param>(), Skipper> params;
 		qi::rule<Iterator, cwcc::param(), Skipper> param;
 		qi::rule<Iterator, cwcc::interface::method(), Skipper> method;
-		qi::rule<Iterator, auto_method(), Skipper> auto_method;
-		qi::rule<Iterator, void_method(), Skipper> void_method;
+		qi::rule<Iterator, auto_method(), Skipper> auto_method_;
+		qi::rule<Iterator, void_method(), Skipper> void_method_;
 		qi::rule<Iterator, cwcc::enumerator(), Skipper> enumerator;
 		qi::rule<Iterator, cwcc::struct_::member(), Skipper> struct_members;
 		qi::rule<Iterator, cwcc::struct_(), Skipper> struct_;

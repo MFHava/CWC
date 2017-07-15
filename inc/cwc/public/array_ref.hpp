@@ -19,7 +19,7 @@ namespace cwc {
 		constexpr auto size(const Type(&array)[Size]) noexcept -> std::size_t { return Size; }
 
 		template<typename Container>
-		constexpr auto data(Container & c) -> decltype(c.data()) { return c.data(); }
+		constexpr auto data(      Container & c) -> decltype(c.data()) { return c.data(); }
 
 		template<typename Container>
 		constexpr auto data(const Container & c) -> decltype(c.data()) { return c.data(); }
@@ -132,8 +132,6 @@ namespace cwc {
 			swap(lhs.last,  rhs.last);
 		}
 
-		//TODO: add operator< <= => > ?!
-
 		friend
 		auto operator==(const array_ref & lhs, const array_ref & rhs) noexcept -> bool {
 			if(lhs.size() != rhs.size()) return false;
@@ -145,6 +143,11 @@ namespace cwc {
 
 		friend
 		auto operator!=(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return !(lhs == rhs); }
+
+		//TODO: operator<
+		//TODO: operator<=
+		//TODO: operator>
+		//TODO: operator>=
 
 		//TODO: operator<<
 	private:

@@ -84,10 +84,10 @@ namespace cwc {
 	auto operator< (const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return lhs.get() < rhs.get(); }
 
 	inline
-	auto operator> (const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return rhs < lhs; }
+	auto operator<=(const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return !(rhs < lhs); }
 
 	inline
-	auto operator<=(const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return !(rhs < lhs); }
+	auto operator> (const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return rhs < lhs; }
 
 	inline
 	auto operator>=(const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return !(lhs < rhs); }

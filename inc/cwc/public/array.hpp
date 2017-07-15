@@ -116,10 +116,10 @@ namespace cwc {
 		}
 
 		friend
-		auto operator> (const array & lhs, const array & rhs) noexcept -> bool { return rhs < lhs; }
+		auto operator<=(const array & lhs, const array & rhs) noexcept -> bool { return !(rhs < lhs); }
 
 		friend
-		auto operator<=(const array & lhs, const array & rhs) noexcept -> bool { return !(rhs < lhs); }
+		auto operator> (const array & lhs, const array & rhs) noexcept -> bool { return rhs < lhs; }
 
 		friend
 		auto operator>=(const array & lhs, const array & rhs) noexcept -> bool { return !(lhs < rhs); }
@@ -133,14 +133,14 @@ namespace cwc {
 
 	template<std::size_t Index, typename Type, std::size_t Size>
 	CWC_CXX_RELAXED_CONSTEXPR
-	auto get(      array<Type, Size> & self) noexcept ->       Type & {
+	auto get(      array<Type, Size> & self) noexcept -> typename array<Type, Size>::      reference {
 		static_assert(Index < Size, "index out of range");
 		return self[Index];
 	}
 
 	template<std::size_t Index, typename Type, std::size_t Size>
 	CWC_CXX_RELAXED_CONSTEXPR
-	auto get(const array<Type, Size> & self) noexcept -> const Type & {
+	auto get(const array<Type, Size> & self) noexcept -> typename array<Type, Size>::const_reference {
 		static_assert(Index < Size, "index out of range");
 		return self[Index];
 	}

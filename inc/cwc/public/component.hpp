@@ -47,11 +47,11 @@ namespace cwc {
 			//! @tparam TargetType type to cast new pointer to
 			//! @returns intrusive_ptr iff cast is valid
 			template<typename TargetType>
-			auto intrusive_from_this() -> intrusive_ptr<TargetType> {
+			auto intrusive_from_this()       -> intrusive_ptr<      TargetType> {
 				static_assert(std::is_base_of<TargetType, Implementation>::value, "invalid cast");
 				typename std::remove_const<TargetType>::type * result;//remove constness of TargetType to allow conversion from 'mutable Type' to 'const TargetType'
 				internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), TargetType::cwc_uuid(), reinterpret_cast<void **>(&result));
-				return intrusive_ptr<TargetType>{result};
+				return intrusive_ptr<      TargetType>{result};
 			}
 
 			//! @brief retrieve intrusive_ptr for requested interface

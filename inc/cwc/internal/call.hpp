@@ -13,15 +13,12 @@
 namespace cwc {
 	namespace internal {
 		template<typename Type, typename Func, typename... Args>
-		void call(Type & self, Func func, Args &&... args) {
-			const auto err = (self.*func)(std::forward<Args>(args)...);
-			internal::validate(err);
-		}
+		void call(Type & self, Func func, Args &&... args) { internal::validate((self.*func)(std::forward<Args>(args)...)); }
 
 		template<typename Type, typename Func, typename... Args>
 		void call(const intrusive_ptr<Type> & ptr, Func func, Args &&... args) { call(*ptr, func, std::forward<Args>(args)...); }
 
 		template<typename Type, typename Func, typename... Args>
-		void call(intrusive_ptr<Type> & ptr, Func func, Args &&... args) { call(*ptr, func, std::forward<Args>(args)...); }
+		void call(      intrusive_ptr<Type> & ptr, Func func, Args &&... args) { call(*ptr, func, std::forward<Args>(args)...); }
 	}
 }

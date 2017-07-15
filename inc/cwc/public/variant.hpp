@@ -202,22 +202,22 @@ namespace cwc {
 
 		friend
 		CWC_CXX_RELAXED_CONSTEXPR
-		auto operator> (const variant & lhs, const variant & rhs) -> bool {
-			if(lhs.valueless_by_exception()) return false;
-			if(rhs.valueless_by_exception()) return true;
-			if(lhs.type > rhs.type) return true;
-			if(lhs.type < rhs.type) return false;
-			return lhs.visit(compare<std::greater>{rhs});
-		}
-
-		friend
-		CWC_CXX_RELAXED_CONSTEXPR
 		auto operator<=(const variant & lhs, const variant & rhs) -> bool {
 			if(lhs.valueless_by_exception()) return true;
 			if(rhs.valueless_by_exception()) return false;
 			if(lhs.type < rhs.type) return true;
 			if(lhs.type > rhs.type) return false;
 			return lhs.visit(compare<std::less_equal>{rhs});
+		}
+
+		friend
+		CWC_CXX_RELAXED_CONSTEXPR
+		auto operator> (const variant & lhs, const variant & rhs) -> bool {
+			if(lhs.valueless_by_exception()) return false;
+			if(rhs.valueless_by_exception()) return true;
+			if(lhs.type > rhs.type) return true;
+			if(lhs.type < rhs.type) return false;
+			return lhs.visit(compare<std::greater>{rhs});
 		}
 
 		friend

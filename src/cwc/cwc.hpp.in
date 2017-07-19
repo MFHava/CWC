@@ -23,6 +23,7 @@
 #include <cstring>
 #include <ostream>
 #include <typeinfo>
+#include <stdexcept>
 #include <type_traits>
 
 //! @brief public API of C++ with Components

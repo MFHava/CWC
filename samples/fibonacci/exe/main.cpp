@@ -15,11 +15,11 @@
 	"[cwc.mapping]\n"\
 	"cwc::sample::fibonacci::generator = [generator]\n"\
 	"[generator]\n"\
-	"ID = sample-fibonacci-dll.dll"
+	"ID = ./sample-fibonacci-dll.dll"
 #else
 	#define CWC_CONTEXT_INIT_STRING\
 	"[cwc.mapping]\n"\
-	"cwc::sample::fibonacci::generator = sample-fibonacci-dll.dll"
+	"cwc::sample::fibonacci::generator = ./sample-fibonacci-dll.dll"
 #endif
 #define CWC_CONTEXT_INIT_IS_NOT_FILE
 #include "cwc/host.hpp"

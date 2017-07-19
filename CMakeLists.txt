@@ -11,6 +11,7 @@ PROJECT(CWC CXX)
 OPTION(CWC_BUILD_TESTS "Build tests" OFF)
 OPTION(CWC_BUILD_SAMPLES "Build samples" OFF)
 OPTION(CWC_BUILD_DOCUMENTATION "Build documentation" OFF)
+OPTION(CWC_USE_STATIC_BOOST "Use static or dynamic Boost libraries (initially selects platform default)" ${WIN32})
 #END configuration
 
 INCLUDE_DIRECTORIES(inc)
@@ -33,7 +34,7 @@ WRITE_COMPILER_DETECTION_HEADER(
 
 SET(CWC_VERSION "WIP")
 
-IF(Unix)
+IF(UNIX)
 	SET(CWC_DLL_LIBRARY "dl")
 ELSE()
 	SET(CWC_DLL_LIBRARY "")
@@ -45,9 +46,9 @@ IF(CWC_BUILD_TESTS)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework)
 ENDIF()
 IF(REQUIRED_BOOST_LIBS)
-	SET(Boost_USE_STATIC_LIBS ON)#TODO: add option to let user select kind of boost libs! (static libraries are rather uncommon on Unix)
+	SET(Boost_USE_STATIC_LIBS ${CWC_USE_STATIC_BOOST})#TODO: add option to let user select kind of boost libs! (static libraries are rather uncommon on Unix)
 	SET(Boost_USE_MULTITHREADED ON)
-	FIND_PACKAGE(Boost 1.58.0 REQUIRED ${REQUIRED_BOOST_LIBS})#TODO: can this requirement be lowered?
+	FIND_PACKAGE(Boost 1.59.0 REQUIRED ${REQUIRED_BOOST_LIBS})
 ENDIF()
 #END find required Boost libraries
 
@@ -88,10 +89,20 @@ IF(CWC_BUILD_TESTS)
 
 	FILE(GLOB_RECURSE CWC_TEST_SOURCES "test/cwc/*")
 	ADD_EXECUTABLE(test-cwc ${CWC_TEST_SOURCES})
+	IF(CWC_USE_STATIC_BOOST)
+		#nothing to do then...
+	ELSE()
+		TARGET_COMPILE_DEFINITIONS(test-cwc PRIVATE -DBOOST_TEST_DYN_LINK)
+	ENDIF()
 	TARGET_LINK_LIBRARIES(test-cwc ${TEST_LIBRARIES})
 
 	FILE(GLOB_RECURSE CWCC_TEST_SOURCES "test/cwcc/*")
 	ADD_EXECUTABLE(test-cwcc ${CWCC_TEST_SOURCES})
+	IF(CWC_USE_STATIC_BOOST)
+		#nothing to do then...
+	ELSE()
+		TARGET_COMPILE_DEFINITIONS(test-cwcc PRIVATE -DBOOST_TEST_DYN_LINK)
+	ENDIF()
 	TARGET_LINK_LIBRARIES(test-cwcc ${TEST_LIBRARIES})
 	SET_SOURCE_FILES_PROPERTIES(test/cwcc/shared.cpp PROPERTIES
 		COMPILE_FLAGS "-O3"#NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)

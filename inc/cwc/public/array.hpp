@@ -17,7 +17,7 @@ namespace cwc {
 	//! @tparam Size size of the stored array
 	template<typename Type, std::size_t Size>
 	struct array final {
-		static_assert(is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
+		static_assert(internal::is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
 
 		using value_type             = Type;
 		using size_type              = std::size_t;

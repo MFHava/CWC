@@ -36,7 +36,7 @@ namespace cwc {
 	//! @tparam Type type of the referenced array
 	template<typename Type>
 	struct array_ref final {
-		static_assert(is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
+		static_assert(internal::is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
 
 		using value_type             = Type;
 		using size_type              = std::size_t;

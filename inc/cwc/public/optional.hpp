@@ -24,7 +24,7 @@ namespace cwc {
 	//! @tparam Type type of the potentially contained object
 	template<typename Type>
 	struct optional final {
-		static_assert(is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
+		static_assert(internal::is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
 
 		optional() noexcept =default;
 		optional(internal::nullopt_t) noexcept {}

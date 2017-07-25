@@ -91,7 +91,7 @@ namespace cwc {
 		template<typename Type>
 		using type_index = internal::TL::find<all_types, Type>;
 
-		static_assert(are_abi_compatible<Types...>::value, "Types do not fulfill ABI requirements");
+		static_assert(internal::are_abi_compatible<Types...>::value, "Types do not fulfill ABI requirements");
 		static_assert(sizeof...(Types) >   0, "A variant cannot store 0 types");
 		static_assert(sizeof...(Types) < 128, "A variant stores at most 127 different types");
 		static_assert(internal::is_unique<all_types>::value, "variant does not support duplicated types");

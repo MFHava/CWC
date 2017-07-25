@@ -31,7 +31,7 @@ namespace cwc {
 	//! @tparam ByteF byte no. 15 of UUID
 	template<typename Type, uint8 Byte0, uint8 Byte1, uint8 Byte2, uint8 Byte3, uint8 Byte4, uint8 Byte5, uint8 Byte6, uint8 Byte7, uint8 Byte8, uint8 Byte9, uint8 ByteA, uint8 ByteB, uint8 ByteC, uint8 ByteD, uint8 ByteE, uint8 ByteF>
 	class enumerator : public component {
-		static_assert(is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
+		static_assert(internal::is_abi_compatible<Type>::value, "Type does not fulfill ABI requirements");
 		virtual internal::error_code CWC_CALL cwc$enumerator$end$0(boolean * cwc_ret) const noexcept =0;
 		virtual internal::error_code CWC_CALL cwc$enumerator$next$1() noexcept =0;
 		virtual internal::error_code CWC_CALL cwc$enumerator$get$2(Type * cwc_ret) const noexcept =0;

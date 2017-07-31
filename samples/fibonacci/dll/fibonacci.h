@@ -8,9 +8,8 @@
 #include "../cwc.sample.fibonacci.cwch"
 
 namespace sample {
-	struct fibonacci : cwc::component_implementation<cwc::sample::fibonacci::generator, fibonacci> {
+	struct fibonacci {
 		fibonacci() =default;
-		fibonacci(const ::cwc::int32 & dummy) {}
 
 		auto calculate(::cwc::uint8 no) const -> ::cwc::uint64;
 		void calculate(const ::cwc::array_ref<const ::cwc::uint8> & nos, ::cwc::array_ref<::cwc::uint64> results) const;

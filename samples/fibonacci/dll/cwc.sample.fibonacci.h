@@ -11,7 +11,13 @@
 namespace cwc {
 	namespace sample {
 		namespace fibonacci {
-			using generator$ = ::sample::fibonacci;//binding your component to the implementation defined name used by the system
+			//binding component to the implementation defined name used by the system
+			//    (there is no need to inherit the actual implementation itself from component_implementation iff intrusive_from_this is NOT needed)
+			struct generator$ : cwc::component_implementation<cwc::sample::fibonacci::generator, generator$>, private ::sample::fibonacci {
+				//export member functions to component_implementation
+				using ::sample::fibonacci::fibonacci;
+				using ::sample::fibonacci::calculate;
+			};
 		}
 	}
 }

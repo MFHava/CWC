@@ -27,8 +27,6 @@ namespace cwc {
 	using boolean = std::conditional<sizeof(bool) == 1, bool, uint8>::type;//!< @brief portable boolean (as bool lacks size guarantee)
 	//! @}
 
-	using uuid = array<uint8, 16>;//!< @brief universally unique identifier
-
 	//! @brief helper to determine if UTF-8 character is a valid ASCII character
 	//! @param[in] c character to test
 	//! @returns true iff c is a valid ASCII character

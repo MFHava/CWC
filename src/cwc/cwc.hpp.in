@@ -38,19 +38,19 @@ namespace cwc {
 }
 
 #include "internal/type_checks.hpp"
-
-#include "public/array.hpp"
-#include "public/array_ref.hpp"
+#include "internal/type_list.hpp"
 
 #include "public/types.hpp"
 
 #include "internal/error_code.hpp"
-#include "internal/type_list.hpp"
 
+#include "public/array.hpp"
+#include "public/array_ref.hpp"
 #include "public/optional.hpp"
 #include "public/variant.hpp"
 #include "public/string_ref.hpp"
 #include "public/intrusive_ptr.hpp"
+#include "public/uuid.hpp"
 
 #include "internal/make_base_list.hpp"
 #include "internal/call.hpp"

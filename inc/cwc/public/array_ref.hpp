@@ -163,7 +163,16 @@ namespace cwc {
 		friend
 		auto operator>=(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return !(lhs < rhs); }
 
-		//TODO: operator<<
+		friend
+		auto operator<<(std::basic_ostream<utf8> & os, const array_ref & self) -> std::basic_ostream<utf8> & {
+			os << '[';
+			if(!self.empty()) {
+				auto it{self.begin()};
+				os << *it;
+				for(++it; it != self.end(); ++it) os << ", " << *it;
+			}
+			return os << ']';
+		}
 	private:
 		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }
 

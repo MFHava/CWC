@@ -24,6 +24,7 @@
 #include <ostream>
 #include <typeinfo>
 #include <stdexcept>
+#include <functional>
 #include <type_traits>
 
 //! @brief public API of C++ with Components

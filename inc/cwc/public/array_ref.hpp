@@ -144,10 +144,24 @@ namespace cwc {
 		friend
 		auto operator!=(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return !(lhs == rhs); }
 
-		//TODO: operator<
-		//TODO: operator<=
-		//TODO: operator>
-		//TODO: operator>=
+		friend
+		auto operator< (const array_ref & lhs, const array_ref & rhs) noexcept -> bool {
+			if(lhs.size() < rhs.size()) return true;
+			if(lhs.size() > rhs.size()) return false;
+			for(size_type i{0}; i < lhs.size(); ++i)
+				if(!(lhs[i] < rhs[i]))
+					return false;
+			return true;
+		}
+
+		friend
+		auto operator<=(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return !(rhs < lhs); }
+
+		friend
+		auto operator> (const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return rhs < lhs; }
+
+		friend
+		auto operator>=(const array_ref & lhs, const array_ref & rhs) noexcept -> bool { return !(lhs < rhs); }
 
 		//TODO: operator<<
 	private:

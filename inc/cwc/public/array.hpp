@@ -123,6 +123,8 @@ namespace cwc {
 
 		friend
 		auto operator>=(const array & lhs, const array & rhs) noexcept -> bool { return !(lhs < rhs); }
+
+		//TODO: operator<<
 	private:
 		CWC_CXX_RELAXED_CONSTEXPR
 		void validate_index(size_type index) const { if(index >= size()) throw std::out_of_range{"index out of range"}; }

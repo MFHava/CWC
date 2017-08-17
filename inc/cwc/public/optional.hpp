@@ -97,15 +97,15 @@ namespace cwc {
 		void swap(optional & lhs, optional & rhs) noexcept {
 			if(!lhs && !rhs) return;
 			else if(lhs && !rhs) {
-				rhs = std::move(lhs);
+				rhs = std::move(*lhs);
 				lhs.reset();
 			} else if(!lhs && rhs) {
-				lhs = std::move(rhs);
+				lhs = std::move(*rhs);
 				rhs.reset();
 			} else {
 				assert(lhs && rhs);
 				using std::swap;
-				swap(lhs, rhs);
+				swap(*lhs, *rhs);
 			}
 		}
 

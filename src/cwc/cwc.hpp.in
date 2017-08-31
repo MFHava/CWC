@@ -11,44 +11,39 @@
 #include "internal/compiler_detection.hpp"
 #include "internal/os_detection.hpp"
 
-#if CWC_COMPILER_CXX_RELAXED_CONSTEXPR
-	#define CWC_CXX_RELAXED_CONSTEXPR constexpr
-#else
-	#define CWC_CXX_RELAXED_CONSTEXPR
-#endif
+#define CWC_PACK_BEGIN            PTL_PACK_BEGIN
+#define CWC_PACK_END              PTL_PACK_END
+#define CWC_CXX_RELAXED_CONSTEXPR PTL_RELAXED_CONSTEXPR
 
 #include <atomic>
 #include <cassert>
-#include <cstdint>
-#include <cstring>
-#include <ostream>
 #include <typeinfo>
-#include <stdexcept>
 #include <functional>
 #include <type_traits>
 
+#include <ptl/array.hpp>
+#include <ptl/array_ref.hpp>
+#include <ptl/optional.hpp>
+#include <ptl/variant.hpp>
+#include <ptl/string_ref.hpp>
+
 //! @brief public API of C++ with Components
 namespace cwc {
+	using namespace ptl;
+
 	//! @brief user defined literals
-	namespace literals {}
+	namespace literals { using namespace ptl::literals; }
 
 	//! @brief internal implementation details
 	//! @attention no member of this namespace is part of the public CWC API
-	namespace internal {}
+	namespace internal { using namespace ptl::internal; }
 }
-
-#include "internal/type_checks.hpp"
-#include "internal/type_list.hpp"
 
 #include "public/types.hpp"
 
+#include "internal/type_list.hpp"
 #include "internal/error_code.hpp"
 
-#include "public/array.hpp"
-#include "public/array_ref.hpp"
-#include "public/optional.hpp"
-#include "public/variant.hpp"
-#include "public/string_ref.hpp"
 #include "public/intrusive_ptr.hpp"
 #include "public/uuid.hpp"
 

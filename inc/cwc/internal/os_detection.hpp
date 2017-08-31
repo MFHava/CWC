@@ -21,11 +21,7 @@
 #if CWC_COMPILER_IS_MSVC || (CWC_COMPILER_IS_Intel && CWC_OS_WINDOWS)
 	#define CWC_CALL       __cdecl
 	#define CWC_EXPORT     __declspec(dllexport)
-	#define CWC_PACK_BEGIN __pragma(pack(push, 1))
-	#define CWC_PACK_END   __pragma(pack(pop))
 #elif CWC_COMPILER_IS_GNU || (CWC_COMPILER_IS_Intel && CWC_OS_LINUX)
 	#define CWC_CALL       __attribute__((__cdecl__))
 	#define CWC_EXPORT     __attribute__((visibility("default")))
-	#define CWC_PACK_BEGIN _Pragma("pack(push, 1)")
-	#define CWC_PACK_END   _Pragma("pack(pop)")
 #endif

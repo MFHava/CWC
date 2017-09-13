@@ -29,12 +29,12 @@ namespace cwc {namespace sample {namespace fibonacci {
 			//detect missing methods:
 			void calculate();
 		};
-		CWC_CXX_RELAXED_CONSTEXPR
+		constexpr
 		static auto cwc_uuid() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x55), static_cast<cwc::uint8>(0x9), static_cast<cwc::uint8>(0x67), static_cast<cwc::uint8>(0x3D), static_cast<cwc::uint8>(0x71), static_cast<cwc::uint8>(0x7), static_cast<cwc::uint8>(0x51), static_cast<cwc::uint8>(0xC5), static_cast<cwc::uint8>(0x97), static_cast<cwc::uint8>(0xAA), static_cast<cwc::uint8>(0x1F), static_cast<cwc::uint8>(0xE8), static_cast<cwc::uint8>(0xA8), static_cast<cwc::uint8>(0x2A), static_cast<cwc::uint8>(0x1A), static_cast<cwc::uint8>(0x6)}; }
 	};
 
 	struct generator : sequence {
-		CWC_CXX_RELAXED_CONSTEXPR
+		constexpr
 		static void cwc_uuid() {}
 		static auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::fibonacci::generator"; }
 		using cwc_interfaces = ::cwc::internal::make_base_list<sequence>::type;
@@ -53,7 +53,7 @@ namespace cwc {namespace sample {namespace fibonacci {
 			//detect missing methods:
 			void create();
 		};
-		CWC_CXX_RELAXED_CONSTEXPR
+		constexpr
 		static auto cwc_uuid() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x12), static_cast<cwc::uint8>(0xEC), static_cast<cwc::uint8>(0x4A), static_cast<cwc::uint8>(0x37), static_cast<cwc::uint8>(0x93), static_cast<cwc::uint8>(0xBB), static_cast<cwc::uint8>(0x54), static_cast<cwc::uint8>(0x62), static_cast<cwc::uint8>(0x81), static_cast<cwc::uint8>(0x3E), static_cast<cwc::uint8>(0xFA), static_cast<cwc::uint8>(0xF0), static_cast<cwc::uint8>(0x48), static_cast<cwc::uint8>(0xD3), static_cast<cwc::uint8>(0x64), static_cast<cwc::uint8>(0x59)}; }
 	};
 	};

@@ -14,7 +14,8 @@ OPTION(CWC_BUILD_DOCUMENTATION "Build documentation" OFF)
 OPTION(CWC_USE_STATIC_BOOST "Use static or dynamic Boost libraries (initially selects platform default)" ${WIN32})
 #END configuration
 
-INCLUDE_DIRECTORIES(inc)
+INCLUDE_DIRECTORIES(inc;external/PTL/inc)
+ADD_SUBDIRECTORY(external/PTL)
 
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/static)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)

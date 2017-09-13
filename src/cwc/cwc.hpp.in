@@ -13,7 +13,6 @@
 
 #define CWC_PACK_BEGIN            PTL_PACK_BEGIN
 #define CWC_PACK_END              PTL_PACK_END
-#define CWC_CXX_RELAXED_CONSTEXPR PTL_RELAXED_CONSTEXPR
 
 #include <atomic>
 #include <cassert>

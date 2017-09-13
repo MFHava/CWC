@@ -88,7 +88,7 @@ namespace cwcc {
 				methods.erase(std::unique(std::begin(methods), std::end(methods)), std::end(methods));
 				for(const auto & method : methods) os << "\t\t\tvoid " << method << "();\n";
 				os << "\t\t};\n"
-				      "\t\tCWC_CXX_RELAXED_CONSTEXPR\n"
+				      "\t\tconstexpr\n"
 				      "\t\tstatic auto cwc_uuid() -> ::cwc::uuid { return {" << name_to_uuid(self.name) << "}; }\n"
 				      "\t};\n";
 			}
@@ -101,7 +101,7 @@ namespace cwcc {
 				os << "\tstruct " << self.name << " : " << self.interfaces[0];
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				os << " {\n"
-				      "\t\tCWC_CXX_RELAXED_CONSTEXPR\n"
+				      "\t\tconstexpr\n"
 				      "\t\tstatic void cwc_uuid() {}\n"
 				      "\t\tstatic auto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
 				      "\t\tusing cwc_interfaces = ::cwc::internal::make_base_list<" << self.interfaces[0];

@@ -88,7 +88,7 @@ namespace cwc {
 			void config();
 			void factory();
 		};
-		CWC_CXX_RELAXED_CONSTEXPR
+		constexpr
 		static auto cwc_uuid() -> uuid { return {static_cast<uint8>(0xEA), static_cast<uint8>(0x2E), static_cast<uint8>(0xA7), static_cast<uint8>(0x81), static_cast<uint8>(0x7F), static_cast<uint8>(0xF8), static_cast<uint8>(0x5D), static_cast<uint8>(0xB8), static_cast<uint8>(0xBE), static_cast<uint8>(0xC1), static_cast<uint8>(0xC1), static_cast<uint8>(0x2), static_cast<uint8>(0x4A), static_cast<uint8>(0x74), static_cast<uint8>(0x4E), static_cast<uint8>(0xC8)}; }
 	};
 

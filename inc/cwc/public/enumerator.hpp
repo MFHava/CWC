@@ -115,7 +115,7 @@ namespace cwc {
 			void next();
 			void get();
 		};
-		CWC_CXX_RELAXED_CONSTEXPR
+		constexpr
 		static auto cwc_uuid() -> uuid { return {Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
 	};
 

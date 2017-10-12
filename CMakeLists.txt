@@ -10,7 +10,6 @@ PROJECT(CWC CXX)
 #BEGIN configuration
 OPTION(CWC_BUILD_TESTS "Build tests" OFF)
 OPTION(CWC_BUILD_SAMPLES "Build samples" OFF)
-OPTION(CWC_BUILD_DOCUMENTATION "Build documentation" OFF)
 OPTION(CWC_USE_STATIC_BOOST "Use static or dynamic Boost libraries (initially selects platform default)" ${WIN32})
 #END configuration
 
@@ -76,9 +75,9 @@ SET_SOURCE_FILES_PROPERTIES(src/cwcc/parser.cpp PROPERTIES
 )
 #END CWCC-application
 
-IF(CWC_BUILD_DOCUMENTATION)
+FIND_PACKAGE(Doxygen)
+IF(Doxygen_FOUND)
 	FILE(GLOB_RECURSE CWC_DOX "docs/*")
-	FIND_PACKAGE(Doxygen REQUIRED)
 	CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
 	ADD_CUSTOM_TARGET(Documentation ALL
 		${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile

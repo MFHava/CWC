@@ -48,7 +48,6 @@ Temporary Items
 
 # Ignore SVN & local build details
 .vs
-.svn*
 build*
 inc/cwc/cwc.hpp
 *.patch

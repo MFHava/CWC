@@ -21,7 +21,7 @@ SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 SET(CMAKE_SHARED_LIBRARY_PREFIX_CXX "")
-SET(CMAKE_SHARED_LIBRARY_SUFFIX_CXX ".ccb")#compiled CWC bundle
+SET(CMAKE_SHARED_LIBRARY_SUFFIX_CXX ".ccb") #compiled CWC bundle
 
 #BEGIN compiler feature detection
 SET(CMAKE_CXX_EXTENSIONS OFF)
@@ -44,12 +44,12 @@ ELSE()
 ENDIF()
 
 #BEGIN find required Boost libraries
-SET(REQUIRED_BOOST_LIBS filesystem system)#TODO: these dependencies are not strictly required if CWCC-main is (slightly) adapted
+SET(REQUIRED_BOOST_LIBS filesystem system) #TODO: these dependencies are not strictly required if CWCC-main is (slightly) adapted
 IF(CWC_BUILD_TESTS)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework)
 ENDIF()
 IF(REQUIRED_BOOST_LIBS)
-	SET(Boost_USE_STATIC_LIBS ${CWC_USE_STATIC_BOOST})#TODO: add option to let user select kind of boost libs! (static libraries are rather uncommon on Unix)
+	SET(Boost_USE_STATIC_LIBS ${CWC_USE_STATIC_BOOST}) #TODO: add option to let user select kind of boost libs! (static libraries are rather uncommon on Unix)
 	SET(Boost_USE_MULTITHREADED ON)
 	FIND_PACKAGE(Boost 1.59.0 REQUIRED ${REQUIRED_BOOST_LIBS})
 ENDIF()
@@ -60,7 +60,7 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/cwc/cwc.hpp.in ${CMAKE_CURRENT_SO
 FILE(GLOB_RECURSE CWC_HEADERS "inc/cwc/*")
 FILE(GLOB_RECURSE CWC_SOURCES "src/cwc/*")
 FILE(GLOB_RECURSE CWC_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/src/cwc/*)
-ADD_LIBRARY(cwc STATIC ${CWC_HEADERS} ${CWC_SOURCES} ${CWC_GENERATED_SOURCES})#header-only!
+ADD_LIBRARY(cwc STATIC ${CWC_HEADERS} ${CWC_SOURCES} ${CWC_GENERATED_SOURCES}) #header-only!
 SET_TARGET_PROPERTIES(cwc PROPERTIES LINKER_LANGUAGE CXX)
 #END CWC-library
 
@@ -71,7 +71,7 @@ FILE(GLOB_RECURSE CWCC_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/src/cwcc/*)
 ADD_EXECUTABLE(cwcc ${CWCC_SOURCES} ${CWCC_GENERATED_SOURCES})
 TARGET_LINK_LIBRARIES(cwcc ${CWC_DLL_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 SET_SOURCE_FILES_PROPERTIES(src/cwcc/parser.cpp PROPERTIES
-	COMPILE_FLAGS "-O3"#NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)
+	COMPILE_FLAGS "-O3" #NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)
 )
 #END CWCC-application
 
@@ -104,7 +104,7 @@ IF(CWC_BUILD_TESTS)
 	ENDIF()
 	TARGET_LINK_LIBRARIES(test-cwcc ${TEST_LIBRARIES})
 	SET_SOURCE_FILES_PROPERTIES(test/cwcc/shared.cpp PROPERTIES
-		COMPILE_FLAGS "-O3"#NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)
+		COMPILE_FLAGS "-O3" #NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)
 	)
 ENDIF()
 
@@ -116,7 +116,7 @@ IF(CWC_BUILD_SAMPLES)
 	ADD_EXECUTABLE(sample-fibonacci ${CWC_SAMPLE_FIBONACCI_EXE_SOURCES} "samples/fibonacci/cwc.sample.fibonacci.cwch")
 	SET_SOURCE_FILES_PROPERTIES(samples/fibonacci/dll/cwc.sample.fibonacci.cwc PROPERTIES
 		LANGUAGE CXX
-		COMPILE_FLAGS "-xc++"#NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise GCC won't compile this file
+		COMPILE_FLAGS "-xc++" #NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise GCC won't compile this file
 	)
 	TARGET_LINK_LIBRARIES(sample-fibonacci ${CWC_DLL_LIBRARY})
 ENDIF()

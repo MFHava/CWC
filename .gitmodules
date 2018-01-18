@@ -1,4 +1,4 @@
 [submodule "external/PTL"]
 	path = external/PTL
 	url = https://github.com/MFHava/PTL.git
-	branch = master
+	branch = stable

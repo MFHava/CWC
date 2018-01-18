@@ -44,7 +44,8 @@ namespace cwcc {
 		if(!definitionPtr) throw std::logic_error{"could not find entry point 'cwc_reflect' in bundle \"" + name + '"'};
 		cwc::string_ref definition;
 		definitionPtr(&definition);
-		definition_ = definition.c_str();
+		definition_.reserve(definition.size());
+		std::copy(std::begin(definition), std::end(definition), std::back_inserter(definition_));
 	}
 }
 

@@ -201,14 +201,17 @@ namespace {
 
 		void error(cwc::string_ref msg) const noexcept {
 			last_message[0] = '\0';
-			std::strncat(last_message, msg.c_str(), sizeof(last_message) - 1);
+			std::strncat(last_message, msg.data(), std::min(sizeof(last_message) - 1, msg.size()));
 		}
 
 		auto error() const noexcept -> cwc::string_ref { return last_message; }
 
 		auto config() const -> cwc::intrusive_ptr<cwc::config_sections_enumerator> { return cwc::make_intrusive<config_sections_enumerator>(configuration); }
 
-		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> { return id ? plugin_factories.at(fqn.c_str()).at(id->c_str()) : component_factories.at(fqn.c_str()); }
+		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> {
+			const std::string fqn_{fqn.data(), fqn.data() + fqn.size()};
+			return id ? plugin_factories.at(fqn_).at(std::string{id->data(), id->data() + id->size()}) : component_factories.at(fqn_);
+		}
 	};
 
 	const cwc::intrusive_ptr<cwc::context> instance = [] {

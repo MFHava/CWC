@@ -56,20 +56,20 @@ namespace cwc {
 				switch(code = static_cast<error_code>(~mask & static_cast<UI>(code))) {//slice inheritance level
 					case error_code::no_error:                   throw unknown_error{};//slicing removed all bits => does not match definition of exceptions!
 					case error_code::std98_exception:            throw std::exception{};
-					case error_code::std98_logic_error:          throw std::logic_error{this_context()->error().c_str()};
-					case error_code::std98_invalid_argument:     throw std::invalid_argument{this_context()->error().c_str()};
-					case error_code::std98_domain_error:         throw std::domain_error{this_context()->error().c_str()};
-					case error_code::std98_length_error:         throw std::length_error{this_context()->error().c_str()};
-					case error_code::std98_out_of_range:         throw std::out_of_range{this_context()->error().c_str()};
+					case error_code::std98_logic_error:          throw std::logic_error{this_context()->error().data()};
+					case error_code::std98_invalid_argument:     throw std::invalid_argument{this_context()->error().data()};
+					case error_code::std98_domain_error:         throw std::domain_error{this_context()->error().data()};
+					case error_code::std98_length_error:         throw std::length_error{this_context()->error().data()};
+					case error_code::std98_out_of_range:         throw std::out_of_range{this_context()->error().data()};
 					//NOTE: not constructable from msg: case error_code::std11_future_error:
 					//NOTE: currently not available: case error_code::std17_bad_optional_access:
-					case error_code::std98_runtime_error:        throw std::runtime_error{this_context()->error().c_str()};
-					case error_code::std98_range_error:          throw std::range_error{this_context()->error().c_str()};
-					case error_code::std98_overflow_error:       throw std::overflow_error{this_context()->error().c_str()};
-					case error_code::std98_underflow_error:      throw std::underflow_error{this_context()->error().c_str()};
+					case error_code::std98_runtime_error:        throw std::runtime_error{this_context()->error().data()};
+					case error_code::std98_range_error:          throw std::range_error{this_context()->error().data()};
+					case error_code::std98_overflow_error:       throw std::overflow_error{this_context()->error().data()};
+					case error_code::std98_underflow_error:      throw std::underflow_error{this_context()->error().data()};
 					//not constructable from msg: case error_code::std11_regex_error:
 					//not constructable from msg: case error_code::std11_system_error:
-					case error_code::std11_ios_base_failure:     throw std::ios_base::failure{this_context()->error().c_str()};
+					case error_code::std11_ios_base_failure:     throw std::ios_base::failure{this_context()->error().data()};
 					//NOTE: currently not available: case error_code::std17_filesystem_error:
 					case error_code::std98_bad_typeid:           throw std::bad_typeid{};
 					case error_code::std98_bad_cast:             throw std::bad_cast{};

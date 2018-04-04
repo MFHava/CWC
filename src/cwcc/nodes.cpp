@@ -18,7 +18,15 @@ namespace cwcc {
 		for(const auto & doc : self.lines) os << '\t' << doc << '\n';
 		os << "\tenum class " << self.name << " : ::cwc::uint8 {\n";
 		for(const auto & e : self.members) os << e << '\n';
-		return os << "\t};";
+		os << "\t};\n"
+		      "\tinline\n"
+		      "\tauto operator<<(std::ostream & os, const " << self.name << " & self) -> std::ostream & {\n"
+		      "\t\tswitch(self) {\n";
+		for(const auto & e : self.members) os << "\t\t\tcase " << self.name << "::" << e.name << ": return os << \"" << self.name << "::" << e.name << "\";\n";
+		os << "\t\t\tdefault: return os << \"invalid value for enum \\\"" << self.name << "\\\"\";\n"
+		      "\t\t}\n"
+		      "\t}\n";
+		return os;
 	}
 
 	auto operator<<(std::ostream & os, const struct_::member & self) -> std::ostream & {

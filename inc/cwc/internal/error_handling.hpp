@@ -15,6 +15,7 @@ namespace cwc {
 	namespace internal {
 		auto store_exception(std::exception_ptr eptr) noexcept -> error_code
 			try                                                  { std::rethrow_exception(eptr);                                                     }
+			//NOTE: currently not available: catch(const std::bad_optional_access          &    ) { return                                    error_code::std17_bad_optional_access;  }
 			//NOTE: currently not available: catch(const std::bad_variant_access           &    ) { return                                    error_code::std17_bad_variant_access;   }
 			catch(const std::bad_function_call            &    ) { return                                    error_code::std11_bad_function_call;    }
 			catch(const std::bad_weak_ptr                 &    ) { return                                    error_code::std11_bad_weak_ptr;         }
@@ -32,7 +33,6 @@ namespace cwc {
 			catch(const std::overflow_error               & exc) { return this_context()->error(exc.what()), error_code::std98_overflow_error;       }
 			catch(const std::range_error                  & exc) { return this_context()->error(exc.what()), error_code::std98_range_error;          }
 			catch(const std::runtime_error                & exc) { return this_context()->error(exc.what()), error_code::std98_runtime_error;        }
-			//NOTE: currently not available: catch(const std::bad_optional_access          &    ) { return                                    error_code::std17_bad_optional_access;  }
 			//NOTE: not constructable from msg: catch(const std::future_error                 &    ) { return                                    error_code::std11_future_error;         }
 			catch(const std::out_of_range                 & exc) { return this_context()->error(exc.what()), error_code::std98_out_of_range;         }
 			catch(const std::length_error                 & exc) { return this_context()->error(exc.what()), error_code::std98_length_error;         }
@@ -62,7 +62,6 @@ namespace cwc {
 					case error_code::std98_length_error:         throw std::length_error{this_context()->error().data()};
 					case error_code::std98_out_of_range:         throw std::out_of_range{this_context()->error().data()};
 					//NOTE: not constructable from msg: case error_code::std11_future_error:
-					//NOTE: currently not available: case error_code::std17_bad_optional_access:
 					case error_code::std98_runtime_error:        throw std::runtime_error{this_context()->error().data()};
 					case error_code::std98_range_error:          throw std::range_error{this_context()->error().data()};
 					case error_code::std98_overflow_error:       throw std::overflow_error{this_context()->error().data()};
@@ -79,6 +78,7 @@ namespace cwc {
 					case error_code::std98_bad_exception:        throw std::bad_exception{};
 					case error_code::std11_bad_weak_ptr:         throw std::bad_weak_ptr{};
 					case error_code::std11_bad_function_call:    throw std::bad_function_call{};
+					//NOTE: currently not available: case error_code::std17_bad_optional_access:
 					//NOTE: currently not available: case error_code::std17_bad_variant_access:
 				}
 			throw unknown_error{};

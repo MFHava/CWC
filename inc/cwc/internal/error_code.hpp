@@ -22,7 +22,6 @@ namespace cwc {
 					std98_length_error         = 	+std98_logic_error | static_cast<uint32>(3) << 15,
 					std98_out_of_range         = 	+std98_logic_error | static_cast<uint32>(4) << 15,
 					std11_future_error         = 	+std98_logic_error | static_cast<uint32>(5) << 15,
-					std17_bad_optional_access  = 	+std98_logic_error | static_cast<uint32>(6) << 15,
 				std98_runtime_error            = +std98_exception | static_cast<uint32>(2) << 23,
 					std98_range_error          = 	+std98_runtime_error | static_cast<uint32>(1) << 15,
 					std98_overflow_error       = 	+std98_runtime_error | static_cast<uint32>(2) << 15,
@@ -40,6 +39,7 @@ namespace cwc {
 				std11_bad_weak_ptr             = +std98_exception | static_cast<uint32>(7) << 23,
 				std11_bad_function_call        = +std98_exception | static_cast<uint32>(8) << 23,
 				std17_bad_variant_access       = +std98_exception | static_cast<uint32>(9) << 23,
+				std17_bad_optional_access      = +std98_exception | static_cast<uint32>(10) << 23,
 		};
 
 		auto store_exception(std::exception_ptr eptr) noexcept -> error_code;

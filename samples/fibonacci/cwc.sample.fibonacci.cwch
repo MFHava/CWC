@@ -11,8 +11,8 @@
 //! @author Michael Florian Hava
 namespace cwc {namespace sample {namespace fibonacci {
 	class sequence : public ::cwc::component {
-		virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept =0;
-		virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept =0;
+		virtual const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept =0;
+		virtual const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept =0;
 	public:
 		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 {
 			::cwc::uint64 cwc_ret;
@@ -24,8 +24,8 @@ namespace cwc {namespace sample {namespace fibonacci {
 		}
 		template<typename CWCImplementation, typename CWCTypeList>
 		class cwc_implementation : public ::cwc::internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).calculate(*no); }); }
-			::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept final { return ::cwc::internal::call_and_return_error([&] { static_cast<const CWCImplementation &>(*this).calculate(*nos, *results); }); }
+			const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).calculate(*no); }); }
+			const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept final { return ::cwc::internal::call_and_return_error([&] { static_cast<const CWCImplementation &>(*this).calculate(*nos, *results); }); }
 			//detect missing methods:
 			void calculate();
 		};
@@ -40,7 +40,7 @@ namespace cwc {namespace sample {namespace fibonacci {
 		using cwc_interfaces = ::cwc::internal::make_base_list<sequence>::type;
 
 	class cwc_factory : public ::cwc::component {
-		virtual ::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept =0;
+		virtual const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept =0;
 	public:
 		auto create() const -> ::cwc::intrusive_ptr<::cwc::component> {
 			::cwc::intrusive_ptr<::cwc::component> cwc_ret;
@@ -49,7 +49,7 @@ namespace cwc {namespace sample {namespace fibonacci {
 		}
 		template<typename CWCImplementation, typename CWCTypeList>
 		class cwc_implementation : public ::cwc::internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			::cwc::internal::error_code CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).create(); }); }
+			const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).create(); }); }
 			//detect missing methods:
 			void create();
 		};

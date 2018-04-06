@@ -74,10 +74,14 @@ namespace {
 	static_assert(validate_floating_point<cwc::float32, 4>::value, "unsupported single precision floating point");
 	static_assert(validate_floating_point<cwc::float64, 8>::value, "unsupported double precision floating point");
 
-	thread_local cwc::utf8 last_message[CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH]{0};
+	thread_local
+	cwc::utf8 last_message[CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH]{0};
+
+	thread_local
+	cwc::internal::error last_error{{}, last_message};
 
 	class context_impl final : public cwc::interface_implementation<cwc::context, context_impl> {
-		using factory_export_type = cwc::internal::error_code(CWC_CALL *)(const cwc::string_ref *, cwc::intrusive_ptr<cwc::component> *);
+		using factory_export_type = const cwc::internal::error *(CWC_CALL *)(const cwc::string_ref *, cwc::intrusive_ptr<cwc::component> *);
 
 		using factory_map = std::unordered_map<std::string, cwc::intrusive_ptr<cwc::component>>;
 		using key_value_map = std::unordered_map<std::string, std::string>;
@@ -104,7 +108,7 @@ namespace {
 		auto create_factory(factory_export_type factory, const std::string & file, const std::string & fqn) -> cwc::intrusive_ptr<cwc::component> {
 			cwc::intrusive_ptr<cwc::component> ptr;
 			const cwc::string_ref tmp{fqn.c_str()};
-			if(factory(&tmp, &ptr) != cwc::internal::error_code::no_error) throw std::logic_error{"could not retrieve factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
+			if(factory(&tmp, &ptr) != nullptr) throw std::logic_error{"could not retrieve factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
 			if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
 			return ptr;
 		}
@@ -199,12 +203,13 @@ namespace {
 
 		auto version() const noexcept -> cwc::string_ref { return CWC_VERSION; }
 
-		void error(cwc::string_ref msg) const noexcept {
+		auto error(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * {
+			assert(err);
+			last_error.code = err->code;
 			last_message[0] = '\0';
-			std::strncat(last_message, msg.data(), std::min(sizeof(last_message) - 1, msg.size()));
+			std::strncat(last_message, err->message, std::min(sizeof(last_message) - 1, std::strlen(err->message)));
+			return &last_error;
 		}
-
-		auto error() const noexcept -> cwc::string_ref { return last_message; }
 
 		auto config() const -> cwc::intrusive_ptr<cwc::config_sections_enumerator> { return cwc::make_intrusive<config_sections_enumerator>(configuration); }
 

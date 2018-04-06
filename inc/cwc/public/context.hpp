@@ -13,27 +13,18 @@
 namespace cwc {
 	//! @brief interface of the global context
 	class context : public component {
-		virtual void                 CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept =0;
-		virtual void                 CWC_CALL cwc$context$error$1(const string_ref * msg) const noexcept =0;
-		virtual void                 CWC_CALL cwc$context$error$2(string_ref * cwc_ret) const noexcept =0;
-		virtual internal::error_code CWC_CALL cwc$context$config$3(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept =0;
-		virtual internal::error_code CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept =0;
+		virtual void                    CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept =0;
+		virtual const internal::error * CWC_CALL cwc$context$error$1(const internal::error * err) const noexcept =0;
+		virtual const internal::error * CWC_CALL cwc$context$config$2(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept =0;
+		virtual const internal::error * CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept =0;
 
 		friend
-		void internal::validate(error_code code);
+		void internal::validate(const internal::error * err);
 
 		friend
-		auto internal::store_exception(std::exception_ptr eptr) noexcept -> error_code;
+		auto internal::store_exception(std::exception_ptr eptr) noexcept -> const internal::error *;
 
-		void error(const string_ref & msg) {
-			cwc$context$error$1(&msg);
-		}
-
-		auto error() const -> string_ref {
-			string_ref cwc_ret;
-			cwc$context$error$2(&cwc_ret);
-			return cwc_ret;
-		}
+		auto error(const internal::error & err) const -> const internal::error * { return cwc$context$error$1(&err); }
 	public:
 		//! @brief get the version information of the context
 		//! @returns version information of the context
@@ -47,7 +38,7 @@ namespace cwc {
 		//! @returns enumerator for all sections
 		auto config() const -> intrusive_ptr<config_sections_enumerator> {
 			intrusive_ptr<config_sections_enumerator> cwc_ret;
-			internal::call(*this, &context::cwc$context$config$3, &cwc_ret);
+			internal::call(*this, &context::cwc$context$config$2, &cwc_ret);
 			return cwc_ret;
 		}
 
@@ -77,11 +68,10 @@ namespace cwc {
 
 		template<typename CWCImplementation, typename CWCTypeList>
 		class cwc_implementation : public internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			void                 CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept final { *cwc_ret = static_cast<const CWCImplementation &>(*this).version(); }
-			void                 CWC_CALL cwc$context$error$1(const string_ref * msg) const noexcept final { static_cast<const CWCImplementation &>(*this).error(*msg); }
-			void                 CWC_CALL cwc$context$error$2(string_ref * cwc_ret) const noexcept final { *cwc_ret = static_cast<const CWCImplementation &>(*this).error(); }
-			internal::error_code CWC_CALL cwc$context$config$3(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).config(); }); }
-			internal::error_code CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).factory(*fqn, *id); }); }
+			void                    CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept final { *cwc_ret = static_cast<const CWCImplementation &>(*this).version(); }
+			const internal::error * CWC_CALL cwc$context$error$1(const internal::error * err) const noexcept final { return static_cast<const CWCImplementation &>(*this).error(err); }
+			const internal::error * CWC_CALL cwc$context$config$2(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).config(); }); }
+			const internal::error * CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).factory(*fqn, *id); }); }
 			//detect missing methods:
 			void version();
 			void error();

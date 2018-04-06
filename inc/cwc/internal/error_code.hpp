@@ -12,14 +12,11 @@
 
 namespace cwc {
 	namespace internal {
-		template<uint8 Level0 = 0, uint8 Level1 = 0, uint8 Level2 = 0, uint8 Level3 = 0>
-		struct error_code_helper final : std::integral_constant<uint32, (1 << 31) | (Level0 << 23) | (Level1 << 15) | (Level2 << 7) | Level3> {
-			static_assert(Level3 < 1 << 8, "last inheritance level only has 7bits");
-		};
+		template<uint8 Level0 = 0, uint8 Level1 = 0, uint8 Level2 = 0, uint8 Level3 = 0, uint8 Level4 = 0, uint8 Level5 = 0, uint8 Level6 = 0, uint8 Level7 = 0>
+		struct error_code_helper final : std::integral_constant<uint64, (static_cast<uint64>(Level0) << 56) | (static_cast<uint64>(Level1) << 48) | (static_cast<uint64>(Level2) << 40) | (static_cast<uint64>(Level3) << 32) | (static_cast<uint64>(Level4) << 24) | (static_cast<uint64>(Level5) << 16) | (static_cast<uint64>(Level6) << 8) | static_cast<uint64>(Level7)> {};
 
 		//exceptions of the standard library: http://en.cppreference.com/w/cpp/error/exception
-		enum class error_code : uint32 {
-			no_error,
+		enum class error_code : uint64 {
 			std98_exception = error_code_helper<>::value,
 				std98_logic_error = error_code_helper<1>::value,
 					std98_invalid_argument = error_code_helper<1, 1>::value,
@@ -47,12 +44,19 @@ namespace cwc {
 				std17_bad_optional_access = error_code_helper<10>::value,
 		};
 
-		auto store_exception(std::exception_ptr eptr) noexcept -> error_code;
-		void validate(error_code code);
+		CWC_PACK_BEGIN
+		struct error final {
+			cwc::internal::error_code code;
+			const cwc::utf8 * message{""};
+		};
+		CWC_PACK_END
+
+		auto store_exception(std::exception_ptr eptr) noexcept -> const error *;
+		void validate(const error * err);
 
 		template<typename Func>
-		auto call_and_return_error(Func func) noexcept -> error_code
-			try { return func(), error_code::no_error; }
+		auto call_and_return_error(Func func) noexcept -> const error *
+			try { return func(), nullptr; }
 			catch(...) { return store_exception(std::current_exception()); }
 	}
 }

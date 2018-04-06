@@ -21,9 +21,9 @@ namespace cwc {
 		friend
 		class internal::cast_to_interface;
 
-		virtual void                 CWC_CALL cwc$component$new$0() const noexcept =0;
-		virtual void                 CWC_CALL cwc$component$delete$1() const noexcept =0;
-		virtual internal::error_code CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept =0;
+		virtual void                    CWC_CALL cwc$component$new$0() const noexcept =0;
+		virtual void                    CWC_CALL cwc$component$delete$1() const noexcept =0;
+		virtual const internal::error * CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept =0;
 	public:
 		template<typename Implementation, typename TypeList>
 		class cwc_implementation : public internal::default_implementation_chaining<Implementation, TypeList> {
@@ -39,9 +39,9 @@ namespace cwc {
 			auto operator=(const cwc_implementation &) -> cwc_implementation & =delete;
 			auto operator=(cwc_implementation &&) -> cwc_implementation & =delete;
 
-			void                 CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
-			void                 CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
-			internal::error_code CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
+			void                    CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
+			void                    CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
+			const internal::error * CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
 		protected:
 			//! @brief retrieve intrusive_ptr for requested interface
 			//! @tparam TargetType type to cast new pointer to

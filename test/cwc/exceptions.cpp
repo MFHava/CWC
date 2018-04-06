@@ -9,12 +9,13 @@
 #include "cwc/cwc.hpp"
 
 BOOST_AUTO_TEST_SUITE(error_handling)
-BOOST_AUTO_TEST_CASE(no_error) { BOOST_TEST((cwc::internal::call_and_return_error([] {}) == cwc::internal::error_code::no_error)); }
+BOOST_AUTO_TEST_CASE(no_error) { BOOST_TEST((cwc::internal::call_and_return_error([] {}) == nullptr)); }
 
 template<typename Exception>
 void test(const Exception & exc, cwc::internal::error_code errc) {
-	const auto code = cwc::internal::call_and_return_error([&] { throw exc; });;
-	BOOST_TEST((code == errc));
+	const auto error = cwc::internal::call_and_return_error([&] { throw exc; });
+	BOOST_TEST(error);
+	BOOST_TEST((error->code == errc));
 }
 
 BOOST_AUTO_TEST_CASE(exception          ) { test(std::exception{},             cwc::internal::error_code::std98_exception           ); }

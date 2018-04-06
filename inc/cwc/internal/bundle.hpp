@@ -20,7 +20,7 @@ extern "C" CWC_EXPORT void CWC_CALL cwc_init(::cwc::intrusive_ptr<::cwc::context
 	cwc_context = context;
 }
 
-extern "C" CWC_EXPORT::cwc::internal::error_code CWC_CALL cwc_factory(const ::cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * result) {
+extern "C" CWC_EXPORT const ::cwc::internal::error * CWC_CALL cwc_factory(const ::cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * result) {
 	assert(cwc_context);
 	assert(result);
 	return ::cwc::internal::call_and_return_error([&] {

@@ -132,7 +132,7 @@ namespace cwcc {
 				for(std::size_t i{0}; i < mangled.size(); ++i) {
 					const auto & method = self.methods[i];
 					std::stringstream ss;
-					ss << "::cwc::internal::error_code CWC_CALL " << mangled[i] << '(';
+					ss << "const ::cwc::internal::error * CWC_CALL " << mangled[i] << '(';
 					const auto & params = method.params();
 					if(!params.empty()) {
 						auto print_param = [&](const param & p) { ss << p.mutable_ << p.type << " * " << p.name; };

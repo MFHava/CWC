@@ -25,19 +25,24 @@ namespace cwc {
 		virtual void                    CWC_CALL cwc$component$delete$1() const noexcept =0;
 		virtual const internal::error * CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept =0;
 	public:
+		constexpr
+		static auto cwc_uuid() -> uuid { return {static_cast<uint8>(0x45), static_cast<uint8>(0x91), static_cast<uint8>(0x4), static_cast<uint8>(0xE), static_cast<uint8>(0xEF), static_cast<uint8>(0xBF), static_cast<uint8>(0x5E), static_cast<uint8>(0x84), static_cast<uint8>(0xA1), static_cast<uint8>(0x58), static_cast<uint8>(0x53), static_cast<uint8>(0x3E), static_cast<uint8>(0xD4), static_cast<uint8>(0xAC), static_cast<uint8>(0xFF), static_cast<uint8>(0x93)}; }
+	};
+
+	namespace internal {
 		template<typename Implementation, typename TypeList>
-		class cwc_implementation : public internal::default_implementation_chaining<Implementation, TypeList> {
+		class vtable_implementation<component, Implementation, TypeList> : public internal::default_implementation_chaining<Implementation, TypeList> {
 			template<typename Type>
 			friend
 			struct intrusive_ptr;
 
 			mutable std::atomic<uint64> cwc_reference_counter{1};
 
-			cwc_implementation(const cwc_implementation &) =delete;
-			cwc_implementation(cwc_implementation &&) =delete;
+			vtable_implementation(const vtable_implementation &) =delete;
+			vtable_implementation(vtable_implementation &&) =delete;
 
-			auto operator=(const cwc_implementation &) -> cwc_implementation & =delete;
-			auto operator=(cwc_implementation &&) -> cwc_implementation & =delete;
+			auto operator=(const vtable_implementation &) -> vtable_implementation & =delete;
+			auto operator=(vtable_implementation &&) -> vtable_implementation & =delete;
 
 			void                    CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
 			void                    CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
@@ -65,10 +70,8 @@ namespace cwc {
 				return intrusive_ptr<const TargetType>{result};
 			}
 		public:
-			cwc_implementation() =default;
-			~cwc_implementation() =default;
+			vtable_implementation() =default;
+			~vtable_implementation() =default;
 		};
-		constexpr
-		static auto cwc_uuid() -> uuid { return {static_cast<uint8>(0x45), static_cast<uint8>(0x91), static_cast<uint8>(0x4), static_cast<uint8>(0xE), static_cast<uint8>(0xEF), static_cast<uint8>(0xBF), static_cast<uint8>(0x5E), static_cast<uint8>(0x84), static_cast<uint8>(0xA1), static_cast<uint8>(0x58), static_cast<uint8>(0x53), static_cast<uint8>(0x3E), static_cast<uint8>(0xD4), static_cast<uint8>(0xAC), static_cast<uint8>(0xFF), static_cast<uint8>(0x93)}; }
-	};
+	}
 }

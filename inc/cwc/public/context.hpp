@@ -26,6 +26,9 @@ namespace cwc {
 
 		auto error(const internal::error & err) const -> const internal::error * { return cwc$context$error$1(&err); }
 	public:
+		constexpr
+		static auto cwc_uuid() -> uuid { return {static_cast<uint8>(0xEA), static_cast<uint8>(0x2E), static_cast<uint8>(0xA7), static_cast<uint8>(0x81), static_cast<uint8>(0x7F), static_cast<uint8>(0xF8), static_cast<uint8>(0x5D), static_cast<uint8>(0xB8), static_cast<uint8>(0xBE), static_cast<uint8>(0xC1), static_cast<uint8>(0xC1), static_cast<uint8>(0x2), static_cast<uint8>(0x4A), static_cast<uint8>(0x74), static_cast<uint8>(0x4E), static_cast<uint8>(0xC8)}; }
+
 		//! @brief get the version information of the context
 		//! @returns version information of the context
 		auto version() const -> string_ref {
@@ -65,22 +68,22 @@ namespace cwc {
 		} catch(...) {
 			return false;
 		}
+	};
 
-		template<typename CWCImplementation, typename CWCTypeList>
-		class cwc_implementation : public internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {
-			void                    CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept final { *cwc_ret = static_cast<const CWCImplementation &>(*this).version(); }
-			const internal::error * CWC_CALL cwc$context$error$1(const internal::error * err) const noexcept final { return static_cast<const CWCImplementation &>(*this).error(err); }
-			const internal::error * CWC_CALL cwc$context$config$2(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).config(); }); }
-			const internal::error * CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const CWCImplementation &>(*this).factory(*fqn, *id); }); }
+	namespace internal {
+		template<typename Implementation, typename TypeList>
+		class vtable_implementation<context, Implementation, TypeList> : public internal::default_implementation_chaining<Implementation, TypeList> {
+			void                    CWC_CALL cwc$context$version$0(string_ref * cwc_ret) const noexcept final { *cwc_ret = static_cast<const Implementation &>(*this).version(); }
+			const internal::error * CWC_CALL cwc$context$error$1(const internal::error * err) const noexcept final { return static_cast<const Implementation &>(*this).error(err); }
+			const internal::error * CWC_CALL cwc$context$config$2(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).config(); }); }
+			const internal::error * CWC_CALL cwc$context$factory$4(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).factory(*fqn, *id); }); }
 			//detect missing methods:
 			void version();
 			void error();
 			void config();
 			void factory();
 		};
-		constexpr
-		static auto cwc_uuid() -> uuid { return {static_cast<uint8>(0xEA), static_cast<uint8>(0x2E), static_cast<uint8>(0xA7), static_cast<uint8>(0x81), static_cast<uint8>(0x7F), static_cast<uint8>(0xF8), static_cast<uint8>(0x5D), static_cast<uint8>(0xB8), static_cast<uint8>(0xBE), static_cast<uint8>(0xC1), static_cast<uint8>(0xC1), static_cast<uint8>(0x2), static_cast<uint8>(0x4A), static_cast<uint8>(0x74), static_cast<uint8>(0x4E), static_cast<uint8>(0xC8)}; }
-	};
+	}
 
 	//! @brief retrieve global context
 	auto this_context() -> intrusive_ptr<context>;

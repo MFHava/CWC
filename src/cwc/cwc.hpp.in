@@ -43,8 +43,15 @@ namespace cwc {
 #include "internal/type_list.hpp"
 #include "internal/error_code.hpp"
 
+namespace cwc {//TODO: move this to dedicated header!!!!!
+	namespace internal {
+		template<typename Type>
+		struct interface_id;
+	}
+}
 #include "public/intrusive_ptr.hpp"
 #include "public/uuid.hpp"
+
 
 #include "internal/make_base_list.hpp"
 #include "internal/call.hpp"

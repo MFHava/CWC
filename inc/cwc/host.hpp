@@ -203,7 +203,7 @@ namespace {
 
 		auto version() const noexcept -> cwc::string_ref { return CWC_VERSION; }
 
-		auto error(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * {
+		auto exception(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * {
 			assert(err);
 			last_error.code = err->code;
 			last_message[0] = '\0';

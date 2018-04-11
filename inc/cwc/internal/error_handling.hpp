@@ -15,32 +15,32 @@ namespace cwc {
 	namespace internal {
 		auto store_exception(std::exception_ptr eptr) noexcept -> const error *
 			try { std::rethrow_exception(eptr); }
-			//NOTE: currently not available: catch(const std::bad_optional_access & exc) { return this_context()->error({error_code::std17_bad_optional_access, exc.what()}); }
-			//NOTE: currently not available: catch(const std::bad_variant_access & exc) { return this_context()->error({error_code::std17_bad_variant_access, exc.what()}); }
-			catch(const std::bad_function_call & exc) { return this_context()->error({error_code::std11_bad_function_call, exc.what()}); }
-			catch(const std::bad_weak_ptr & exc) { return this_context()->error({error_code::std11_bad_weak_ptr, exc.what()}); }
-			catch(const std::bad_exception & exc) { return this_context()->error({error_code::std98_bad_exception, exc.what()}); }
-			catch(const std::bad_array_new_length & exc) { return this_context()->error({error_code::std11_bad_array_new_length, exc.what()}); }
-			catch(const std::bad_alloc & exc) { return this_context()->error({error_code::std98_bad_alloc, exc.what()}); }
-			//NOTE: currently not available: catch(const std::bad_any_cast & exc) { return this_context()->error({error_code::std17_bad_any_cast, exc.what()}); }
-			catch(const std::bad_cast & exc) { return this_context()->error({error_code::std98_bad_cast, exc.what()}); }
-			catch(const std::bad_typeid & exc) { return this_context()->error({error_code::std98_bad_typeid, exc.what()}); }
-			//NOTE: currently not available: catch(const std::filesystem::filesystem_error & exc) { return this_context()->error({error_code::std17_filesystem_error, exc.what()}); }
-			catch(const std::ios_base::failure & exc) { return this_context()->error({error_code::std11_ios_base_failure, exc.what()}); }
-			//NOTE: not constructable from msg: catch(const std::system_error & exc) { return this_context()->error({error_code::std11_system_error, exc.what()}); }
-			//NOTE: not constructable from msg: catch(const std::regex_error & exc) { return this_context()->error({error_code::std11_regex_error, exc.what()}); }
-			catch(const std::underflow_error & exc) { return this_context()->error({error_code::std98_underflow_error, exc.what()}); }
-			catch(const std::overflow_error & exc) { return this_context()->error({error_code::std98_overflow_error, exc.what()}); }
-			catch(const std::range_error & exc) { return this_context()->error({error_code::std98_range_error, exc.what()}); }
-			catch(const std::runtime_error & exc) { return this_context()->error({error_code::std98_runtime_error, exc.what()}); }
-			//NOTE: not constructable from msg: catch(const std::future_error & exc) { return this_context()->error({error_code::std11_future_error, exc.what()}); }
-			catch(const std::out_of_range & exc) { return this_context()->error({error_code::std98_out_of_range, exc.what()}); }
-			catch(const std::length_error & exc) { return this_context()->error({error_code::std98_length_error, exc.what()}); }
-			catch(const std::domain_error & exc) { return this_context()->error({error_code::std98_domain_error, exc.what()}); }
-			catch(const std::invalid_argument & exc) { return this_context()->error({error_code::std98_invalid_argument, exc.what()}); }
-			catch(const std::logic_error & exc) { return this_context()->error({error_code::std98_logic_error, exc.what()}); }
-			catch(const std::exception & exc) { return this_context()->error({error_code::std98_exception, exc.what()}); }
-			catch(...) { return this_context()->error({error_code::std98_exception, ""}); }
+			//NOTE: currently not available: catch(const std::bad_optional_access & exc) { return this_context()->exception({error_code::std17_bad_optional_access, exc.what()}); }
+			//NOTE: currently not available: catch(const std::bad_variant_access & exc) { return this_context()->exception({error_code::std17_bad_variant_access, exc.what()}); }
+			catch(const std::bad_function_call & exc) { return this_context()->exception({error_code::std11_bad_function_call, exc.what()}); }
+			catch(const std::bad_weak_ptr & exc) { return this_context()->exception({error_code::std11_bad_weak_ptr, exc.what()}); }
+			catch(const std::bad_exception & exc) { return this_context()->exception({error_code::std98_bad_exception, exc.what()}); }
+			catch(const std::bad_array_new_length & exc) { return this_context()->exception({error_code::std11_bad_array_new_length, exc.what()}); }
+			catch(const std::bad_alloc & exc) { return this_context()->exception({error_code::std98_bad_alloc, exc.what()}); }
+			//NOTE: currently not available: catch(const std::bad_any_cast & exc) { return this_context()->exception({error_code::std17_bad_any_cast, exc.what()}); }
+			catch(const std::bad_cast & exc) { return this_context()->exception({error_code::std98_bad_cast, exc.what()}); }
+			catch(const std::bad_typeid & exc) { return this_context()->exception({error_code::std98_bad_typeid, exc.what()}); }
+			//NOTE: currently not available: catch(const std::filesystem::filesystem_error & exc) { return this_context()->exception({error_code::std17_filesystem_error, exc.what()}); }
+			catch(const std::ios_base::failure & exc) { return this_context()->exception({error_code::std11_ios_base_failure, exc.what()}); }
+			//NOTE: not constructable from msg: catch(const std::system_error & exc) { return this_context()->exception({error_code::std11_system_error, exc.what()}); }
+			//NOTE: not constructable from msg: catch(const std::regex_error & exc) { return this_context()->exception({error_code::std11_regex_error, exc.what()}); }
+			catch(const std::underflow_error & exc) { return this_context()->exception({error_code::std98_underflow_error, exc.what()}); }
+			catch(const std::overflow_error & exc) { return this_context()->exception({error_code::std98_overflow_error, exc.what()}); }
+			catch(const std::range_error & exc) { return this_context()->exception({error_code::std98_range_error, exc.what()}); }
+			catch(const std::runtime_error & exc) { return this_context()->exception({error_code::std98_runtime_error, exc.what()}); }
+			//NOTE: not constructable from msg: catch(const std::future_error & exc) { return this_context()->exception({error_code::std11_future_error, exc.what()}); }
+			catch(const std::out_of_range & exc) { return this_context()->exception({error_code::std98_out_of_range, exc.what()}); }
+			catch(const std::length_error & exc) { return this_context()->exception({error_code::std98_length_error, exc.what()}); }
+			catch(const std::domain_error & exc) { return this_context()->exception({error_code::std98_domain_error, exc.what()}); }
+			catch(const std::invalid_argument & exc) { return this_context()->exception({error_code::std98_invalid_argument, exc.what()}); }
+			catch(const std::logic_error & exc) { return this_context()->exception({error_code::std98_logic_error, exc.what()}); }
+			catch(const std::exception & exc) { return this_context()->exception({error_code::std98_exception, exc.what()}); }
+			catch(...) { return this_context()->exception({error_code::std98_exception, ""}); }
 
 		void validate(const error * err) {
 			if(!err) return;

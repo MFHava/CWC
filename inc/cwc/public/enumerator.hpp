@@ -39,10 +39,6 @@ namespace cwc {
 		virtual
 		auto CWC_CALL cwc$enumerator$get$2(Type * cwc_ret) const noexcept -> const internal::error * =0;
 	public:
-		constexpr
-		static
-		auto cwc_uuid() -> uuid { return {Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
-
 		struct cwc_iterator final {
 			using iterator_category = std::input_iterator_tag;
 			using value_type        = Type;
@@ -114,11 +110,18 @@ namespace cwc {
 	};
 
 	namespace internal {
+		template<typename Type, uint8 Byte0, uint8 Byte1, uint8 Byte2, uint8 Byte3, uint8 Byte4, uint8 Byte5, uint8 Byte6, uint8 Byte7, uint8 Byte8, uint8 Byte9, uint8 ByteA, uint8 ByteB, uint8 ByteC, uint8 ByteD, uint8 ByteE, uint8 ByteF>
+		struct interface_id<enumerator<Type, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF>> final {
+			constexpr
+			static
+			auto get() -> uuid { return {Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
+		};
+
 		template<typename Type, uint8 Byte0, uint8 Byte1, uint8 Byte2, uint8 Byte3, uint8 Byte4, uint8 Byte5, uint8 Byte6, uint8 Byte7, uint8 Byte8, uint8 Byte9, uint8 ByteA, uint8 ByteB, uint8 ByteC, uint8 ByteD, uint8 ByteE, uint8 ByteF, typename Implementation, typename TypeList>
-		class vtable_implementation<enumerator<Type, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF>, Implementation, TypeList> : public internal::default_implementation_chaining<Implementation, TypeList> {
-			auto CWC_CALL cwc$enumerator$end$0(boolean * cwc_ret) const noexcept -> const internal::error * final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).end(); }); }
-			auto CWC_CALL cwc$enumerator$next$1() noexcept -> const internal::error * final { return internal::call_and_return_error([&] { static_cast<Implementation &>(*this).next(); }); }
-			auto CWC_CALL cwc$enumerator$get$2(Type * cwc_ret) const noexcept -> const internal::error * final { return internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).get(); }); }
+		class vtable_implementation<enumerator<Type, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF>, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {
+			auto CWC_CALL cwc$enumerator$end$0(boolean * cwc_ret) const noexcept -> const error * final { return call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).end(); }); }
+			auto CWC_CALL cwc$enumerator$next$1() noexcept -> const error * final { return call_and_return_error([&] { static_cast<Implementation &>(*this).next(); }); }
+			auto CWC_CALL cwc$enumerator$get$2(Type * cwc_ret) const noexcept -> const error * final { return call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).get(); }); }
 			//detect missing methods:
 			void end();
 			void next();

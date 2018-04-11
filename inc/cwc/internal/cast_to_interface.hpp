@@ -12,6 +12,9 @@
 
 namespace cwc {
 	namespace internal {
+		template<typename Type>
+		struct interface_id;//TODO: variaable template
+
 		template<typename TypeList>
 		struct ambigous_component_helper;
 
@@ -41,7 +44,7 @@ namespace cwc {
 			static
 			void cast(Self * self, const uuid & id, ResultType ** result) {
 				using Type = typename TypeList::head;
-				if(id != Type::cwc_uuid()) return cast_to_interface<Self, typename TypeList::tail>::cast(self, id, result);
+				if(id != interface_id<Type>::get()) return cast_to_interface<Self, typename TypeList::tail>::cast(self, id, result);
 				using Cast = typename std::conditional<std::is_same<Type, component>::value, IdentityType, Type>::type;
 				static_assert(std::is_base_of<Type, Cast>::value, "replacement type is not compatible with target type");
 				auto ptr = static_cast<typename std::conditional<IsConst, const Cast, Cast>::type *>(self);

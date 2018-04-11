@@ -28,14 +28,18 @@ namespace cwc {
 		virtual
 		auto CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * =0;
 	public:
-		constexpr
-		static
-		auto cwc_uuid() -> uuid { return {static_cast<uint8>(0x45), static_cast<uint8>(0x91), static_cast<uint8>(0x4), static_cast<uint8>(0xE), static_cast<uint8>(0xEF), static_cast<uint8>(0xBF), static_cast<uint8>(0x5E), static_cast<uint8>(0x84), static_cast<uint8>(0xA1), static_cast<uint8>(0x58), static_cast<uint8>(0x53), static_cast<uint8>(0x3E), static_cast<uint8>(0xD4), static_cast<uint8>(0xAC), static_cast<uint8>(0xFF), static_cast<uint8>(0x93)}; }
 	};
 
 	namespace internal {
+		template<>
+		struct interface_id<component> final {
+			constexpr
+			static
+			auto get() -> uuid { return {static_cast<uint8>(0x45), static_cast<uint8>(0x91), static_cast<uint8>(0x4), static_cast<uint8>(0xE), static_cast<uint8>(0xEF), static_cast<uint8>(0xBF), static_cast<uint8>(0x5E), static_cast<uint8>(0x84), static_cast<uint8>(0xA1), static_cast<uint8>(0x58), static_cast<uint8>(0x53), static_cast<uint8>(0x3E), static_cast<uint8>(0xD4), static_cast<uint8>(0xAC), static_cast<uint8>(0xFF), static_cast<uint8>(0x93)}; }
+		};
+
 		template<typename Implementation, typename TypeList>
-		class vtable_implementation<component, Implementation, TypeList> : public internal::default_implementation_chaining<Implementation, TypeList> {
+		class vtable_implementation<component, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {
 			template<typename Type>
 			friend
 			struct intrusive_ptr;
@@ -50,7 +54,7 @@ namespace cwc {
 
 			void CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
 			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
-			auto CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
+			auto CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * final { return call_and_return_error([&] { cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
 		protected:
 			//! @brief retrieve intrusive_ptr for requested interface
 			//! @tparam TargetType type to cast new pointer to
@@ -59,7 +63,7 @@ namespace cwc {
 			auto intrusive_from_this()       -> intrusive_ptr<      TargetType> {
 				static_assert(std::is_base_of<TargetType, Implementation>::value, "invalid cast");
 				typename std::remove_const<TargetType>::type * result;//remove constness of TargetType to allow conversion from 'mutable Type' to 'const TargetType'
-				internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), TargetType::cwc_uuid(), reinterpret_cast<void **>(&result));
+				cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), interface_id<TargetType>::get(), reinterpret_cast<void **>(&result));
 				return intrusive_ptr<      TargetType>{result};
 			}
 
@@ -70,7 +74,7 @@ namespace cwc {
 			auto intrusive_from_this() const -> intrusive_ptr<const TargetType> {
 				static_assert(std::is_base_of<TargetType, Implementation>::value, "invalid cast");
 				const TargetType * result;
-				internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), TargetType::cwc_uuid(), reinterpret_cast<void **>(&result));
+				cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), interface_id<TargetType>::get(), reinterpret_cast<void **>(&result));
 				return intrusive_ptr<const TargetType>{result};
 			}
 		public:

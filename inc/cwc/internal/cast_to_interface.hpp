@@ -37,7 +37,9 @@ namespace cwc {
 			using ResultType = typename std::conditional<IsConst, const void, void>::type;
 			using IdentityType = typename ambigous_component_helper<TypeList>::type;
 		public:
-			static void cast(Self * self, const uuid & id, ResultType ** result) {
+		
+			static
+			void cast(Self * self, const uuid & id, ResultType ** result) {
 				using Type = typename TypeList::head;
 				if(id != Type::cwc_uuid()) return cast_to_interface<Self, typename TypeList::tail>::cast(self, id, result);
 				using Cast = typename std::conditional<std::is_same<Type, component>::value, IdentityType, Type>::type;
@@ -53,7 +55,8 @@ namespace cwc {
 			enum { IsConst = std::is_const<Self>::value };
 			using ResultType = typename std::conditional<IsConst, const void, void>::type;
 		public:
-			static void cast(Self *, const uuid &, ResultType **) { throw std::bad_cast(); }
+			static
+			void cast(Self *, const uuid &, ResultType **) { throw std::bad_cast(); }
 		};
 	}
 }

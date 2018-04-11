@@ -11,7 +11,9 @@
 #pragma once
 #include "error_handling.hpp"
 
-static ::cwc::intrusive_ptr<::cwc::context> cwc_context;
+namespace {
+	::cwc::intrusive_ptr<::cwc::context> cwc_context;
+}
 
 auto ::cwc::this_context() -> ::cwc::intrusive_ptr<context> { return cwc_context; }
 

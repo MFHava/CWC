@@ -11,11 +11,14 @@
 //! @author Michael Florian Hava
 namespace cwc {namespace sample {namespace fibonacci {
 	class sequence : public ::cwc::component {
-		virtual const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept =0;
-		virtual const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept =0;
+		virtual
+		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const internal::error * =0;
+		virtual
+		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept -> const internal::error * =0;
 	public:
 		constexpr
-		static auto cwc_uuid() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x55), static_cast<cwc::uint8>(0x9), static_cast<cwc::uint8>(0x67), static_cast<cwc::uint8>(0x3D), static_cast<cwc::uint8>(0x71), static_cast<cwc::uint8>(0x7), static_cast<cwc::uint8>(0x51), static_cast<cwc::uint8>(0xC5), static_cast<cwc::uint8>(0x97), static_cast<cwc::uint8>(0xAA), static_cast<cwc::uint8>(0x1F), static_cast<cwc::uint8>(0xE8), static_cast<cwc::uint8>(0xA8), static_cast<cwc::uint8>(0x2A), static_cast<cwc::uint8>(0x1A), static_cast<cwc::uint8>(0x6)}; }
+		static
+		auto cwc_uuid() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x55), static_cast<cwc::uint8>(0x9), static_cast<cwc::uint8>(0x67), static_cast<cwc::uint8>(0x3D), static_cast<cwc::uint8>(0x71), static_cast<cwc::uint8>(0x7), static_cast<cwc::uint8>(0x51), static_cast<cwc::uint8>(0xC5), static_cast<cwc::uint8>(0x97), static_cast<cwc::uint8>(0xAA), static_cast<cwc::uint8>(0x1F), static_cast<cwc::uint8>(0xE8), static_cast<cwc::uint8>(0xA8), static_cast<cwc::uint8>(0x2A), static_cast<cwc::uint8>(0x1A), static_cast<cwc::uint8>(0x6)}; }
 
 		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 {
 			::cwc::uint64 cwc_ret;
@@ -28,16 +31,21 @@ namespace cwc {namespace sample {namespace fibonacci {
 	};
 
 	struct generator : sequence {
+		//detecting invalid call to cwc_uuid
 		constexpr
-		static void cwc_uuid() {}
-		static auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::fibonacci::generator"; }
+		static
+		void cwc_uuid() {}
+		static
+		auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::fibonacci::generator"; }
 		using cwc_interfaces = ::cwc::internal::make_base_list<sequence>::type;
 
 	class cwc_factory : public ::cwc::component {
-		virtual const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept =0;
+		virtual
+		auto CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept -> const internal::error * =0;
 	public:
 		constexpr
-		static auto cwc_uuid() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x12), static_cast<cwc::uint8>(0xEC), static_cast<cwc::uint8>(0x4A), static_cast<cwc::uint8>(0x37), static_cast<cwc::uint8>(0x93), static_cast<cwc::uint8>(0xBB), static_cast<cwc::uint8>(0x54), static_cast<cwc::uint8>(0x62), static_cast<cwc::uint8>(0x81), static_cast<cwc::uint8>(0x3E), static_cast<cwc::uint8>(0xFA), static_cast<cwc::uint8>(0xF0), static_cast<cwc::uint8>(0x48), static_cast<cwc::uint8>(0xD3), static_cast<cwc::uint8>(0x64), static_cast<cwc::uint8>(0x59)}; }
+		static
+		auto cwc_uuid() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x12), static_cast<cwc::uint8>(0xEC), static_cast<cwc::uint8>(0x4A), static_cast<cwc::uint8>(0x37), static_cast<cwc::uint8>(0x93), static_cast<cwc::uint8>(0xBB), static_cast<cwc::uint8>(0x54), static_cast<cwc::uint8>(0x62), static_cast<cwc::uint8>(0x81), static_cast<cwc::uint8>(0x3E), static_cast<cwc::uint8>(0xFA), static_cast<cwc::uint8>(0xF0), static_cast<cwc::uint8>(0x48), static_cast<cwc::uint8>(0xD3), static_cast<cwc::uint8>(0x64), static_cast<cwc::uint8>(0x59)}; }
 
 		auto create() const -> ::cwc::intrusive_ptr<::cwc::component> {
 			::cwc::intrusive_ptr<::cwc::component> cwc_ret;
@@ -51,15 +59,15 @@ namespace cwc {namespace sample {namespace fibonacci {
 namespace cwc { namespace internal {
 	template<typename Implementation, typename TypeList>
 	class vtable_implementation<::cwc::sample::fibonacci::sequence, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
-		const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).calculate(*no); }); }
-		const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept final { return ::cwc::internal::call_and_return_error([&] { static_cast<const Implementation &>(*this).calculate(*nos, *results); }); }
+		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const internal::error * final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).calculate(*no); }); }
+		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept -> const internal::error * final { return ::cwc::internal::call_and_return_error([&] { static_cast<const Implementation &>(*this).calculate(*nos, *results); }); }
 		//detect missing methods:
 		void calculate();
 	};
 
 	template<typename Implementation, typename TypeList>
 	class vtable_implementation<::cwc::sample::fibonacci::generator::cwc_factory, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
-		const ::cwc::internal::error * CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).create(); }); }
+		auto CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept -> const internal::error * final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).create(); }); }
 		//detect missing methods:
 		void create();
 	};

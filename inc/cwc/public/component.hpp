@@ -21,12 +21,16 @@ namespace cwc {
 		friend
 		class internal::cast_to_interface;
 
-		virtual void                    CWC_CALL cwc$component$new$0() const noexcept =0;
-		virtual void                    CWC_CALL cwc$component$delete$1() const noexcept =0;
-		virtual const internal::error * CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept =0;
+		virtual
+		void CWC_CALL cwc$component$new$0() const noexcept =0;
+		virtual
+		void CWC_CALL cwc$component$delete$1() const noexcept =0;
+		virtual
+		auto CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * =0;
 	public:
 		constexpr
-		static auto cwc_uuid() -> uuid { return {static_cast<uint8>(0x45), static_cast<uint8>(0x91), static_cast<uint8>(0x4), static_cast<uint8>(0xE), static_cast<uint8>(0xEF), static_cast<uint8>(0xBF), static_cast<uint8>(0x5E), static_cast<uint8>(0x84), static_cast<uint8>(0xA1), static_cast<uint8>(0x58), static_cast<uint8>(0x53), static_cast<uint8>(0x3E), static_cast<uint8>(0xD4), static_cast<uint8>(0xAC), static_cast<uint8>(0xFF), static_cast<uint8>(0x93)}; }
+		static
+		auto cwc_uuid() -> uuid { return {static_cast<uint8>(0x45), static_cast<uint8>(0x91), static_cast<uint8>(0x4), static_cast<uint8>(0xE), static_cast<uint8>(0xEF), static_cast<uint8>(0xBF), static_cast<uint8>(0x5E), static_cast<uint8>(0x84), static_cast<uint8>(0xA1), static_cast<uint8>(0x58), static_cast<uint8>(0x53), static_cast<uint8>(0x3E), static_cast<uint8>(0xD4), static_cast<uint8>(0xAC), static_cast<uint8>(0xFF), static_cast<uint8>(0x93)}; }
 	};
 
 	namespace internal {
@@ -44,9 +48,9 @@ namespace cwc {
 			auto operator=(const vtable_implementation &) -> vtable_implementation & =delete;
 			auto operator=(vtable_implementation &&) -> vtable_implementation & =delete;
 
-			void                    CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
-			void                    CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
-			const internal::error * CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
+			void CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
+			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
+			auto CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * final { return internal::call_and_return_error([&] { internal::cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
 		protected:
 			//! @brief retrieve intrusive_ptr for requested interface
 			//! @tparam TargetType type to cast new pointer to

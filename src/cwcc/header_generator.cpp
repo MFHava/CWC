@@ -16,6 +16,49 @@
 
 namespace cwcc {
 	namespace {
+		auto name_to_uuid(const bundle & this_bundle, const std::string & s) -> std::string {
+			static boost::uuids::name_generator uuid_generator{boost::uuids::string_generator{}("{E4F6FD20-A501-44BB-A840-E9F2B61717F2}")};
+			const auto uuid = uuid_generator(this_bundle.name + "::" + s);
+			std::stringstream ss;
+			const auto last = std::end(uuid.data) - 1;
+			std::copy(std::begin(uuid.data), last, std::ostream_iterator<int>{ss << std::hex << std::uppercase << "0x", ", 0x"});
+			ss << static_cast<int>(*last);
+			return ss.str();
+		}
+
+		auto mangled_names(const bundle & this_bundle, const interface & self) -> std::vector<std::string> {
+			std::vector<std::string> result;
+			result.reserve(self.methods.size());
+			for(std::size_t i{0}; i < self.methods.size(); ++i) {
+				auto tmp = remove_double_colon(this_bundle.name + "::" + self.name + "::" + self.methods[i].name + "::");
+				std::replace(std::begin(tmp), std::end(tmp), ':', '$');
+				tmp += std::to_string(i);
+				result.push_back(std::move(tmp));
+			}
+			return result;
+		}
+
+		auto vtable_entries(const interface & self, const std::vector<std::string> & mangled) -> std::vector<std::string> {
+			std::vector<std::string> result;
+			for(std::size_t i{0}; i < mangled.size(); ++i) {
+				const auto & method = self.methods[i];
+				std::stringstream ss;
+				ss << "auto CWC_CALL " << mangled[i] << '(';
+				const auto & params = method.params();
+				if(!params.empty()) {
+					auto print_param = [&](const param & p) { ss << p.mutable_ << p.type << " * " << p.name; };
+					print_param(params[0]);
+					for(std::size_t i{1}; i < params.size(); ++i) {
+						ss << ", ";
+						print_param(params[i]);
+					}
+				}
+				ss << ") " << method.mutable_ << "noexcept -> const ::cwc::internal::error * ";
+				result.push_back(ss.str());
+			}
+			return result;
+		}
+
 		struct header_visitor : boost::static_visitor<> {
 			header_visitor(std::ostream & os, const bundle & b) : os{os}, this_bundle{b} {}
 			void operator()(const export_ &) const { /*nothing to do*/ }
@@ -24,14 +67,14 @@ namespace cwcc {
 			void operator()(const typedef_ & self) const { os << self << '\n'; }
 			void operator()(const enumerator & self) const {
 				for(const auto & doc : self.lines) os << '\t' << doc << '\n';
-				os << "\tusing " << self.name << " = ::cwc::enumerator<" << self.type << ", " << name_to_uuid(self.name) << ">;\n";
+				os << "\tusing " << self.name << " = ::cwc::enumerator<" << self.type << ", " << name_to_uuid(this_bundle, self.name) << ">;\n";
 			}
 			void operator()(const interface & self) const {
-				const auto mangled = mangled_names(self);
+				const auto mangled = mangled_names(this_bundle, self);
 				const auto vtable = vtable_entries(self, mangled);
 				for(const auto & doc : self.lines) os << '\t' << doc << '\n';
 				os << "\tclass " << self.name << " : public ::cwc::component {\n";
-				for(const auto & v : vtable) os << "\t\tvirtual " << v << "=0;\n";
+				for(const auto & v : vtable) os << "\t\tvirtual\n\t\t" << v << "=0;\n";
 				os << "\tpublic:\n";
 				for(std::size_t i{0}; i < vtable.size(); ++i) {
 					const auto & method = self.methods[i];
@@ -65,32 +108,7 @@ namespace cwcc {
 					if(method.out) os << "\t\t\treturn cwc_ret;\n";
 					os << "\t\t}\n";
 				}
-				os << "\t\ttemplate<typename CWCImplementation, typename CWCTypeList>\n"
-				      "\t\tclass cwc_implementation : public ::cwc::internal::default_implementation_chaining<CWCImplementation, CWCTypeList> {\n";
-				for(std::size_t i{0}; i < vtable.size(); ++i) {
-					const auto & method = self.methods[i];
-					os << "\t\t\t" << vtable[i] << "final { return ::cwc::internal::call_and_return_error([&] { ";
-					if(method.out) os << "*cwc_ret = ";
-					os << "static_cast<" << method.mutable_ << "CWCImplementation &>(*this)." << method.name << '(';
-					if(!method.in.empty()) {
-						auto print_param = [&](const param & p) { os << '*' << p.name; };
-						print_param(method.in[0]);
-						for(std::size_t i{1}; i < method.in.size(); ++i) {
-							os << ", ";
-							print_param(method.in[i]);
-						}
-					}
-					os << "); }); }\n";
-				}
-				os << "\t\t\t//detect missing methods:\n";
-				std::vector<std::string> methods;
-				std::transform(std::begin(self.methods), std::end(self.methods), std::back_inserter(methods), [](const auto & method) { return method.name; });
-				methods.erase(std::unique(std::begin(methods), std::end(methods)), std::end(methods));
-				for(const auto & method : methods) os << "\t\t\tvoid " << method << "();\n";
-				os << "\t\t};\n"
-				      "\t\tconstexpr\n"
-				      "\t\tstatic auto cwc_uuid() -> ::cwc::uuid { return {" << name_to_uuid(self.name) << "}; }\n"
-				      "\t};\n";
+				os << "\t};\n";
 			}
 			void operator()(const component & self) const {
 				bundle b;
@@ -101,9 +119,8 @@ namespace cwcc {
 				os << "\tstruct " << self.name << " : " << self.interfaces[0];
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				os << " {\n"
-				      "\t\tconstexpr\n"
-				      "\t\tstatic void cwc_uuid() {}\n"
-				      "\t\tstatic auto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
+				      "\t\tstatic\n"
+				      "\t\tauto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
 				      "\t\tusing cwc_interfaces = ::cwc::internal::make_base_list<" << self.interfaces[0];
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				os << ">::type;\n\n";
@@ -114,50 +131,56 @@ namespace cwcc {
 		private:
 			std::ostream & os;
 			const bundle & this_bundle;
+		};
 
-			auto mangled_names(const interface & self) const -> std::vector<std::string> {
-				std::vector<std::string> result;
-				result.reserve(self.methods.size());
-				for(std::size_t i{0}; i < self.methods.size(); ++i) {
-					auto tmp = remove_double_colon(this_bundle.name + "::" + self.name + "::" + self.methods[i].name + "::");
-					std::replace(std::begin(tmp), std::end(tmp), ':', '$');
-					tmp += std::to_string(i);
-					result.push_back(std::move(tmp));
-				}
-				return result;
-			}
+		struct details_visitor : boost::static_visitor<> {
+			details_visitor(std::ostream & os, const bundle & b) : os{os}, this_bundle{b} {}
 
-			static auto vtable_entries(const interface & self, const std::vector<std::string> & mangled) -> std::vector<std::string> {
-				std::vector<std::string> result;
-				for(std::size_t i{0}; i < mangled.size(); ++i) {
+			void operator()(const export_ &) const { /*nothing to do*/ }
+			void operator()(const enum_ &) const { /*nothing to do*/ }
+			void operator()(const struct_ &) const { /*nothing to do*/ }
+			void operator()(const typedef_ &) const { /*nothing to do*/ }
+			void operator()(const enumerator &) const { /*nothing to do*/ }
+			void operator()(const interface & self) const {
+				os << "\ttemplate<>\n"
+				      "\tstruct interface_id<::" << this_bundle.name << "::" << self.name << "> final : uuid_constant<" << name_to_uuid(this_bundle, self.name) << "> {};\n"
+				      "\n"
+				      "\ttemplate<typename Implementation, typename TypeList>\n"
+				      "\tclass vtable_implementation<" << this_bundle.name << "::" << self.name << ", Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {\n";
+				const auto mangled = mangled_names(this_bundle, self);
+				const auto vtable = vtable_entries(self, mangled);
+				for(std::size_t i{0}; i < vtable.size(); ++i) {
 					const auto & method = self.methods[i];
-					std::stringstream ss;
-					ss << "const ::cwc::internal::error * CWC_CALL " << mangled[i] << '(';
-					const auto & params = method.params();
-					if(!params.empty()) {
-						auto print_param = [&](const param & p) { ss << p.mutable_ << p.type << " * " << p.name; };
-						print_param(params[0]);
-						for(std::size_t i{1}; i < params.size(); ++i) {
-							ss << ", ";
-							print_param(params[i]);
+					os << "\t\t" << vtable[i] << "final { return ::cwc::internal::call_and_return_error([&] { ";
+					if(method.out) os << "*cwc_ret = ";
+					os << "static_cast<" << method.mutable_ << "Implementation &>(*this)." << method.name << '(';
+					if(!method.in.empty()) {
+						auto print_param = [&](const param & p) { os << '*' << p.name; };
+						print_param(method.in[0]);
+						for(std::size_t i{1}; i < method.in.size(); ++i) {
+							os << ", ";
+							print_param(method.in[i]);
 						}
 					}
-					ss << ") " << method.mutable_ << "noexcept ";
-					result.push_back(ss.str());
+					os << "); }); }\n";
 				}
-				return result;
+				os << "\t\t//detect missing methods:\n";
+				std::vector<std::string> methods;
+				std::transform(std::begin(self.methods), std::end(self.methods), std::back_inserter(methods), [](const auto & method) { return method.name; });
+				methods.erase(std::unique(std::begin(methods), std::end(methods)), std::end(methods));
+				for(const auto & method : methods) os << "\t\tvoid " << method << "();\n";
+				os << "\t};\n\n";
 			}
-
-			auto name_to_uuid(const std::string & s) const -> std::string {
-				static boost::uuids::name_generator uuid_generator{boost::uuids::string_generator{}("{E4F6FD20-A501-44BB-A840-E9F2B61717F2}")};
-				const auto uuid = uuid_generator(this_bundle.name + "::" + s);
-				std::stringstream ss;
-				const auto last = std::end(uuid.data) - 1;
-				std::copy(std::begin(uuid.data), last, std::ostream_iterator<int>{ss << std::hex << std::uppercase << "static_cast<cwc::uint8>(0x", "), static_cast<cwc::uint8>(0x"});
-				ss << static_cast<int>(*last);
-				ss << ')';
-				return ss.str();
+			void operator()(const component & self) const {
+				bundle b;
+				b.name = this_bundle.name + "::" + self.name;
+				b.members.push_back(self.factory());
+				details_visitor visitor{os, b};
+				for(const auto & m : b.members) m.apply_visitor(visitor);
 			}
+		private:
+			std::ostream & os;
+			const bundle & this_bundle;
 		};
 
 		class dependencies_visitor : public boost::static_visitor<> {
@@ -214,5 +237,12 @@ namespace cwcc {
 		for(const auto & d : dependencies(b)) os << "#include \"" << base_file_name(d) << ".cwch\"\n";
 		os << '\n';
 		wrap_in_namespace<header_visitor>(os, b, true, "\n");
+		os << "\n"
+		      "\n"
+		      "//ATTENTION: don't modify the following code, it contains necessary metadata for CWC\n"
+		      "namespace cwc { namespace internal {\n";
+		details_visitor visitor{os, b};
+		for(const auto & m : b.members) m.apply_visitor(visitor);
+		os << "} }\n";
 	}
 }

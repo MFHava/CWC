@@ -46,18 +46,10 @@ namespace cwc {namespace sample {namespace fibonacci {
 
 namespace cwc { namespace internal {
 	template<>
-	struct interface_id<::cwc::sample::fibonacci::sequence> final {
-		constexpr
-		static
-		auto get() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x55), static_cast<cwc::uint8>(0x9), static_cast<cwc::uint8>(0x67), static_cast<cwc::uint8>(0x3D), static_cast<cwc::uint8>(0x71), static_cast<cwc::uint8>(0x7), static_cast<cwc::uint8>(0x51), static_cast<cwc::uint8>(0xC5), static_cast<cwc::uint8>(0x97), static_cast<cwc::uint8>(0xAA), static_cast<cwc::uint8>(0x1F), static_cast<cwc::uint8>(0xE8), static_cast<cwc::uint8>(0xA8), static_cast<cwc::uint8>(0x2A), static_cast<cwc::uint8>(0x1A), static_cast<cwc::uint8>(0x6)}; }
-	};
+	struct interface_id<::cwc::sample::fibonacci::sequence> final : uuid_constant<0x55, 0x9, 0x67, 0x3D, 0x71, 0x7, 0x51, 0xC5, 0x97, 0xAA, 0x1F, 0xE8, 0xA8, 0x2A, 0x1A, 0x6> {};
 
 	template<>
-	struct interface_id<::cwc::sample::fibonacci::generator::cwc_factory> final {
-		constexpr
-		static
-		auto get() -> ::cwc::uuid { return {static_cast<cwc::uint8>(0x12), static_cast<cwc::uint8>(0xEC), static_cast<cwc::uint8>(0x4A), static_cast<cwc::uint8>(0x37), static_cast<cwc::uint8>(0x93), static_cast<cwc::uint8>(0xBB), static_cast<cwc::uint8>(0x54), static_cast<cwc::uint8>(0x62), static_cast<cwc::uint8>(0x81), static_cast<cwc::uint8>(0x3E), static_cast<cwc::uint8>(0xFA), static_cast<cwc::uint8>(0xF0), static_cast<cwc::uint8>(0x48), static_cast<cwc::uint8>(0xD3), static_cast<cwc::uint8>(0x64), static_cast<cwc::uint8>(0x59)}; }
-	};
+	struct interface_id<::cwc::sample::fibonacci::generator::cwc_factory> final : uuid_constant<0x12, 0xEC, 0x4A, 0x37, 0x93, 0xBB, 0x54, 0x62, 0x81, 0x3E, 0xFA, 0xF0, 0x48, 0xD3, 0x64, 0x59> {};
 
 	template<typename Implementation, typename TypeList>
 	class vtable_implementation<::cwc::sample::fibonacci::sequence, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {

@@ -73,11 +73,7 @@ namespace cwc {
 
 	namespace internal {
 		template<>
-		struct interface_id<context> final {
-			constexpr
-			static
-			auto get() -> uuid { return {static_cast<uint8>(0xEA), static_cast<uint8>(0x2E), static_cast<uint8>(0xA7), static_cast<uint8>(0x81), static_cast<uint8>(0x7F), static_cast<uint8>(0xF8), static_cast<uint8>(0x5D), static_cast<uint8>(0xB8), static_cast<uint8>(0xBE), static_cast<uint8>(0xC1), static_cast<uint8>(0xC1), static_cast<uint8>(0x2), static_cast<uint8>(0x4A), static_cast<uint8>(0x74), static_cast<uint8>(0x4E), static_cast<uint8>(0xC8)}; }
-		};
+		struct interface_id<context> final : uuid_constant<0xEA, 0x2E, 0xA7, 0x81, 0x7F, 0xF8, 0x5D, 0xB8, 0xBE, 0xC1, 0xC1, 0x2, 0x4A, 0x74, 0x4E, 0xC8> {};
 
 		template<typename Implementation, typename TypeList>
 		class vtable_implementation<context, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {

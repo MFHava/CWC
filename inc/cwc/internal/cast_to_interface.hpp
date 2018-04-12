@@ -12,9 +12,6 @@
 
 namespace cwc {
 	namespace internal {
-		template<typename Type>
-		struct interface_id;//TODO: variaable template
-
 		template<typename TypeList>
 		struct ambigous_component_helper;
 

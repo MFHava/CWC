@@ -26,8 +26,6 @@
 
 int main() try {
 	const auto context = cwc::this_context();
-
-	std::cout << "CWC " << context->version() << std::endl;
 #if 1
 	for(auto section : context->config()) {
 		std::cout << '[' << section.name << "]\n";

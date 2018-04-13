@@ -5,15 +5,6 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#define CWC_HPP_HEADER_INCLUDED
-#define CWC_VERSION "@CWC_VERSION@"
-
-#include "internal/compiler_detection.hpp"
-#include "internal/os_detection.hpp"
-
-#define CWC_PACK_BEGIN            PTL_PACK_BEGIN
-#define CWC_PACK_END              PTL_PACK_END
-
 #include <atomic>
 #include <cassert>
 #include <typeinfo>
@@ -26,6 +17,11 @@
 #include <ptl/variant.hpp>
 #include <ptl/string_ref.hpp>
 
+#define CWC_HPP_HEADER_INCLUDED
+
+#define CWC_PACK_BEGIN PTL_PACK_BEGIN
+#define CWC_PACK_END   PTL_PACK_END
+
 //! @brief public API of C++ with Components
 namespace cwc {
 	using namespace ptl;
@@ -37,6 +33,8 @@ namespace cwc {
 	//! @attention no member of this namespace is part of the public CWC API
 	namespace internal { using namespace ptl::internal; }
 }
+
+#include "internal/detection.hpp"
 
 #include "public/types.hpp"
 #include "public/uuid.hpp"

@@ -1,5 +1,3 @@
 BUILD
 *.swp
 *.patch
-inc/cwc/cwc.hpp
-inc/cwc/internal/compiler_detection.hpp

@@ -4,16 +4,16 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include "@CMAKE_CURRENT_SOURCE_DIR@/src/cwcc/disclaimer.hpp"
+#include "disclaimer.hpp"
 
 namespace cwcc {
 	void program_disclaimer(std::ostream & os) {
-		os << "C++ with Components compiler (CWC @CWC_VERSION@)\n"
+		os << "C++ with Components compiler (CWC )\n"
 		      "(C) 2012, Michael Florian Hava\n";
 	}
 
 	void file_disclaimer(std::ostream & os, bool modifiable) {
-		os << "//This file was generated for CWC @CWC_VERSION@ by CWCC\n";
+		os << "//This file was generated for CWC  by CWCC\n";
 		if(!modifiable) os << "//ATTENTION: Do not modify this file as its content is highly dependent on the design of CWC!\n";
 	}
 }

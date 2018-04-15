@@ -12,9 +12,6 @@
 
 namespace cwc {
 	namespace internal {
-		template<typename Interface, typename Implementation, typename TypeList>
-		struct vtable_implementation;
-
 		template<typename Implementation, typename TypeList>
 		struct default_implementation_chaining;
 

@@ -19,7 +19,10 @@ namespace cwc {
 			auto get() noexcept -> uuid { return {Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
 		};
 
-		template<typename Type>
+		template<typename Interface>
 		struct interface_id;
+
+		template<typename Interface, typename Implementation, typename TypeList>
+		struct vtable_implementation;
 	}
 }

@@ -32,4 +32,6 @@ namespace cwc {
 	//! @returns true iff c is a valid ASCII character
 	inline
 	auto is_ascii(const utf8 & c) -> bool { return (c >= 0 && c < 128); }
+
+	using uuid = array<uint8, 16>;//!< @brief universally unique identifier
 }

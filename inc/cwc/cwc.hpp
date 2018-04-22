@@ -37,7 +37,6 @@ namespace cwc {
 #include "internal/detection.hpp"
 
 #include "public/types.hpp"
-#include "public/uuid.hpp"
 
 #include "internal/traits.hpp"
 #include "internal/type_list.hpp"

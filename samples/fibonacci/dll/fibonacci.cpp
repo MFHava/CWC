@@ -17,10 +17,4 @@ namespace sample {
 		}
 		return a;
 	}
-
-	void fibonacci::calculate(const ::cwc::array_ref<const ::cwc::uint8> & nos, ::cwc::array_ref<::cwc::uint64> results) const {
-		if(nos.size() > results.size()) throw std::invalid_argument{"results is not big enough"};
-		for(std::size_t i{0}; i < nos.size(); ++i)
-			results[i] = calculate(nos[i]);
-	}
 }

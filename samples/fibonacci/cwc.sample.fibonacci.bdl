@@ -9,7 +9,6 @@
 bundle cwc::sample::fibonacci {
 	interface sequence {
 		auto calculate(::cwc::uint8 no) -> ::cwc::uint64;
-		void calculate(array_ref<::cwc::uint8> nos, array_ref<mutable ::cwc::uint64> results);
 	};
 
 	component generator : sequence {};

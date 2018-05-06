@@ -13,16 +13,11 @@ namespace cwc {namespace sample {namespace fibonacci {
 	class sequence : public ::cwc::component {
 		virtual
 		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;
-		virtual
-		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept -> const ::cwc::internal::error * =0;
 	public:
 		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 {
 			::cwc::uint64 cwc_ret;
 			::cwc::internal::call(*this, &sequence::cwc$sample$fibonacci$sequence$calculate$0, &no, &cwc_ret);
 			return cwc_ret;
-		}
-		void calculate(const ::cwc::array_ref<const ::cwc::uint8> & nos, const ::cwc::array_ref<::cwc::uint64> & results) const {
-			::cwc::internal::call(*this, &sequence::cwc$sample$fibonacci$sequence$calculate$1, &nos, &results);
 		}
 	};
 
@@ -53,7 +48,6 @@ namespace cwc { namespace internal {
 	template<typename Implementation, typename TypeList>
 	class vtable_implementation<cwc::sample::fibonacci::sequence, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
 		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).calculate(*no); }); }
-		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::array_ref<const ::cwc::uint8> * nos, const ::cwc::array_ref<::cwc::uint64> * results) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { static_cast<const Implementation &>(*this).calculate(*nos, *results); }); }
 		//detect missing methods:
 		void calculate();
 	};

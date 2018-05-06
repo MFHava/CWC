@@ -108,12 +108,14 @@ ENDIF()
 IF(CWC_BUILD_SAMPLES)
 	FILE(GLOB_RECURSE CWC_SAMPLE_FIBONACCI_DLL_SOURCES "samples/fibonacci/dll/*.*")
 	ADD_LIBRARY(sample-fibonacci-dll SHARED ${CWC_SAMPLE_FIBONACCI_DLL_SOURCES} "samples/fibonacci/cwc.sample.fibonacci.cwch")
+	SET_TARGET_PROPERTIES(sample-fibonacci-dll PROPERTIES OUTPUT_NAME sample-fibonacci)
 
 	FILE(GLOB_RECURSE CWC_SAMPLE_FIBONACCI_EXE_SOURCES "samples/fibonacci/exe/*.*")
-	ADD_EXECUTABLE(sample-fibonacci ${CWC_SAMPLE_FIBONACCI_EXE_SOURCES} "samples/fibonacci/cwc.sample.fibonacci.cwch")
+	ADD_EXECUTABLE(sample-fibonacci-exe ${CWC_SAMPLE_FIBONACCI_EXE_SOURCES} "samples/fibonacci/cwc.sample.fibonacci.cwch")
 	SET_SOURCE_FILES_PROPERTIES(samples/fibonacci/dll/cwc.sample.fibonacci.cwc PROPERTIES
 		LANGUAGE CXX
 		COMPILE_FLAGS "-xc++" #NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise GCC won't compile this file
 	)
-	TARGET_LINK_LIBRARIES(sample-fibonacci ${CWC_DLL_LIBRARY})
+	TARGET_LINK_LIBRARIES(sample-fibonacci-exe ${CWC_DLL_LIBRARY})
+	SET_TARGET_PROPERTIES(sample-fibonacci-exe PROPERTIES OUTPUT_NAME sample-fibonacci)
 ENDIF()

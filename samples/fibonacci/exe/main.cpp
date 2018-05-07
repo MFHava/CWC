@@ -11,7 +11,7 @@
 #define CWC_CONTEXT_INIT_IS_NOT_FILE
 #define CWC_CONTEXT_INIT_STRING\
 	"[cwc.mapping]\n"\
-	"cwc::sample::fibonacci::generator = ./sample-fibonacci.ccb"
+	"cwc::sample::fibonacci::generator = sample-fibonacci"
 #include "cwc/host.hpp"
 
 int main() {

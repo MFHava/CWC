@@ -4,25 +4,10 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#ifdef _WIN32
-	#define WIN32_LEAN_AND_MEAN
-	#define NOSERVICE
-	#define NOMCX
-	#define NOIME
-	#ifndef NOMINMAX
-		#define NOMINMAX
-	#endif
-	#include <Windows.h>
-#else
-	#include <dlfcn.h>
-	#define HMODULE void *
-	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
-	#define GetProcAddress(dll, function) dlsym(dll, function)
-	#define FreeLibrary(dll) dlclose(dll)
-#endif
-
+#define CWC_CONTEXT_INIT_STRING ""
+#define CWC_CONTEXT_INIT_IS_NOT_FILE
+#include <cwc/host.hpp>
 #include <sstream>
-#include <cwc/cwc.hpp>
 #include "library.hpp"
 
 namespace cwcc {
@@ -48,7 +33,3 @@ namespace cwcc {
 		std::copy(std::begin(definition), std::end(definition), std::back_inserter(definition_));
 	}
 }
-
-#define CWC_CONTEXT_INIT_STRING ""
-#define CWC_CONTEXT_INIT_IS_NOT_FILE
-#include <cwc/host.hpp>

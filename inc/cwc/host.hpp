@@ -50,11 +50,16 @@
 		#define NOMINMAX
 	#endif
 	#include <Windows.h>
+	#define DLL_PREFIX ""
+	#define DLL_SUFFIX ".dll"
 #elif CWC_OS_LINUX
 	#include <dlfcn.h>
 	#define HMODULE void *
 	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
 	#define GetProcAddress(dll, function) dlsym(dll, function)
+	#define FreeLibrary(dll) dlclose(dll)
+	#define DLL_PREFIX "./lib"
+	#define DLL_SUFFIX ".so"
 #else
 	#error unknown operating system
 #endif
@@ -93,10 +98,11 @@ namespace {
 		const config_map configuration;
 
 		auto load_dll(dll_map & map, const std::string & file) -> HMODULE {
-			const auto handle = LoadLibrary(file.c_str());
+			const auto name{DLL_PREFIX + file + DLL_SUFFIX};
+			const auto handle{LoadLibrary(name.c_str())};
 			if(handle && !map.count(handle)) { 
-				if(const auto init = reinterpret_cast<void (CWC_CALL *)(cwc::intrusive_ptr<context>)>(GetProcAddress(handle, "cwc_init"))) {
-					if(const auto factory = reinterpret_cast<factory_export_type>(GetProcAddress(handle, "cwc_factory"))) {
+				if(const auto init{reinterpret_cast<void (CWC_CALL *)(cwc::intrusive_ptr<context>)>(GetProcAddress(handle, "cwc_init"))}) {
+					if(const auto factory{reinterpret_cast<factory_export_type>(GetProcAddress(handle, "cwc_factory"))}) {
 						init(intrusive_from_this<context>());
 						map[handle] = factory;
 					} else throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + file + '"'};
@@ -132,13 +138,13 @@ namespace {
 		}
 
 		void load_component(dll_map & map, const std::string & fqn, const std::string & file) {
-			if(const auto library = load_dll(map, file)) component_factories.emplace(fqn, create_factory(map.at(library), file, fqn));
+			if(const auto library{load_dll(map, file)}) component_factories.emplace(fqn, create_factory(map.at(library), file, fqn));
 			else throw std::logic_error{"could not load bundle \"" + file + '"'};
 		}
 
 		void load_plugins(dll_map & map, const std::string & fqn, const key_value_map & mapping) {
 			for(const auto & m : mapping)
-				if(const auto library = load_dll(map, m.second))
+				if(const auto library{load_dll(map, m.second)})
 					plugin_factories[fqn].emplace(m.first, create_factory(map.at(library), m.second, fqn));
 		}
 
@@ -182,13 +188,14 @@ namespace {
 		context_impl(std::istream & is) : configuration{parse_ini(is)} {
 			key_value_map components;
 			config_map plugins;
-			const auto it = configuration.find("cwc.mapping");
+			//TODO: add ability to specify lib-path || allow setting the path per DLL/SO
+			const auto it{configuration.find("cwc.mapping")};
 			if(it != std::end(configuration)) {
 				for(const auto & mapping : it->second) {
 					if(mapping.second.front() != '[') components[mapping.first] = mapping.second;
 					else {//key maps to section
 						if(mapping.second.back() != ']') throw std::invalid_argument{"malformed configuration"};
-						const auto & it = configuration.find(mapping.second.substr(1, mapping.second.size() - 2));
+						const auto it{configuration.find(mapping.second.substr(1, mapping.second.size() - 2))};
 						if(it != std::end(configuration))
 							for(const auto & entry: it->second)
 								plugins[mapping.first].insert(entry);

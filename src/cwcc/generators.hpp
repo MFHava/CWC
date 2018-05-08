@@ -12,6 +12,5 @@ namespace cwcc {
 	struct bundle;
 
 	void generate_header(std::ostream & os, const bundle & b);
-	void generate_stub(std::ostream & os, const bundle & b);
 	void generate_source(std::istream & is, std::ostream & os, const bundle & b);
 }

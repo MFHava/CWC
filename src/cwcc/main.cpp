@@ -64,8 +64,7 @@ namespace {
 	void generate_files(const cwcc::bundle & bundle, std::istream & definition) {
 		const auto base_name = cwcc::base_file_name(bundle.name) + '.';
 		conditional_write(base_name + "cwch", type::generated, [&](std::ostream & os) { cwcc::generate_header(os, bundle); });
-		conditional_write(base_name + "cwc",  type::generated, [&](std::ostream & os) { cwcc::generate_source(definition, os, bundle); });
-		conditional_write(base_name + "h",    type::stub,      [&](std::ostream & os) { cwcc::generate_stub(os, bundle); });
+		conditional_write(base_name + "cpp",  type::generated, [&](std::ostream & os) { cwcc::generate_source(definition, os, bundle); });
 	}
 
 	void reflect(const char * filename) {
@@ -93,8 +92,8 @@ int main(int argc, char * argv[]) {
 	cwcc::program_disclaimer(std::cout);
 	if(argc != 2) {//batch operations are NOT supported!
 		std::cout << "\nusage:\n"
-		             "\tCWCC bundle => .cwch (generated), .cwc (generated), .h (stub), .bdl (extracted)\n"
-		             "\tCWCC bdl    => .cwch (generated), .cwc (generated), .h (stub)"
+		             "\tCWCC bundle => .cwch (generated), .cpp (generated), .bdl (extracted)\n"
+		             "\tCWCC bdl    => .cwch (generated), .cpp (generated)"
 		          << std::endl;
 	} else try {
 		const boost::filesystem::path path{argv[1]};

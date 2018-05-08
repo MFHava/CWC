@@ -22,7 +22,12 @@ namespace cwc {
 	}
 }
 
+
+#define CWC_INTERNAL_CAT(lhs, rhs) CWC_INTERNAL_CAT1(lhs, rhs)
+#define CWC_INTERNAL_CAT1(lhs, rhs) CWC_INTERNAL_CAT2(~, lhs ## rhs)
+#define CWC_INTERNAL_CAT2(_, result) result
+
 //! @brief register implementation for export
 //! @param[in] Component public component that is being exporter
 //! @param[in] Implementation the to be exported implementation of the public component
-#define CWC_EXPORT_COMPONENT(Component, Implementation) static const auto dummy_##__LINE__{(cwc::internal::register_factory<Component, Implementation>(), 0)}
+#define CWC_EXPORT_COMPONENT(Component, Implementation) static const auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){(cwc::internal::register_factory<Component, Implementation>(), 0)}

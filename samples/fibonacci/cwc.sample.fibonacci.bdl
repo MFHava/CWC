@@ -12,6 +12,4 @@ bundle cwc::sample::fibonacci {
 	};
 
 	component generator : sequence {};
-
-	export generator;
 }

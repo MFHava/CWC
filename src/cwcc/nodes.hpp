@@ -113,13 +113,6 @@ namespace cwcc {
 		auto operator<<(std::ostream & os, const documentation & self) -> std::ostream & { return os << "//" << self.line; }
 	};
 
-	struct export_ final {
-		std::string component;
-
-		friend
-		auto operator==(const export_ & lhs, const export_ & rhs) -> bool { return lhs.component == rhs.component; }
-	};
-
 	struct param final {
 		mutability mutable_;
 		templated_type type;
@@ -247,7 +240,7 @@ namespace cwcc {
 	struct bundle final {
 		std::vector<documentation> lines;
 		std::string name;
-		std::vector<boost::variant<export_, component, enum_, struct_, typedef_, interface, enumerator>> members;
+		std::vector<boost::variant<component, enum_, struct_, typedef_, interface, enumerator>> members;
 
 		friend
 		auto operator==(const bundle & lhs, const bundle & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.members == rhs.members); }
@@ -263,7 +256,6 @@ BOOST_FUSION_ADAPT_STRUCT(cwcc::variant, types)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::documentation, line)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member, lines, type, fields)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_, lines, name, members)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::export_, component)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::component::constructor, lines, params)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::enum_::member, lines, name)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::enum_, lines, name, members)

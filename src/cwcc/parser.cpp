@@ -102,8 +102,6 @@ namespace {
 			enum_member        %= *documentation >> local_identifier;
 			enum_              %= *documentation >> keyword["enum"] > new_type > '{' > enum_member % ',' > '}';
 
-			export_            %= keyword["export"] > existing_type;
-
 			component          %= *documentation >> keyword["component"] > new_type > ':' > existing_type % ',' > '{' > *constructor > '}';
 
 			constructor        %= *documentation >> keyword["constructor"] > params > ';';
@@ -128,7 +126,7 @@ namespace {
 
 			documentation      %= cpp_comment;
 
-			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((export_ | component | enum_ | struct_ | interface | typedef_ | enumerator) > ';') > '}';
+			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((component | enum_ | struct_ | interface | typedef_ | enumerator) > ';') > '}';
 
 			qi::on_error(start, phx::bind(error_handler, _1, _3, _2, _4));//register handler for parser errors
 
@@ -153,7 +151,6 @@ namespace {
 			BOOST_SPIRIT_DEBUG_NODE(struct_);
 			BOOST_SPIRIT_DEBUG_NODE(enum_member);
 			BOOST_SPIRIT_DEBUG_NODE(enum_);
-			BOOST_SPIRIT_DEBUG_NODE(export_);
 			BOOST_SPIRIT_DEBUG_NODE(component);
 			BOOST_SPIRIT_DEBUG_NODE(typedef_);
 			BOOST_SPIRIT_DEBUG_NODE(start);
@@ -222,7 +219,6 @@ namespace {
 		qi::rule<Iterator, cwcc::struct_(), Skipper> struct_;
 		qi::rule<Iterator, cwcc::enum_::member(), Skipper> enum_member;
 		qi::rule<Iterator, cwcc::enum_(), Skipper> enum_;
-		qi::rule<Iterator, cwcc::export_(), Skipper> export_;
 		qi::rule<Iterator, cwcc::component(), Skipper> component;
 		qi::rule<Iterator, cwcc::typedef_(), Skipper> typedef_;
 		qi::rule<Iterator, cwcc::bundle(), Skipper> start;

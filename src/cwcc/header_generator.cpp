@@ -61,7 +61,6 @@ namespace cwcc {
 
 		struct header_visitor : boost::static_visitor<> {
 			header_visitor(std::ostream & os, const bundle & b) : os{os}, this_bundle{b} {}
-			void operator()(const export_ &) const { /*nothing to do*/ }
 			void operator()(const enum_ & self) const { os << self << '\n'; }
 			void operator()(const struct_ & self) const { os << self << '\n'; }
 			void operator()(const typedef_ & self) const { os << self << '\n'; }
@@ -136,7 +135,6 @@ namespace cwcc {
 		struct details_visitor : boost::static_visitor<> {
 			details_visitor(std::ostream & os, const bundle & b) : os{os}, this_bundle{b} {}
 
-			void operator()(const export_ &) const { /*nothing to do*/ }
 			void operator()(const enum_ &) const { /*nothing to do*/ }
 			void operator()(const struct_ &) const { /*nothing to do*/ }
 			void operator()(const typedef_ &) const { /*nothing to do*/ }
@@ -212,7 +210,6 @@ namespace cwcc {
 			}
 			void operator()(const enum_ & self) { /*nothing to do*/ }
 			void operator()(const component::constructor & self) { for(const auto & p : self.params) (*this)(p); }
-			void operator()(const export_ & self) { (*this)(self.component); }
 		};
 
 		auto dependencies(const bundle & b) -> std::vector<std::string> {

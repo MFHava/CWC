@@ -15,8 +15,6 @@ auto cwc_definition{
 "	};\n"
 "\n"
 "	component generator : sequence {};\n"
-"\n"
-"	export generator;\n"
 "}\n"
 };
 #include <cwc/internal/bundle.hpp>

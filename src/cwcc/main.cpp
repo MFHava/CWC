@@ -69,6 +69,10 @@ namespace {
 
 	void reflect(const char * filename) {
 		cwcc::library lib{filename};
+		std::cout << "=== exports ===\n";
+		for(const auto & tmp : lib.exports()) std::cout << tmp << '\n';
+		std::cout << "===============\n";
+
 		std::istringstream in{lib.definition()};
 		const auto bundle = cwcc::parse(in);
 		in.seekg(0).clear();

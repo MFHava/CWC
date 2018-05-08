@@ -50,3 +50,12 @@ extern "C" CWC_EXPORT const ::cwc::internal::error * CWC_CALL cwc_factory(const 
 }
 
 extern "C" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_ref * definition) { *definition = cwc_definition; }
+
+extern "C" CWC_EXPORT void CWC_CALL cwc_exports(::cwc::array_ref<const ::cwc::string_ref> * exports) {
+	static const auto data{[] {
+		std::vector<cwc::string_ref> result;
+		for(const auto & factory : cwc::internal::registered_factories()) result.push_back(factory.first);
+		return result;
+	}()};
+	*exports = data;
+}

@@ -50,10 +50,8 @@ int main(int argc, char * argv[]) try {
 		auto & file{vm.at("input-file").as<std::string>()};
 		const cwcc::library lib{file};
 		if(vm.count("exports")) {
-			//TODO: better layout
-			std::cout << "=== exports ===\n";
-			for(const auto & tmp : lib.exports()) std::cout << tmp << '\n';
-			std::cout << "===============\n";
+			std::cout << "EXPORTS\n";
+			for(const auto & tmp : lib.exports()) std::cout << '\t' << tmp << '\n';
 		}
 		if(vm.count("reflect")) {
 			file += ".bdl";//replace filename in case we want to generate header or source

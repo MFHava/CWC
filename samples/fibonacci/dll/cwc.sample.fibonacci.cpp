@@ -4,7 +4,9 @@
 //    (See accompanying file ../../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-static const char * cwc_definition{
+static
+constexpr
+auto cwc_definition{
 "//! @brief CWC Sample \"Fibonacci Generator\"\n"
 "//! @author Michael Florian Hava\n"
 "bundle cwc::sample::fibonacci {\n"

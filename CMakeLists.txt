@@ -31,7 +31,7 @@ ELSE()
 ENDIF()
 
 #BEGIN find required Boost libraries
-SET(REQUIRED_BOOST_LIBS filesystem system) #TODO: these dependencies are not strictly required if CWCC-main is (slightly) adapted
+SET(REQUIRED_BOOST_LIBS program_options)
 IF(CWC_BUILD_TESTS)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework)
 ENDIF()
@@ -54,7 +54,7 @@ SET_TARGET_PROPERTIES(cwc PROPERTIES LINKER_LANGUAGE CXX)
 FILE(GLOB_RECURSE CWCC_SOURCES "src/cwcc/*")
 FILE(GLOB_RECURSE CWCC_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/src/cwcc/*)
 ADD_EXECUTABLE(cwcc ${CWCC_SOURCES} ${CWCC_GENERATED_SOURCES})
-TARGET_LINK_LIBRARIES(cwcc ${CWC_DLL_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+TARGET_LINK_LIBRARIES(cwcc ${CWC_DLL_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 SET_SOURCE_FILES_PROPERTIES(src/cwcc/parser.cpp PROPERTIES
 	COMPILE_FLAGS "-O3" #NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)
 )

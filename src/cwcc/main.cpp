@@ -5,9 +5,8 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <fstream>
-#include <sstream>
 #include <iostream>
-#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #include "nodes.hpp"
 #include "utils.hpp"
 #include "parser.hpp"
@@ -15,95 +14,71 @@
 #include "disclaimer.hpp"
 #include "generators.hpp"
 
-namespace {
-	enum class type {
-		extracted,
-		generated,
-		stub
-	};
+int main(int argc, char * argv[]) try {
+	namespace po = boost::program_options;
+	po::options_description desc{"Allowed options"};
+	desc.add_options()
+		("help", "produce help message")
+		("reflect,r", "extract the BDL file from a bundle")
+		("exports,x", "extract exported components from a bundle")
+		("header,h", "generate header for BDL")
+		("source,s", "generate source for BDL")
+	;
 
-	auto operator<<(std::ostream & os, const type & t) -> std::ostream & {
-		switch(t) {
-			case type::extracted: return os << "extracted";
-			case type::generated: return os << "generated";
-			case type::stub:      return os << "stub";
-			default: std::terminate();
-		}
+	po::options_description hidden{"Hidden options"};
+	hidden.add_options()
+		("input-file", po::value<std::string>()->required(), "input file")
+	;
+
+	po::options_description cmd_options{"Command line options"};
+	cmd_options.add(desc).add(hidden);
+
+	po::positional_options_description p;
+	p.add("input-file", -1);
+
+	po::variables_map vm;
+	po::store(po::command_line_parser{argc, argv}.options(cmd_options).positional(p).run(), vm);
+
+	if(vm.count("help")) {
+		cwcc::program_disclaimer(std::cout);
+		std::cout << desc << "\n";
+		return EXIT_SUCCESS;
 	}
+	po::notify(vm);
 
-	auto allow_write(const std::string & filename, type type) -> bool {
-		if(boost::filesystem::exists(filename)) {
-			for(;;) {
-				std::cout << "CWCC is trying to override the existing file '" << filename << "' with " << type << "-file. Proceed? (Y/y/N/n): " << std::flush;
-				std::string line;
-				std::getline(std::cin, line);
-				if(line.size() == 1)
-					switch(line[0]) {
-						case 'y':
-						case 'Y':
-							return true;
-						case 'n':
-						case 'N':
-							return false;
-					}
-			}
+	if(vm.count("reflect") || vm.count("exports")) {//assume that file name is a DLL/SO
+		auto & file{vm.at("input-file").as<std::string>()};
+		const cwcc::library lib{file};
+		if(vm.count("exports")) {
+			//TODO: better layout
+			std::cout << "=== exports ===\n";
+			for(const auto & tmp : lib.exports()) std::cout << tmp << '\n';
+			std::cout << "===============\n";
 		}
-		return true;
-	}
-
-	template<typename WriteFunctor>
-	void conditional_write(const std::string & filename, type type, WriteFunctor functor) {
-		if(allow_write(filename, type)) {
-			std::ofstream os{filename};
+		if(vm.count("reflect")) {
+			file += ".bdl";//replace filename in case we want to generate header or source
+			std::ofstream os{file};
 			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
-			functor(os);
-			os.flush();
+			os << lib.definition();
 		}
 	}
 
-	void generate_files(const cwcc::bundle & bundle, std::istream & definition) {
-		const auto base_name = cwcc::base_file_name(bundle.name) + '.';
-		conditional_write(base_name + "cwch", type::generated, [&](std::ostream & os) { cwcc::generate_header(os, bundle); });
-		conditional_write(base_name + "cpp",  type::generated, [&](std::ostream & os) { cwcc::generate_source(definition, os, bundle); });
+	if(vm.count("source") || vm.count("header")) {
+		std::ifstream is{vm["input-file"].as<std::string>()};
+		const auto bundle{cwcc::parse(is)};
+		const auto base_name{cwcc::base_file_name(bundle.name) + '.'};
+		if(vm.count("header")) {
+			std::ofstream os{base_name + "cwch"};
+			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
+			cwcc::generate_header(os, bundle);
+		}
+		if(vm.count("source")) {
+			is.seekg(0).clear();
+			std::ofstream os{base_name + "cpp"};
+			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
+			cwcc::generate_source(is, os, bundle);
+		}
 	}
-
-	void reflect(const char * filename) {
-		cwcc::library lib{filename};
-		std::cout << "=== exports ===\n";
-		for(const auto & tmp : lib.exports()) std::cout << tmp << '\n';
-		std::cout << "===============\n";
-
-		std::istringstream in{lib.definition()};
-		const auto bundle = cwcc::parse(in);
-		in.seekg(0).clear();
-		const auto base_name = cwcc::base_file_name(bundle.name) + '.';
-
-		conditional_write(base_name + "bdl",  type::extracted, [&](std::ostream & os) { os << lib.definition(); });
-		generate_files(bundle, in);
-	}
-
-	void compile(const char * filename) {
-		std::ifstream in{filename};
-		const auto bundle = cwcc::parse(in);
-		in.seekg(0).clear();
-		const auto base_name = cwcc::base_file_name(bundle.name) + '.';
-
-		generate_files(bundle, in);
-	}
-}
-
-int main(int argc, char * argv[]) {
-	cwcc::program_disclaimer(std::cout);
-	if(argc != 2) {//batch operations are NOT supported!
-		std::cout << "\nusage:\n"
-		             "\tCWCC bundle => .cwch (generated), .cpp (generated), .bdl (extracted)\n"
-		             "\tCWCC bdl    => .cwch (generated), .cpp (generated)"
-		          << std::endl;
-	} else try {
-		const boost::filesystem::path path{argv[1]};
-		if(path.extension() != ".bdl") reflect(argv[1]);
-		else compile(argv[1]);
-	} catch(const std::exception & exc) {
-		std::cerr << "error occured while processing \"" << argv[1] << "\":\n" << exc.what() << std::endl;
-	}
+} catch(const std::exception & exc) {
+	std::cerr << "ERROR: " << exc.what() << std::endl;
 }

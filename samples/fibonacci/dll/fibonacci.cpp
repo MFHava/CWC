@@ -5,6 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include "fibonacci.h"
+#include <cwc/bundle.hpp>
 
 namespace sample {
 	auto fibonacci::calculate(::cwc::uint8 no) const -> ::cwc::uint64 {
@@ -18,3 +19,15 @@ namespace sample {
 		return a;
 	}
 }
+
+namespace {
+	//exporting fibonacci as implementation of generator
+	//    (there is no need to inherit the actual implementation itself from component_implementation iff intrusive_from_this is NOT needed)
+	struct generator : cwc::component_implementation<cwc::sample::fibonacci::generator, generator>, private ::sample::fibonacci {
+		//export member functions to component_implementation
+		using ::sample::fibonacci::fibonacci;
+		using ::sample::fibonacci::calculate;
+	};
+}
+
+CWC_EXPORT_COMPONENT(cwc::sample::fibonacci::generator, generator);

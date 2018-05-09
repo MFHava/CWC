@@ -58,7 +58,7 @@
 	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
 	#define GetProcAddress(dll, function) dlsym(dll, function)
 	#define FreeLibrary(dll) dlclose(dll)
-	#define DLL_PREFIX "./lib"
+	#define DLL_PREFIX "lib"
 	#define DLL_SUFFIX ".so"
 #else
 	#error unknown operating system
@@ -85,6 +85,12 @@ namespace {
 	thread_local
 	cwc::internal::error last_error{{}, last_message};
 
+	auto make_path(std::string file) -> std::string {
+		static const std::string local{"./"};
+		if(std::find(std::begin(file), std::end(file), '/') == std::end(file)) file.insert(std::begin(file), std::begin(local), std::end(local));
+		return file;
+	}
+
 	class context_impl final : public cwc::interface_implementation<cwc::context, context_impl> {
 		using factory_export_type = const cwc::internal::error *(CWC_CALL *)(const cwc::string_ref *, cwc::intrusive_ptr<cwc::component> *);
 
@@ -97,11 +103,19 @@ namespace {
 		std::unordered_map<std::string, factory_map> plugin_factories;
 		const config_map configuration;
 
+		static
+		auto make_name(std::string file) -> std::string {
+			static const std::string prefix{DLL_PREFIX}, suffix{DLL_SUFFIX};
+			file.insert(std::find(file.rbegin(), file.rend(), '/').base(), std::begin(prefix), std::end(prefix));
+			file.insert(std::end(file), std::begin(suffix), std::end(suffix));
+			return file;
+		}
+
 		auto load_dll(dll_map & map, const std::string & file) -> HMODULE {
-			const auto name{DLL_PREFIX + file + DLL_SUFFIX};
-			const auto handle{LoadLibrary(name.c_str())};
-			if(handle && !map.count(handle)) { 
-				if(const auto init{reinterpret_cast<void (CWC_CALL *)(cwc::intrusive_ptr<context>)>(GetProcAddress(handle, "cwc_init"))}) {
+			const auto handle{LoadLibrary(make_path(make_name(file)).c_str())};
+			if(handle) {
+				if(map.count(handle)) FreeLibrary(handle);
+				else if(const auto init{reinterpret_cast<void (CWC_CALL *)(cwc::intrusive_ptr<context>)>(GetProcAddress(handle, "cwc_init"))}) {
 					if(const auto factory{reinterpret_cast<factory_export_type>(GetProcAddress(handle, "cwc_factory"))}) {
 						init(intrusive_from_this<context>());
 						map[handle] = factory;
@@ -188,7 +202,7 @@ namespace {
 		context_impl(std::istream & is) : configuration{parse_ini(is)} {
 			key_value_map components;
 			config_map plugins;
-			//TODO: add ability to specify lib-path || allow setting the path per DLL/SO
+
 			const auto it{configuration.find("cwc.mapping")};
 			if(it != std::end(configuration)) {
 				for(const auto & mapping : it->second) {

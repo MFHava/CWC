@@ -15,7 +15,7 @@ namespace cwcc {
 		struct guard {
 			HMODULE handle;
 
-			guard(const std::string & name) : handle{LoadLibrary(name.c_str())} {
+			guard(const std::string & name) : handle{LoadLibrary(make_path(name).c_str())} {
 				if(!handle) throw std::logic_error{"could not load bundle '" + name + "'"};
 			}
 

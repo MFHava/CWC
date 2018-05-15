@@ -10,7 +10,7 @@
 
 namespace cwcc {
 	template<typename Visitor>
-	void wrap_in_namespace(std::ostream & os, const bundle & b, bool comments, const char * delimiter = "") {
+	void wrap_in_namespace(std::ostream & os, const bundle & b) {
 		//TODO: this will be simplified once nested namespaces (C++17) can be used
 		auto namespaces = 0;
 		{
@@ -33,7 +33,7 @@ namespace cwcc {
 			if(it != end) {
 				it->apply_visitor(visitor);
 				for(++it; it != end; ++it) {
-					os << delimiter;
+					os << '\n';
 					it->apply_visitor(visitor);
 				}
 			}

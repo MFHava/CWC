@@ -9,7 +9,8 @@
 namespace cwcc {
 	void program_disclaimer(std::ostream & os) {
 		os << "C++ with Components compiler (CWC)\n"
-		      "(C) 2012, Michael Florian Hava\n";
+		      "(C) 2012, Michael Florian Hava\n"
+		      "\n";
 	}
 
 	void file_disclaimer(std::ostream & os, bool modifiable) {

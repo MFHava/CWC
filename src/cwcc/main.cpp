@@ -16,21 +16,21 @@
 
 int main(int argc, char * argv[]) try {
 	namespace po = boost::program_options;
-	po::options_description desc{"Allowed options"};
+	po::options_description desc{"supported options"};
 	desc.add_options()
 		("help", "produce help message")
-		("reflect,r", "extract the BDL file from a bundle")
+		("reflect,r", "extract the embedded BDL file from a bundle")
 		("exports,x", "extract exported components from a bundle")
-		("header,h", "generate header for BDL")
-		("source,s", "generate source for BDL")
+		("header,h", "generate header for BDL (needed to consume/implement bundle)")
+		("source,s", "generate source for BDL (needed to implement bundle)")
 	;
 
-	po::options_description hidden{"Hidden options"};
+	po::options_description hidden{"hidden options"};
 	hidden.add_options()
 		("input-file", po::value<std::string>()->required(), "input file")
 	;
 
-	po::options_description cmd_options{"Command line options"};
+	po::options_description cmd_options{"command line options"};
 	cmd_options.add(desc).add(hidden);
 
 	po::positional_options_description p;

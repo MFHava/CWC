@@ -233,7 +233,7 @@ namespace cwcc {
 		      "#include <cwc/cwc.hpp>\n";
 		for(const auto & d : dependencies(b)) os << "#include \"" << base_file_name(d) << ".cwch\"\n";
 		os << '\n';
-		wrap_in_namespace<header_visitor>(os, b, true, "\n");
+		wrap_in_namespace<header_visitor>(os, b);
 		os << "\n"
 		      "\n"
 		      "//ATTENTION: don't modify the following code, it contains necessary metadata for CWC\n"

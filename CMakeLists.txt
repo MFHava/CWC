@@ -7,11 +7,11 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 PROJECT(CWC CXX)
 
-#BEGIN configuration
 OPTION(CWC_BUILD_TESTS "Build tests" OFF)
 OPTION(CWC_BUILD_SAMPLES "Build samples" OFF)
 OPTION(CWC_USE_STATIC_BOOST "Use static or dynamic Boost libraries (initially selects platform default)" ${WIN32})
-#END configuration
+
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 INCLUDE_DIRECTORIES(inc;external/PTL/inc)
 ADD_SUBDIRECTORY(external/PTL)
@@ -30,7 +30,6 @@ ELSE()
 	SET(CWC_DLL_LIBRARY "")
 ENDIF()
 
-#BEGIN find required Boost libraries
 SET(REQUIRED_BOOST_LIBS program_options)
 IF(CWC_BUILD_TESTS)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework)
@@ -40,25 +39,21 @@ IF(REQUIRED_BOOST_LIBS)
 	SET(Boost_USE_MULTITHREADED ON)
 	FIND_PACKAGE(Boost 1.59.0 REQUIRED ${REQUIRED_BOOST_LIBS})
 ENDIF()
-#END find required Boost libraries
 
-#BEGIN CWC-library
 FILE(GLOB_RECURSE CWC_HEADERS "inc/cwc/*")
 FILE(GLOB_RECURSE CWC_SOURCES "src/cwc/*")
 FILE(GLOB_RECURSE CWC_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/src/cwc/*)
 ADD_LIBRARY(cwc STATIC ${CWC_HEADERS} ${CWC_SOURCES} ${CWC_GENERATED_SOURCES}) #header-only!
-SET_TARGET_PROPERTIES(cwc PROPERTIES LINKER_LANGUAGE CXX)
-#END CWC-library
+SET_TARGET_PROPERTIES(cwc PROPERTIES LINKER_LANGUAGE CXX FOLDER "C++ with Components")
 
-#BEGIN CWCC-application
 FILE(GLOB_RECURSE CWCC_SOURCES "src/cwcc/*")
 FILE(GLOB_RECURSE CWCC_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/src/cwcc/*)
 ADD_EXECUTABLE(cwcc ${CWCC_SOURCES} ${CWCC_GENERATED_SOURCES})
+SET_TARGET_PROPERTIES(cwcc PROPERTIES FOLDER "C++ with Components")
 TARGET_LINK_LIBRARIES(cwcc ${CWC_DLL_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 SET_SOURCE_FILES_PROPERTIES(src/cwcc/parser.cpp PROPERTIES
 	COMPILE_FLAGS "-O3" #NOTE: this only works as VC++ ignores unknown flags; this flag is necessary because otherwise AR from BINUTILS can't handle the this file (gets very big in debug version)
 )
-#END CWCC-application
 
 FIND_PACKAGE(Doxygen)
 IF(Doxygen_FOUND)
@@ -79,6 +74,7 @@ IF(Doxygen_FOUND)
 		CWC-Documentation
 		"${PROJECT_SOURCE_DIR}/inc;${PROJECT_SOURCE_DIR}/docs"
 	)
+	SET_TARGET_PROPERTIES(CWC-Documentation PROPERTIES FOLDER "C++ with Components")
 ENDIF()
 
 IF(CWC_BUILD_TESTS)
@@ -86,6 +82,7 @@ IF(CWC_BUILD_TESTS)
 
 	FILE(GLOB_RECURSE CWC_TEST_SOURCES "test/cwc/*")
 	ADD_EXECUTABLE(test-cwc ${CWC_TEST_SOURCES})
+	SET_TARGET_PROPERTIES(test-cwc PROPERTIES FOLDER "C++ with Components")
 	IF(NOT CWC_USE_STATIC_BOOST)
 		TARGET_COMPILE_DEFINITIONS(test-cwc PRIVATE -DBOOST_TEST_DYN_LINK)
 	ENDIF()
@@ -93,6 +90,7 @@ IF(CWC_BUILD_TESTS)
 
 	FILE(GLOB_RECURSE CWCC_TEST_SOURCES "test/cwcc/*")
 	ADD_EXECUTABLE(test-cwcc ${CWCC_TEST_SOURCES})
+	SET_TARGET_PROPERTIES(test-cwcc PROPERTIES FOLDER "C++ with Components")
 	IF(NOT CWC_USE_STATIC_BOOST)
 		TARGET_COMPILE_DEFINITIONS(test-cwcc PRIVATE -DBOOST_TEST_DYN_LINK)
 	ENDIF()
@@ -105,10 +103,10 @@ ENDIF()
 IF(CWC_BUILD_SAMPLES)
 	FILE(GLOB_RECURSE CWC_SAMPLE_FIBONACCI_DLL_SOURCES "samples/fibonacci/dll/*.*")
 	ADD_LIBRARY(sample-fibonacci-dll SHARED ${CWC_SAMPLE_FIBONACCI_DLL_SOURCES} "samples/fibonacci/cwc.sample.fibonacci.cwch")
-	SET_TARGET_PROPERTIES(sample-fibonacci-dll PROPERTIES OUTPUT_NAME sample-fibonacci)
+	SET_TARGET_PROPERTIES(sample-fibonacci-dll PROPERTIES OUTPUT_NAME sample-fibonacci FOLDER "C++ with Components/Samples")
 
 	FILE(GLOB_RECURSE CWC_SAMPLE_FIBONACCI_EXE_SOURCES "samples/fibonacci/exe/*.*")
 	ADD_EXECUTABLE(sample-fibonacci-exe ${CWC_SAMPLE_FIBONACCI_EXE_SOURCES} "samples/fibonacci/cwc.sample.fibonacci.cwch")
 	TARGET_LINK_LIBRARIES(sample-fibonacci-exe ${CWC_DLL_LIBRARY})
-	SET_TARGET_PROPERTIES(sample-fibonacci-exe PROPERTIES OUTPUT_NAME sample-fibonacci)
+	SET_TARGET_PROPERTIES(sample-fibonacci-exe PROPERTIES OUTPUT_NAME sample-fibonacci FOLDER "C++ with Components/Samples")
 ENDIF()

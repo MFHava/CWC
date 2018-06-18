@@ -86,7 +86,7 @@ namespace {
 			global_identifier  %= repeat(2)[ascii::char_(':')] > local_identifier > repeat(2)[ascii::char_(':')] > bundle_identifier;
 
 			new_type           %= local_identifier[phx::bind(&bundle_parser::add_new_type, this, _1)];
-			existing_type      %= local_identifier[phx::bind(&bundle_parser::validate_local_type, this, _1)] | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
+			existing_type      %= local_identifier[phx::bind(&bundle_parser::make_global_type, this, _1)] | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
 
 			templated_type     %= array_ref | array | optional | variant | intrusive_ptr | untemplated_type;
 			untemplated_type   %= existing_type;
@@ -170,6 +170,13 @@ namespace {
 		void add_new_type(const std::string & type) { if(!new_types.insert(type).second) throw std::invalid_argument{"duplicated new type detected"}; }
 
 		void validate_local_type(const std::string & type) { if(!new_types.count(type)) throw std::invalid_argument{"unknown local type '" + type + "'"}; }
+
+		void make_global_type(std::string & type) {
+			validate_local_type(type);
+			const char sep[] = "::";
+			type.insert(std::begin(type), std::begin(sep), std::end(sep) - 1);
+			type.insert(std::begin(type), std::begin(bundle), std::end(bundle));
+		}
 
 		void validate_global_type(const std::string & type) {
 			const auto it = std::find(type.rbegin(), type.rend(), ':').base() - 2;//end of namespace

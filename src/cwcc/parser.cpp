@@ -181,7 +181,7 @@ namespace {
 		void validate_global_type(const std::string & type) {
 			const auto it = std::find(type.rbegin(), type.rend(), ':').base() - 2;//end of namespace
 			if(std::distance(std::begin(type), it) != bundle.size()) return;//type is not of current bundle
-			if(std::equal(std::begin(bundle), std::end(bundle), std::begin(type))) validate_local_type({it + 2, std::end(type)});//TODO: if C++14 => equal with 2 full ranges
+			if(std::equal(std::begin(bundle), std::end(bundle), std::begin(type), std::end(type))) validate_local_type({it + 2, std::end(type)});
 		}
 
 		static void error_handler(Iterator begin, Iterator pos, Iterator end, const boost::spirit::info & msg) {

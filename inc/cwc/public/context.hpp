@@ -41,7 +41,7 @@ namespace cwc {
 		//! @param[in] id optional id of the plugin
 		//! @returns factory for requested type
 		template<typename Component>
-		auto factory(const optional<const string_ref> & id = nullopt) const -> intrusive_ptr<typename Component::cwc_factory> {
+		auto factory(const optional<const string_ref> & id = std::nullopt) const -> intrusive_ptr<typename Component::cwc_factory> {
 			intrusive_ptr<component> cwc_ret;
 			const auto & fqn = Component::cwc_fqn();
 			internal::call(*this, &context::cwc$context$factory$2, &fqn, &id, &cwc_ret);

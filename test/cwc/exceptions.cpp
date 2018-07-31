@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(domain_error       ) { test(std::domain_error{""},        c
 BOOST_AUTO_TEST_CASE(length_error       ) { test(std::length_error{""},        cwc::internal::error_code::std98_length_error        ); }
 BOOST_AUTO_TEST_CASE(out_of_range       ) { test(std::out_of_range{""},        cwc::internal::error_code::std98_out_of_range        ); }
 //NOTE: not constructable from msg: std11_future_error
-//NOTE: currently not available: std17_bad_optional_access
+BOOST_AUTO_TEST_CASE(bad_optional       ) { test(std::bad_optional_access{},   cwc::internal::error_code::std17_bad_optional_access ); }
 
 BOOST_AUTO_TEST_CASE(runtime_error      ) { test(std::runtime_error{""},       cwc::internal::error_code::std98_runtime_error       ); }
 BOOST_AUTO_TEST_CASE(range_error        ) { test(std::range_error{""},         cwc::internal::error_code::std98_range_error         ); }
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(bad_array_new_length) { test(std::bad_array_new_length{}, c
 BOOST_AUTO_TEST_CASE(bad_exception       ) { test(std::bad_exception{},        cwc::internal::error_code::std98_bad_exception       ); }
 BOOST_AUTO_TEST_CASE(bad_weak_ptr        ) { test(std::bad_weak_ptr{},         cwc::internal::error_code::std11_bad_weak_ptr        ); }
 BOOST_AUTO_TEST_CASE(bad_function_call   ) { test(std::bad_function_call{},    cwc::internal::error_code::std11_bad_function_call   ); }
-//NOTE: currently not available: std17_bad_variant_access
+BOOST_AUTO_TEST_CASE(bad_variant_access  ) { test(std::bad_variant_access{},   cwc::internal::error_code::std17_bad_variant_access  ); }
 
 //TODO: test inherited exceptions (slicing of error code)
 

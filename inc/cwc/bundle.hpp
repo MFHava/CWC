@@ -25,7 +25,7 @@ namespace cwc {
 	static\
 	const\
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){([] {\
-		static_assert(std::is_base_of<Component, Implementation>::value, "Implementation does not fulfill the requirements of exported Component");\
+		static_assert(std::is_base_of_v<Component, Implementation>, "Implementation does not fulfill the requirements of exported Component");\
 		auto & tmp{cwc::internal::registered_factories()[Component::cwc_fqn()]};\
 		if(tmp) throw std::logic_error{"detected duplicated export of component"};\
 		tmp = cwc::make_intrusive<typename Implementation::cwc_component_factory>();\

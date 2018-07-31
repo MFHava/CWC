@@ -10,16 +10,17 @@
 
 #pragma once
 
-namespace cwc {
-	namespace internal {
-		template<typename... Types>
-		struct make_base_list {
-			using type = typename TL::unique<
-				typename TL::make_type_list<
-					component,
-					Types...
-				>::type
-			>::type;
-		};
-	}
+namespace cwc::internal {
+	template<typename... Types>
+	struct make_base_list {
+		using type = TL::unique_t<
+			TL::make_type_list_t<
+				component,
+				Types...
+			>
+		>;
+	};
+
+	template<typename... Types>
+	using make_base_list_t = typename make_base_list<Types...>::type;
 }

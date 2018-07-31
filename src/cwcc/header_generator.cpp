@@ -120,9 +120,9 @@ namespace cwcc {
 				os << " {\n"
 				      "\t\tstatic\n"
 				      "\t\tauto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
-				      "\t\tusing cwc_interfaces = ::cwc::internal::make_base_list<" << self.interfaces[0];
+				      "\t\tusing cwc_interfaces = ::cwc::internal::make_base_list_t<" << self.interfaces[0];
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
-				os << ">::type;\n\n";
+				os << ">;\n\n";
 				header_visitor visitor{os, b};
 				for(const auto & m : b.members) m.apply_visitor(visitor);
 				os << "\t};\n";

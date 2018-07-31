@@ -66,18 +66,22 @@
 
 namespace {
 	//validate that platform conforms to basic CWC ABI requirements
-	template<typename FloatingPoint, size_t ExpectedSize>
-	struct validate_floating_point final {
-		enum {
-			value = sizeof(FloatingPoint) == ExpectedSize
-			     && std::numeric_limits<FloatingPoint>::is_specialized
-			     && std::numeric_limits<FloatingPoint>::is_iec559
-			     && std::is_floating_point<FloatingPoint>::value
-		};
-	};
+	template<typename FloatingPoint, std::size_t ExpectedSize>
+	struct validate_floating_point final : std::bool_constant<
+		sizeof(FloatingPoint) == ExpectedSize &&
+		std::numeric_limits<FloatingPoint>::is_specialized &&
+		std::numeric_limits<FloatingPoint>::is_iec559 &&
+		std::is_floating_point_v<FloatingPoint>
+	> {};
+
+	template<typename FloatingPoint, std::size_t ExpectedSize>
+	inline
+	constexpr
+	auto validate_floating_point_v{validate_floating_point<FloatingPoint, ExpectedSize>::value};
+
 	static_assert(CHAR_BIT == 8, "unsupported character type (not 8 bits)");
-	static_assert(validate_floating_point<cwc::float32, 4>::value, "unsupported single precision floating point");
-	static_assert(validate_floating_point<cwc::float64, 8>::value, "unsupported double precision floating point");
+	static_assert(validate_floating_point_v<cwc::float32, 4>, "unsupported single precision floating point");
+	static_assert(validate_floating_point_v<cwc::float64, 8>, "unsupported double precision floating point");
 
 	thread_local
 	cwc::utf8 last_message[CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH]{0};

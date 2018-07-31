@@ -10,15 +10,13 @@
 
 #pragma once
 
-namespace cwc {
-	namespace internal {
-		template<typename Type, typename Func, typename... Args>
-		void call(Type & self, Func func, Args &&... args) { internal::validate((self.*func)(std::forward<Args>(args)...)); }
+namespace cwc::internal {
+	template<typename Type, typename Func, typename... Args>
+	void call(Type & self, Func func, Args &&... args) { internal::validate((self.*func)(std::forward<Args>(args)...)); }
 
-		template<typename Type, typename Func, typename... Args>
-		void call(const intrusive_ptr<Type> & ptr, Func func, Args &&... args) { call(*ptr, func, std::forward<Args>(args)...); }
+	template<typename Type, typename Func, typename... Args>
+	void call(const intrusive_ptr<Type> & ptr, Func func, Args &&... args) { call(*ptr, func, std::forward<Args>(args)...); }
 
-		template<typename Type, typename Func, typename... Args>
-		void call(      intrusive_ptr<Type> & ptr, Func func, Args &&... args) { call(*ptr, func, std::forward<Args>(args)...); }
-	}
+	template<typename Type, typename Func, typename... Args>
+	void call(      intrusive_ptr<Type> & ptr, Func func, Args &&... args) { call(*ptr, func, std::forward<Args>(args)...); }
 }

@@ -18,7 +18,7 @@ namespace cwc {
 	//! @tparam Type type of the managed object
 	template<typename Type>
 	struct intrusive_ptr final {
-		static_assert(std::is_base_of<component, Type>::value, "intrusive_ptr only supports components");
+		static_assert(std::is_base_of_v<component, Type>, "intrusive_ptr only supports components");
 
 		intrusive_ptr() noexcept =default;
 		intrusive_ptr(std::nullptr_t) noexcept {}
@@ -47,9 +47,9 @@ namespace cwc {
 
 		template<typename OtherType>
 		operator intrusive_ptr<OtherType>() const {
-			static_assert(!std::is_const<Type>::value || (std::is_const<Type>::value && std::is_const<OtherType>::value), "constness violation detected");
+			static_assert(!std::is_const_v<Type> || (std::is_const_v<Type> && std::is_const_v<OtherType>), "constness violation detected");
 			if(!ptr) return intrusive_ptr<OtherType>{};
-			using TargetType = typename std::remove_const<OtherType>::type;
+			using TargetType = typename std::remove_const_t<OtherType>;
 			TargetType * tmp;
 			const uuid & id{internal::interface_id<TargetType>::get()};
 			internal::validate(ptr->cwc$component$cast$2(&id, reinterpret_cast<void **>(&tmp)));

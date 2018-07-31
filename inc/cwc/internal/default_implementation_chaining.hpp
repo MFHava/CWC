@@ -10,15 +10,13 @@
 
 #pragma once
 
-namespace cwc {
-	namespace internal {
-		template<typename Implementation, typename TypeList>
-		struct default_implementation_chaining;
+namespace cwc::internal {
+	template<typename Implementation, typename TypeList>
+	struct default_implementation_chaining;
 
-		template<typename Implementation, typename Head, typename Tail>
-		struct default_implementation_chaining<Implementation, TL::type_list<Head, Tail>> : vtable_implementation<Head, Implementation, Tail> {};
+	template<typename Implementation, typename Head, typename Tail>
+	struct default_implementation_chaining<Implementation, TL::type_list<Head, Tail>> : vtable_implementation<Head, Implementation, Tail> {};
 
-		template<typename Implementation, typename VTable>
-		struct default_implementation_chaining<Implementation, TL::type_list<VTable, TL::empty_type_list>> : VTable {};//last base has to be vtable to connect implementation to
-	}
+	template<typename Implementation, typename VTable>
+	struct default_implementation_chaining<Implementation, TL::type_list<VTable, TL::empty_type_list>> : VTable {};//last base has to be vtable to connect implementation to
 }

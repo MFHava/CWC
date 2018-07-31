@@ -24,7 +24,7 @@ namespace cwc {
 	using uint64  = std::uint64_t;//!< @brief unsigned 64bit integer
 	using float32 = float;//!< @brief single precision (32bit) floating point
 	using float64 = double;//!< @brief double precision (64bit) floating point
-	using boolean = std::conditional<sizeof(bool) == 1, bool, uint8>::type;//!< @brief portable boolean (as bool lacks size guarantee)
+	using boolean = std::conditional_t<sizeof(bool) == 1, bool, uint8>;//!< @brief portable boolean (as bool lacks size guarantee)
 	//! @}
 
 	//! @brief helper to determine if UTF-8 character is a valid ASCII character

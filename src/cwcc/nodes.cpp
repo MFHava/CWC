@@ -43,7 +43,7 @@ namespace cwcc {
 			for(const auto & doc : member.lines) os << "\t\t" << doc << '\n';
 			os << "\t\t" << member << '\n';
 		}
-		for(const auto & member : self.members) os << "\t\tstatic_assert(std::is_standard_layout<" << member.type << ">::value, \"Type '" << member.type << "' is incompatible with the requirements of portable structs\");\n";
+		for(const auto & member : self.members) os << "\t\tstatic_assert(std::is_standard_layout_v<" << member.type << ">);\n";
 		return os << "\t};\n"
 		             "\tCWC_PACK_END";
 	}
@@ -51,7 +51,7 @@ namespace cwcc {
 	auto operator<<(std::ostream & os, const typedef_ & self) -> std::ostream & {
 		for(const auto & doc : self.lines) os << '\t' << doc << '\n';
 		return os << "\tusing " << self.name << " = " << self.type << ";\n"
-		             "\tstatic_assert(std::is_standard_layout<" << self.type << ">::value, \"Type '" << self.type << "' is incompatible with the requirements for portable type definitions\");";//TODO: is it safe to generate this every time?!
+		             "\tstatic_assert(std::is_standard_layout_v<" << self.type << ">);";//TODO: is it safe to generate this every time?!
 	}
 
 	auto component::factory() const -> interface {

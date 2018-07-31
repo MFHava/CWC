@@ -18,13 +18,13 @@ namespace cwc {
 	struct interface_implementation :
 		internal::default_implementation_chaining<
 			Implementation,
-			typename internal::TL::append<
-				typename internal::make_base_list<Interface>::type,
+			internal::TL::append_t<
+				internal::make_base_list_t<Interface>,
 				Interface
-			>::type
+			>
 		> {
 
-		using cwc_interfaces = typename internal::make_base_list<Interface>::type;
+		using cwc_interfaces = internal::make_base_list_t<Interface>;
 	};
 
 	//! @brief default implementation of basic operations for use with component implementations
@@ -34,10 +34,10 @@ namespace cwc {
 	struct component_implementation :
 		internal::default_implementation_chaining<
 			Implementation,
-			typename internal::TL::append<
+			internal::TL::append_t<
 				typename Component::cwc_interfaces,
 				Component
-			>::type
+			>
 		> {
 
 		struct cwc_component_factory : interface_implementation<typename Component::cwc_factory, cwc_component_factory> {

@@ -24,7 +24,7 @@ namespace cwc {namespace sample {namespace fibonacci {
 	struct generator : sequence {
 		static
 		auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::fibonacci::generator"; }
-		using cwc_interfaces = ::cwc::internal::make_base_list<sequence>::type;
+		using cwc_interfaces = ::cwc::internal::make_base_list_t<sequence>;
 
 	class cwc_factory : public ::cwc::component {
 		virtual

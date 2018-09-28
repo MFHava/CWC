@@ -14,9 +14,8 @@ namespace cwc {
 	}
 }
 
-#define CWC_INTERNAL_CAT(lhs, rhs) CWC_INTERNAL_CAT1(lhs, rhs)
-#define CWC_INTERNAL_CAT1(lhs, rhs) CWC_INTERNAL_CAT2(~, lhs ## rhs)
-#define CWC_INTERNAL_CAT2(_, result) result
+#define CWC_INTERNAL_CAT(lhs, rhs) CWC_INTERNAL_CAT_(lhs, rhs)
+#define CWC_INTERNAL_CAT_(lhs, rhs) lhs ## rhs
 
 //! @brief register implementation for export
 //! @param[in] Component public component that is being exporter

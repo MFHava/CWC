@@ -12,35 +12,35 @@
 
 namespace cwc {
 	//! @brief default implementation of basic operations for use with simple interface-implementations
-	//! @tparam Interface interface to implement
 	//! @tparam Implementation name of the class that implements the interface
-	template<typename Interface, typename Implementation>
-	struct interface_implementation :
-		internal::default_implementation_chaining<
+	//! @tparam Interface interface to implement
+	//! @tparam AdditionalInterfaces additional interfaces to implement
+	template<typename Implementation, typename Interface, typename... AdditionalInterfaces>
+	struct interface_implementation : 
+		internal::default_implementation<
 			Implementation,
-			internal::TL::append_t<
-				internal::make_base_list_t<Interface>,
-				Interface
+			internal::interface_implementation_base<
+				Interface,
+				AdditionalInterfaces...
 			>
 		> {
-
-		using cwc_interfaces = internal::make_base_list_t<Interface>;
 	};
 
 	//! @brief default implementation of basic operations for use with component implementations
-	//! @tparam Component component to implement
 	//! @tparam Implementation name of the class that implements the component
-	template<typename Component, typename Implementation>
+	//! @tparam Component component to implement
+	//! @tparam AdditionalInterfaces additional interfaces to implement
+	template<typename Implementation, typename Component, typename... AdditionalInterfaces>
 	struct component_implementation :
-		internal::default_implementation_chaining<
+		internal::default_implementation<
 			Implementation,
-			internal::TL::append_t<
-				typename Component::cwc_interfaces,
-				Component
+			internal::component_implementation_base<
+				Component,
+				AdditionalInterfaces...
 			>
 		> {
 
-		struct cwc_component_factory : interface_implementation<typename Component::cwc_factory, cwc_component_factory> {
+		struct cwc_component_factory : interface_implementation<cwc_component_factory, typename Component::cwc_factory> {
 			template<typename... Params>
 			auto create(Params &&... params) const -> intrusive_ptr<component> { return make_intrusive<Implementation>(std::forward<Params>(params)...); }
 		};

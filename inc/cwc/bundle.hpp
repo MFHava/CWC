@@ -8,10 +8,8 @@
 #include <map>
 #include "cwc.hpp"
 
-namespace cwc {
-	namespace internal {
-		auto registered_factories() noexcept -> std::map<string_ref, intrusive_ptr<component>> &;
-	}
+namespace cwc::internal {
+	auto registered_factories() noexcept -> std::map<string_ref, intrusive_ptr<component>> &;
 }
 
 #define CWC_INTERNAL_CAT(lhs, rhs) CWC_INTERNAL_CAT_(lhs, rhs)

@@ -95,7 +95,7 @@ namespace {
 		return file;
 	}
 
-	class context_impl final : public cwc::interface_implementation<cwc::context, context_impl> {
+	class context_impl final : public cwc::interface_implementation<context_impl, cwc::context> {
 		using factory_export_type = const cwc::internal::error *(CWC_CALL *)(const cwc::string_ref *, cwc::intrusive_ptr<cwc::component> *);
 
 		using factory_map = std::unordered_map<std::string, cwc::intrusive_ptr<cwc::component>>;
@@ -166,7 +166,7 @@ namespace {
 					plugin_factories[fqn].emplace(m.first, create_factory(map.at(library), m.second, fqn));
 		}
 
-		class config_section_enumerator : public cwc::interface_implementation<cwc::config_section_enumerator, config_section_enumerator> {
+		class config_section_enumerator : public cwc::interface_implementation<config_section_enumerator, cwc::config_section_enumerator> {
 			key_value_map::const_iterator it, last;
 		public:
 			config_section_enumerator(const key_value_map & config) : it{std::begin(config)}, last{std::end(config)} {}
@@ -184,7 +184,7 @@ namespace {
 			}
 		};
 
-		class config_sections_enumerator : public cwc::interface_implementation<cwc::config_sections_enumerator, config_sections_enumerator> {
+		class config_sections_enumerator : public cwc::interface_implementation<config_sections_enumerator, cwc::config_sections_enumerator> {
 			config_map::const_iterator it, last;
 		public:
 			config_sections_enumerator(const config_map & config) : it{std::begin(config)}, last{std::end(config)} {}

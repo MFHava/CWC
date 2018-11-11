@@ -245,12 +245,11 @@ namespace {
 	const cwc::intrusive_ptr<cwc::context> instance = [] {
 #ifdef CWC_CONTEXT_INIT_IS_NOT_FILE
 		std::istringstream is{CWC_CONTEXT_INIT_STRING};
-		return cwc::make_intrusive<context_impl>(is);
 #else
 		std::ifstream is{CWC_CONTEXT_INIT_STRING};
 		if(!is) throw std::invalid_argument{"could not open file \"" + std::string{CWC_CONTEXT_INIT_STRING} +"\" for context initialization"};
-		return cwc::make_intrusive<context_impl>(is);
 #endif
+		return cwc::make_intrusive<context_impl>(is);
 	}();
 }
 

@@ -93,6 +93,12 @@ namespace cwc {
 	inline
 	auto operator>=(const intrusive_ptr<component> & lhs, const intrusive_ptr<component> & rhs) noexcept -> bool { return !(lhs < rhs); }
 
-	template<typename Type, typename... Args>
-	auto make_intrusive(Args &&... args) -> intrusive_ptr<Type> { return intrusive_ptr<Type>{new Type{std::forward<Args>(args)...}}; }
+	template<typename Implementation, typename... Args>
+	auto make_intrusive(Args &&... args) -> intrusive_ptr<component> {
+		using Interface = internal::TL::at_t<typename Implementation::cwc_interfaces, 1>;//does not work for classes that implement no additional interfaces...
+		static_assert(!std::is_same_v<Interface, component>);
+		//this indirection via an Interface ensures the identity relation for components
+		const intrusive_ptr<Interface> ptr{new Implementation{std::forward<Args>(args)...}};
+		return intrusive_ptr<component>{ptr};
+	}
 }

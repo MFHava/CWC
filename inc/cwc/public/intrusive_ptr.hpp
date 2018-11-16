@@ -26,14 +26,14 @@ namespace cwc {
 		explicit intrusive_ptr(Type * ptr) noexcept : ptr{ptr} {}
 
 		intrusive_ptr(const intrusive_ptr & other) noexcept : ptr{other.ptr} { if(ptr) ptr->cwc$component$new$0(); }
-		intrusive_ptr(intrusive_ptr && other) noexcept { swap(*this, other); }
+		intrusive_ptr(intrusive_ptr && other) noexcept { swap(other); }
 
 		auto operator=(const intrusive_ptr & other) -> intrusive_ptr & {
 			intrusive_ptr tmp{other};
-			swap(*this, tmp);
+			swap(tmp);
 			return *this;
 		}
-		auto operator=(intrusive_ptr && other) noexcept -> intrusive_ptr & { swap(*this, other); return *this; }
+		auto operator=(intrusive_ptr && other) noexcept -> intrusive_ptr & { swap(other); return *this; }
 
 		~intrusive_ptr() noexcept { if(ptr) ptr->cwc$component$delete$1(); }
 
@@ -46,27 +46,36 @@ namespace cwc {
 		auto operator!() const noexcept -> bool { return ptr == nullptr; }
 
 		template<typename OtherType>
-		operator intrusive_ptr<OtherType>() const {
+		operator intrusive_ptr<OtherType>() const & {
 			static_assert(!std::is_const_v<Type> || (std::is_const_v<Type> && std::is_const_v<OtherType>), "constness violation detected");
 			if(!ptr) return intrusive_ptr<OtherType>{};
 			using TargetType = typename std::remove_const_t<OtherType>;
 			TargetType * tmp;
 			const uuid & id{internal::interface_id<TargetType>::get()};
-			internal::validate(ptr->cwc$component$cast$2(&id, reinterpret_cast<void **>(&tmp)));
+			internal::validate(ptr->cwc$component$dynamic_cast$2(&id, reinterpret_cast<void **>(&tmp)));
 			return intrusive_ptr<OtherType>{tmp};
 		}
 
-		void reset() noexcept {
-			if(!ptr) return;
-			intrusive_ptr tmp;
-			swap(*this, tmp);
+		template<typename OtherType>
+		operator intrusive_ptr<OtherType>() && {
+			static_assert(!std::is_const_v<Type> || (std::is_const_v<Type> && std::is_const_v<OtherType>), "constness violation detected");
+			if(!ptr) return intrusive_ptr<OtherType>{};
+			using TargetType = typename std::remove_const_t<OtherType>;
+			TargetType * tmp;
+			const uuid & id{internal::interface_id<TargetType>::get()};
+			internal::validate(ptr->cwc$component$dynamic_cast_fast$3(&id, reinterpret_cast<void **>(&tmp)));
+			ptr = nullptr;
+			return intrusive_ptr<OtherType>{tmp};
 		}
 
-		friend
-		void swap(intrusive_ptr & lhs, intrusive_ptr & rhs) noexcept {
+		void reset() noexcept { intrusive_ptr{}.swap(*this); }
+
+		void swap(intrusive_ptr & other) noexcept {
 			using std::swap;
-			swap(lhs.ptr, rhs.ptr);
+			swap(ptr, other.ptr);
 		}
+		friend
+		void swap(intrusive_ptr & lhs, intrusive_ptr & rhs) noexcept { lhs.swap(rhs); }
 
 		friend
 		auto operator<<(std::basic_ostream<utf8> & os, const intrusive_ptr & self) -> std::basic_ostream<utf8> & { return os << self.get();  }
@@ -98,7 +107,6 @@ namespace cwc {
 		using Interface = internal::TL::at_t<typename Implementation::cwc_interfaces, 1>;//does not work for classes that implement no additional interfaces...
 		static_assert(!std::is_same_v<Interface, component>);
 		//this indirection via an Interface ensures the identity relation for components
-		const intrusive_ptr<Interface> ptr{new Implementation{std::forward<Args>(args)...}};
-		return intrusive_ptr<component>{ptr};
+		return intrusive_ptr<Interface>{new Implementation{std::forward<Args>(args)...}};
 	}
 }

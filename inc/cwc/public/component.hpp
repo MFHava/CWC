@@ -17,7 +17,7 @@ namespace cwc {
 		friend
 		struct intrusive_ptr;
 
-		template<typename Self, typename TypeList>
+		template<typename Self, typename TypeList, bool IncRefCount>
 		friend
 		class internal::cast_to_interface;
 
@@ -26,7 +26,9 @@ namespace cwc {
 		virtual
 		void CWC_CALL cwc$component$delete$1() const noexcept =0;
 		virtual
-		auto CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * =0;
+		auto CWC_CALL cwc$component$dynamic_cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * =0;
+		virtual
+		auto CWC_CALL cwc$component$dynamic_cast_fast$3(const uuid * id, void ** result) const noexcept -> const internal::error * =0;
 	public:
 	};
 
@@ -50,7 +52,8 @@ namespace cwc {
 
 			void CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
 			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
-			auto CWC_CALL cwc$component$cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * final { return call_and_return_error([&] { cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
+			auto CWC_CALL cwc$component$dynamic_cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * final { return call_and_return_error([&] { cast_to_interface<Implementation, typename Implementation::cwc_interfaces, true>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
+			auto CWC_CALL cwc$component$dynamic_cast_fast$3(const uuid * id, void ** result) const noexcept -> const internal::error * final { return call_and_return_error([&] { cast_to_interface<Implementation, typename Implementation::cwc_interfaces, false>::cast(const_cast<Implementation *>(static_cast<const Implementation *>(this)), *id, result); }); }
 		protected:
 			//! @brief retrieve intrusive_ptr for requested interface
 			//! @tparam TargetType type to cast new pointer to
@@ -59,7 +62,7 @@ namespace cwc {
 			auto intrusive_from_this()       -> intrusive_ptr<      TargetType> {
 				static_assert(std::is_base_of_v<TargetType, Implementation>, "invalid cast");
 				std::remove_const_t<TargetType> * result;//remove constness of TargetType to allow conversion from 'mutable Type' to 'const TargetType'
-				cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), interface_id<TargetType>::get(), reinterpret_cast<void **>(&result));
+				cast_to_interface<Implementation, typename Implementation::cwc_interfaces, true>::cast(static_cast<Implementation *>(this), interface_id<TargetType>::get(), reinterpret_cast<void **>(&result));
 				return intrusive_ptr<      TargetType>{result};
 			}
 
@@ -70,7 +73,7 @@ namespace cwc {
 			auto intrusive_from_this() const -> intrusive_ptr<const TargetType> {
 				static_assert(std::is_base_of_v<TargetType, Implementation>, "invalid cast");
 				const TargetType * result;
-				cast_to_interface<Implementation, typename Implementation::cwc_interfaces>::cast(static_cast<Implementation *>(this), interface_id<TargetType>::get(), reinterpret_cast<void **>(&result));
+				cast_to_interface<Implementation, typename Implementation::cwc_interfaces, true>::cast(static_cast<Implementation *>(this), interface_id<TargetType>::get(), reinterpret_cast<void **>(&result));
 				return intrusive_ptr<const TargetType>{result};
 			}
 		public:

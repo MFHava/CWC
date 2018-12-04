@@ -20,15 +20,15 @@ namespace cwcc {
 			}
 
 			~guard() { FreeLibrary(handle); }
-		} instance{name};
-		const auto init{reinterpret_cast<void(CWC_CALL *)(cwc::intrusive_ptr<cwc::context>)>(GetProcAddress(instance.handle, "cwc_init"))};
+		} guard{name};
+		const auto init{reinterpret_cast<void(CWC_CALL *)(cwc::intrusive_ptr<cwc::context>)>(GetProcAddress(guard.handle, "cwc_init"))};
 		if(!init) throw std::logic_error{"could not find entry point 'cwc_init' in bundle \"" + name + '"'};
 		init(cwc::this_context());
 		
-		const auto definitionPtr{reinterpret_cast<void(CWC_CALL *)(cwc::string_ref *)>(GetProcAddress(instance.handle, "cwc_reflect"))};
+		const auto definitionPtr{reinterpret_cast<void(CWC_CALL *)(cwc::string_ref *)>(GetProcAddress(guard.handle, "cwc_reflect"))};
 		if(!definitionPtr) throw std::logic_error{"could not find entry point 'cwc_reflect' in bundle \"" + name + '"'};
 
-		const auto exportsPtr{reinterpret_cast<void(CWC_CALL *)(::cwc::array_ref<const ::cwc::string_ref> *)>(GetProcAddress(instance.handle, "cwc_exports"))};
+		const auto exportsPtr{reinterpret_cast<void(CWC_CALL *)(::cwc::array_ref<const ::cwc::string_ref> *)>(GetProcAddress(guard.handle, "cwc_exports"))};
 		if(!exportsPtr) throw std::logic_error{"could not find entry point 'cwc_exports' in bundle \"" + name + '"'};
 
 		cwc::string_ref definition;

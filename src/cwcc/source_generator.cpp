@@ -13,7 +13,7 @@
 #include "generators.hpp"
 
 namespace cwcc {
-	void generate_source(std::istream & is, std::ostream & os, const bundle & b) {
+	void generate_source(std::istream & is, std::ostream & os) {
 		file_disclaimer(os, false);
 		os << "static\n"
 		      "constexpr\n"

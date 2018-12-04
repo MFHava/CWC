@@ -207,20 +207,16 @@ namespace {
 			key_value_map components;
 			config_map plugins;
 
-			const auto it{configuration.find("cwc.mapping")};
-			if(it != std::end(configuration)) {
-				for(const auto & mapping : it->second) {
+			if(const auto cit{configuration.find("cwc.mapping")}; cit != std::end(configuration)) {
+				for(const auto & mapping : cit->second)
 					if(mapping.second.front() != '[') components[mapping.first] = mapping.second;
 					else {//key maps to section
 						if(mapping.second.back() != ']') throw std::invalid_argument{"malformed configuration"};
-						const auto it{configuration.find(mapping.second.substr(1, mapping.second.size() - 2))};
-						if(it != std::end(configuration))
-							for(const auto & entry: it->second)
+						if(const auto section{configuration.find(mapping.second.substr(1, mapping.second.size() - 2))}; section != std::end(configuration))
+							for(const auto & entry: section->second)
 								plugins[mapping.first].insert(entry);
 					}
-				}
 			}
-
 			dll_map map;//ensure that cwc_init is only called once
 			for(const auto & c : components) load_component(map, c.first, c.second);
 			for(const auto & p : plugins) load_plugins(map, p.first, p.second);

@@ -48,9 +48,9 @@ namespace cwcc {
 				if(!params.empty()) {
 					auto print_param = [&](const param & p) { ss << p.mutable_ << p.type << " * " << p.name; };
 					print_param(params[0]);
-					for(std::size_t i{1}; i < params.size(); ++i) {
+					for(std::size_t j{1}; j < params.size(); ++j) {
 						ss << ", ";
-						print_param(params[i]);
+						print_param(params[j]);
 					}
 				}
 				ss << ") " << method.mutable_ << "noexcept -> const ::cwc::internal::error * ";
@@ -82,9 +82,9 @@ namespace cwcc {
 					if(!method.in.empty()) {
 						auto print_param = [&](const param & p) { os << p.mutable_ << p.type << " & " << p.name; };
 						print_param(method.in[0]);
-						for(std::size_t i{1}; i < method.in.size(); ++i) {
+						for(std::size_t j{1}; j < method.in.size(); ++j) {
 							os << ", ";
-							print_param(method.in[i]);
+							print_param(method.in[j]);
 						}
 					}
 					os << ") " << method.mutable_;
@@ -97,9 +97,9 @@ namespace cwcc {
 						os << ", ";
 						auto print_param = [&](const param & p) { os << '&' << p.name; };
 						print_param(params[0]);
-						for(std::size_t i{1}; i < params.size(); ++i) {
+						for(std::size_t j{1}; j < params.size(); ++j) {
 							os << ", ";
-							print_param(params[i]);
+							print_param(params[j]);
 						}
 
 					}
@@ -155,9 +155,9 @@ namespace cwcc {
 					if(!method.in.empty()) {
 						auto print_param = [&](const param & p) { os << '*' << p.name; };
 						print_param(method.in[0]);
-						for(std::size_t i{1}; i < method.in.size(); ++i) {
+						for(std::size_t j{1}; j < method.in.size(); ++j) {
 							os << ", ";
-							print_param(method.in[i]);
+							print_param(method.in[j]);
 						}
 					}
 					os << "); }); }\n";
@@ -208,7 +208,7 @@ namespace cwcc {
 				for(const auto & s : self.interfaces) (*this)(s);
 				for(const auto & c : self.members) (*this)(c);
 			}
-			void operator()(const enum_ & self) { /*nothing to do*/ }
+			void operator()(const enum_ &) { /*nothing to do*/ }
 			void operator()(const component::constructor & self) { for(const auto & p : self.params) (*this)(p); }
 		};
 

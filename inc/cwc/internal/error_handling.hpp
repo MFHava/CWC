@@ -60,18 +60,18 @@ namespace cwc::internal {
 				case error_code::std98_domain_error: throw std::domain_error{err->message};
 				case error_code::std98_length_error: throw std::length_error{err->message};
 				case error_code::std98_out_of_range: throw std::out_of_range{err->message};
-				//NOTE: not constructable from msg: case error_code::std11_future_error:
+				case error_code::std11_future_error: continue; //NOTE: not constructible from message
 				case error_code::std98_runtime_error: throw std::runtime_error{err->message};
 				case error_code::std98_range_error: throw std::range_error{err->message};
 				case error_code::std98_overflow_error: throw std::overflow_error{err->message};
 				case error_code::std98_underflow_error: throw std::underflow_error{err->message};
-				//not constructable from msg: case error_code::std11_regex_error:
-				//not constructable from msg: case error_code::std11_system_error:
+				case error_code::std11_regex_error: continue; //not constructible from message
+				case error_code::std11_system_error: continue; //not constructible from message
 				case error_code::std11_ios_base_failure: throw std::ios_base::failure{err->message};
-				//NOTE: currently not available: case error_code::std17_filesystem_error:
+				case error_code::std17_filesystem_error: continue; //NOTE: currently not available
 				case error_code::std98_bad_typeid: throw std::bad_typeid{};
 				case error_code::std98_bad_cast: throw std::bad_cast{};
-				//NOTE: currently not available: case error_code::std17_bad_any_cast:
+				case error_code::std17_bad_any_cast: continue; //NOTE: currently not available
 				case error_code::std98_bad_alloc: throw std::bad_alloc{};
 				case error_code::std11_bad_array_new_length: throw std::bad_array_new_length{};
 				case error_code::std98_bad_exception: throw std::bad_exception{};

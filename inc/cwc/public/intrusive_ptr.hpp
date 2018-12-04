@@ -23,17 +23,54 @@ namespace cwc {
 		intrusive_ptr() noexcept =default;
 		intrusive_ptr(std::nullptr_t) noexcept {}
 
-		explicit intrusive_ptr(Type * ptr) noexcept : ptr{ptr} {}
+		explicit
+		intrusive_ptr(Type * ptr) noexcept : ptr{ptr} {}
 
 		intrusive_ptr(const intrusive_ptr & other) noexcept : ptr{other.ptr} { if(ptr) ptr->cwc$component$new$0(); }
 		intrusive_ptr(intrusive_ptr && other) noexcept { swap(other); }
 
+		template<typename OtherType>
+		intrusive_ptr(const intrusive_ptr<OtherType> & other) {
+			static_assert(!std::is_const_v<OtherType> || (std::is_const_v<OtherType> && std::is_const_v<Type>), "constness violation detected");
+			if(!other) return;
+			using TargetType = std::remove_const_t<Type>;
+			const uuid & id{internal::interface_id<TargetType>::get()};
+			TargetType * tmp;
+			internal::validate(other.ptr->cwc$component$dynamic_cast$2(&id, reinterpret_cast<void **>(&tmp)));
+			ptr = tmp;
+		}
+
+		template<typename OtherType>
+		intrusive_ptr(intrusive_ptr<OtherType> && other) {
+			static_assert(!std::is_const_v<OtherType> || (std::is_const_v<OtherType> && std::is_const_v<Type>), "constness violation detected");
+			if(!other) return;
+			using TargetType = std::remove_const_t<Type>;
+			const uuid & id{internal::interface_id<TargetType>::get()};
+			TargetType * tmp;
+			internal::validate(other.ptr->cwc$component$dynamic_cast_fast$3(&id, reinterpret_cast<void **>(&tmp)));
+			ptr = tmp;
+			other.ptr = nullptr;
+		}
+
 		auto operator=(const intrusive_ptr & other) -> intrusive_ptr & {
-			intrusive_ptr tmp{other};
-			swap(tmp);
+			intrusive_ptr{other}.swap(*this);
 			return *this;
 		}
-		auto operator=(intrusive_ptr && other) noexcept -> intrusive_ptr & { swap(other); return *this; }
+		auto operator=(intrusive_ptr && other) noexcept -> intrusive_ptr & {
+			swap(other);
+			return *this;
+		}
+
+		template<typename OtherType>
+		auto operator=(const intrusive_ptr<OtherType> & other) -> intrusive_ptr & {
+			intrusive_ptr{other}.swap(*this);
+			return *this;
+		}
+		template<typename OtherType>
+		auto operator=(intrusive_ptr<OtherType> && other) -> intrusive_ptr & {
+			intrusive_ptr{std::move(other)}.swap(*this);
+			return *this;
+		}
 
 		~intrusive_ptr() noexcept { if(ptr) ptr->cwc$component$delete$1(); }
 
@@ -42,31 +79,9 @@ namespace cwc {
 		auto operator*() const noexcept -> Type & { assert(ptr); return *ptr; }
 		auto operator->() const noexcept -> Type * { assert(ptr); return ptr; }
 
-		explicit operator bool() const noexcept { return ptr != nullptr; }
+		explicit
+		operator bool() const noexcept { return ptr != nullptr; }
 		auto operator!() const noexcept -> bool { return ptr == nullptr; }
-
-		template<typename OtherType>
-		operator intrusive_ptr<OtherType>() const & {
-			static_assert(!std::is_const_v<Type> || (std::is_const_v<Type> && std::is_const_v<OtherType>), "constness violation detected");
-			if(!ptr) return intrusive_ptr<OtherType>{};
-			using TargetType = typename std::remove_const_t<OtherType>;
-			TargetType * tmp;
-			const uuid & id{internal::interface_id<TargetType>::get()};
-			internal::validate(ptr->cwc$component$dynamic_cast$2(&id, reinterpret_cast<void **>(&tmp)));
-			return intrusive_ptr<OtherType>{tmp};
-		}
-
-		template<typename OtherType>
-		operator intrusive_ptr<OtherType>() && {
-			static_assert(!std::is_const_v<Type> || (std::is_const_v<Type> && std::is_const_v<OtherType>), "constness violation detected");
-			if(!ptr) return intrusive_ptr<OtherType>{};
-			using TargetType = typename std::remove_const_t<OtherType>;
-			TargetType * tmp;
-			const uuid & id{internal::interface_id<TargetType>::get()};
-			internal::validate(ptr->cwc$component$dynamic_cast_fast$3(&id, reinterpret_cast<void **>(&tmp)));
-			ptr = nullptr;
-			return intrusive_ptr<OtherType>{tmp};
-		}
 
 		void reset() noexcept { intrusive_ptr{}.swap(*this); }
 
@@ -80,6 +95,10 @@ namespace cwc {
 		friend
 		auto operator<<(std::basic_ostream<utf8> & os, const intrusive_ptr & self) -> std::basic_ostream<utf8> & { return os << self.get();  }
 	private:
+		template<typename OtherType>
+		friend
+		struct intrusive_ptr;
+
 		Type * ptr{nullptr};
 	};
 	CWC_PACK_END

@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(component) {
 		c.lines = std::move(lines);
 		c.name = std::move(name);
 		c.interfaces.push_back("::cwc::I");
-		c.members.push_back({c.lines});
+		c.members.push_back({c.lines, {}});
 		c.members.push_back({c.lines,{{false, cwcc::untemplated_type{"::cwc::int"}, "param"}}});
 		c.members.push_back({c.lines,{{true,  cwcc::untemplated_type{"::cwc::int"}, "param"}}});
 		reference.members.push_back(c);

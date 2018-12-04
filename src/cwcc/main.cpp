@@ -74,7 +74,7 @@ int main(int argc, char * argv[]) try {
 			is.seekg(0).clear();
 			std::ofstream os{base_name + "cpp"};
 			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
-			cwcc::generate_source(is, os, bundle);
+			cwcc::generate_source(is, os);
 		}
 	}
 } catch(const std::exception & exc) {

@@ -165,7 +165,7 @@ namespace {
 		std::string bundle;
 		std::unordered_set<std::string> new_types;
 
-		void set_bundle(const std::string & bundle) { this->bundle = "::" + bundle; }
+		void set_bundle(const std::string & b) { bundle = "::" + b; }
 
 		void add_new_type(const std::string & type) { if(!new_types.insert(type).second) throw std::invalid_argument{"duplicated new type detected"}; }
 
@@ -180,7 +180,8 @@ namespace {
 
 		void validate_global_type(const std::string & type) {
 			const auto it = std::find(type.rbegin(), type.rend(), ':').base() - 2;//end of namespace
-			if(std::distance(std::begin(type), it) != bundle.size()) return;//type is not of current bundle
+			assert(it >= std::begin(type));
+			if(static_cast<std::size_t>(std::distance(std::begin(type), it)) != bundle.size()) return;//type is not of current bundle
 			if(std::equal(std::begin(bundle), std::end(bundle), std::begin(type), std::end(type))) validate_local_type({it + 2, std::end(type)});
 		}
 

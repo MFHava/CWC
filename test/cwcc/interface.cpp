@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(interface) {
 		i.name = std::move(name);
 		const cwcc::templated_type type{cwcc::untemplated_type{"::cwc::int"}};
 		auto append = [&](std::vector<cwcc::documentation> lines, std::vector<cwcc::param> in) {
-			i.methods.push_back(cwcc::interface::method{lines, "method", in, false      });
-			i.methods.push_back(cwcc::interface::method{lines, "method", in, true       });
+			i.methods.push_back(cwcc::interface::method{lines, "method", in, false, boost::none});
+			i.methods.push_back(cwcc::interface::method{lines, "method", in, true,  boost::none});
 			i.methods.push_back(cwcc::interface::method{lines, "method", in, false, type});
 			i.methods.push_back(cwcc::interface::method{lines, "method", in, true,  type});
 		};

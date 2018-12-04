@@ -31,7 +31,10 @@ namespace cwc {
 	//! @param[in] c character to test
 	//! @returns true iff c is a valid ASCII character
 	inline
-	auto is_ascii(const utf8 & c) -> bool { return (c >= 0 && c < 128); }
+	auto is_ascii(const utf8 & c) -> bool {
+		const int32 tmp{c};
+		return tmp >= 0 && tmp <= 127;
+	}
 
 	using uuid = array<uint8, 16>;//!< @brief universally unique identifier
 }

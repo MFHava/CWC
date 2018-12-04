@@ -34,12 +34,22 @@
 #define CWC_CALL
 #if CWC_COMPILER_MSVC
 	#define CWC_EXPORT __declspec(dllexport)
+
+	#define CWC_PRAGMA_WARNING_PUSH __pragma(warning(push))
+	#define CWC_PRAGMA_WARNING_POP  __pragma(warning(pop))
+	#define CWC_PRAGMA_WARNING_NON_VIRTUAL_DTOR //not needed
+
 	#ifndef _M_X64//still using 32bit system
 		#undef  CWC_CALL
 		#define CWC_CALL __cdecl
 	#endif
 #elif CWC_COMPILER_GNU
 	#define CWC_EXPORT __attribute__((visibility("default")))
+
+	#define CWC_PRAGMA_WARNING_PUSH _Pragma("GCC diagnostic push")
+	#define CWC_PRAGMA_WARNING_POP  _Pragma("GCC diagnostic pop")
+	#define CWC_PRAGMA_WARNING_NON_VIRTUAL_DTOR _Pragma("GCC diagnostic ignored \"-Wdelete-non-virtual-dtor\"")
+
 	#ifndef __x86_64__//still using 32bit system
 		#undef  CWC_CALL
 		#define CWC_CALL __attribute__((__cdecl__))

@@ -18,7 +18,8 @@ namespace cwcc {
 		mutability() =default;
 		mutability(bool value) : value{value} {}
 
-		explicit operator bool() const noexcept { return value; }
+		explicit
+		operator bool() const noexcept { return value; }
 
 		friend
 		auto operator==(const mutability & lhs, const mutability & rhs) -> bool { return lhs.value == rhs.value; }

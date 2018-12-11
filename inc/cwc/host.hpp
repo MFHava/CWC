@@ -50,16 +50,32 @@
 		#define NOMINMAX
 	#endif
 	#include <Windows.h>
+	namespace {
+		auto GetExecutableFileName(std::vector<char> & result) -> std::size_t {
+			assert(result.size() <= std::numeric_limits<DWORD>::max());
+			return GetModuleFileName(nullptr, result.data(), static_cast<DWORD>(result.size()));
+		}
+	}
 	#define DLL_PREFIX ""
 	#define DLL_SUFFIX ".dll"
+	#define PATH_SEPARATOR '\\'
 #elif CWC_OS_LINUX
 	#include <dlfcn.h>
 	#define HMODULE void *
+	#define MAX_PATH PATH_MAX
 	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
 	#define GetProcAddress(dll, function) dlsym(dll, function)
 	#define FreeLibrary(dll) dlclose(dll)
+	namespace {
+		auto GetExecutableFileName(std::vector<char> & result) -> std::size_t {
+			const auto tmp{readlink("/proc/self/exe", result.data(), result.size())};
+			assert(tmp != -1);
+			return static_cast<std::size_t>(tmp);
+		}
+	}
 	#define DLL_PREFIX "lib"
 	#define DLL_SUFFIX ".so"
+	#define PATH_SEPARATOR '/'
 #else
 	#error unknown operating system
 #endif
@@ -90,8 +106,9 @@ namespace {
 	cwc::internal::error last_error{{}, last_message};
 
 	auto make_path(std::string file) -> std::string {
-		static const std::string local{"./"};
-		if(std::find(std::begin(file), std::end(file), '/') == std::end(file)) file.insert(std::begin(file), std::begin(local), std::end(local));
+		using namespace std::string_literals;
+		static const std::string local{"."s + PATH_SEPARATOR};
+		if(std::find(std::begin(file), std::end(file), PATH_SEPARATOR) == std::end(file)) file.insert(std::begin(file), std::begin(local), std::end(local));
 		return file;
 	}
 
@@ -110,7 +127,18 @@ namespace {
 		static
 		auto make_name(std::string file) -> std::string {
 			static const std::string prefix{DLL_PREFIX}, suffix{DLL_SUFFIX};
-			file.insert(std::find(file.rbegin(), file.rend(), '/').base(), std::begin(prefix), std::end(prefix));
+			static const auto base{[] {
+				auto exe{[] {
+					for(std::vector<char> result(10);; result.resize(result.size() * 2)) {
+						const auto size{GetExecutableFileName(result)};
+						if(size < result.size()) return std::string{std::begin(result), std::begin(result) + size};
+					}
+				}()};
+				if(const auto it{std::find(std::rbegin(exe), std::rend(exe), PATH_SEPARATOR)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
+				return exe;
+			}()};
+			file.insert(std::begin(file), std::begin(base), std::end(base));
+			file.insert(std::find(std::rbegin(file), std::rend(file), PATH_SEPARATOR).base(), std::begin(prefix), std::end(prefix));
 			file.insert(std::end(file), std::begin(suffix), std::end(suffix));
 			return file;
 		}
@@ -129,6 +157,7 @@ namespace {
 			return handle;
 		}
 
+		static
 		auto create_factory(factory_export_type factory, const std::string & file, const std::string & fqn) -> cwc::intrusive_ptr<cwc::component> {
 			cwc::intrusive_ptr<cwc::component> ptr;
 			const cwc::string_ref tmp{fqn.c_str()};
@@ -137,6 +166,7 @@ namespace {
 			return ptr;
 		}
 
+		static
 		auto parse_ini(std::istream & is) -> config_map {
 			config_map result;
 			if(is) {
@@ -153,17 +183,6 @@ namespace {
 				}
 			}
 			return result;
-		}
-
-		void load_component(dll_map & map, const std::string & fqn, const std::string & file) {
-			if(const auto library{load_dll(map, file)}) component_factories.emplace(fqn, create_factory(map.at(library), file, fqn));
-			else throw std::logic_error{"could not load bundle \"" + file + '"'};
-		}
-
-		void load_plugins(dll_map & map, const std::string & fqn, const key_value_map & mapping) {
-			for(const auto & m : mapping)
-				if(const auto library{load_dll(map, m.second)})
-					plugin_factories[fqn].emplace(m.first, create_factory(map.at(library), m.second, fqn));
 		}
 
 		class config_section_enumerator : public cwc::interface_implementation<config_section_enumerator, cwc::config_section_enumerator> {
@@ -217,9 +236,16 @@ namespace {
 								plugins[mapping.first].insert(entry);
 					}
 			}
+
 			dll_map map;//ensure that cwc_init is only called once
-			for(const auto & c : components) load_component(map, c.first, c.second);
-			for(const auto & p : plugins) load_plugins(map, p.first, p.second);
+			for(const auto & [fqn, file] : components)
+				if(const auto library{load_dll(map, file)}) component_factories.emplace(fqn, create_factory(map.at(library), file, fqn));
+				else throw std::logic_error{"could not load bundle \"" + file + '"'};
+
+			for(const auto & [fqn, mapping] : plugins)
+				for(const auto & m : mapping)
+					if(const auto library{load_dll(map, m.second)})
+						plugin_factories[fqn].emplace(m.first, create_factory(map.at(library), m.second, fqn));
 		}
 
 		auto exception(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * {
@@ -232,10 +258,7 @@ namespace {
 
 		auto config() const -> cwc::intrusive_ptr<cwc::config_sections_enumerator> { return cwc::make_intrusive<config_sections_enumerator>(configuration); }
 
-		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> {
-			const std::string fqn_{fqn.data(), fqn.data() + fqn.size()};
-			return id ? plugin_factories.at(fqn_).at(std::string{id->data(), id->data() + id->size()}) : component_factories.at(fqn_);
-		}
+		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> { return id ? plugin_factories.at(fqn).at(*id) : component_factories.at(fqn); }
 	};
 
 	const cwc::intrusive_ptr<cwc::context> instance = [] {

@@ -7,6 +7,8 @@
 #pragma once
 #include <atomic>
 #include <cassert>
+#include <istream>
+#include <ostream>
 #include <typeinfo>
 #include <functional>
 #include <type_traits>
@@ -35,6 +37,7 @@ namespace cwc {
 }
 
 #include "internal/detection.hpp"
+#include "internal/serialization.hpp"
 
 #include "public/types.hpp"
 

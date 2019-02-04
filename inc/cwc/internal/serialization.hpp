@@ -9,6 +9,8 @@
 #endif
 
 #pragma once
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 //simple serialization framework
 //  syntax inspired by Boost.Serialization
@@ -124,6 +126,7 @@ namespace cwc::internal {
 
 		ibuffer buffer;
 		std::istream is{&buffer};
+		std::vector<boost::shared_ptr<void>> cache;//TODO: better name
 
 		template<typename Head, typename... Tail, typename... Types>
 		void construct_in_variant_from_index(cwc::variant<Types...> & val, std::uint8_t index) {//TODO: if this works - ptl::internal::visit can be vastly simplified
@@ -152,7 +155,17 @@ namespace cwc::internal {
 		void operator&(cwc::array<Type, Size> & val) { for(auto & elem : val) *this & elem; }
 
 		template<typename Type>
-		void operator&(cwc::array_ref<Type> & val) =delete;//TODO
+		void operator&(cwc::array_ref<Type> & val) {
+			std::size_t size;
+			*this & size;
+			if(!size) val = {};
+			else {
+				auto ptr{boost::make_shared<std::remove_const_t<Type>[]>(size)};//TODO: using boost as GCC has no support for C++17-style smartpointer
+				for(std::size_t i{0}; i < size; ++i) *this & ptr[i];
+				val = {ptr.get(), size};
+				cache.push_back(ptr);
+			}
+		}
 #if 0//TODO
 		template<std::size_t Size>
 		void operator&(cwc::bitset<Size> & val) {

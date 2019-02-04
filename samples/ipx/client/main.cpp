@@ -9,15 +9,13 @@ int main() {
 	std::vector<std::uint16_t> input(100);
 	std::iota(std::begin(input), std::end(input), 0);
 
-	std::vector<std::uint8_t> opacket;
-	cwc::internal::oarchive oar{opacket};
+	cwc::internal::oarchive oar;
 	oar & cwc::array_ref<const std::uint16_t>{input};
-	socket.send(opacket);
+	socket.send(oar);
 
 	cwc::array_ref<const std::uint16_t> result;
 
-	const auto ipacket{socket.receive()};
-	cwc::internal::iarchive iar{ipacket};
+	cwc::internal::iarchive iar{socket.receive()};
 	iar & result;
 
 	std::cout << "result: ";

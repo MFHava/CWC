@@ -26,14 +26,15 @@ namespace cwc::internal {
 
 		~socket() noexcept { close(fd); }
 
-		void send(const std::vector<std::uint8_t> & data) const {
+		void send(const oarchive & ar) const {
+			const auto & data{ar.data};
 			const auto size{static_cast<std::uint32_t>(data.size())};
 			//TODO: error checking is missing
 			write(fd, &size, sizeof(size));
 			write(fd, data.data(), data.size());
 		}
 
-		auto receive() const -> std::vector<std::uint8_t> {
+		auto receive() const -> iarchive {
 			std::vector<std::uint8_t> data;
 			std::uint32_t size;
 			//TODO: error checking is missing

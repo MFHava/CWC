@@ -33,6 +33,9 @@ namespace cwc::internal {
 	};
 
 	class oarchive final {
+		friend
+		struct socket;
+
 		struct obuffer final : std::streambuf {
 			obuffer(std::vector<std::uint8_t> & buffer) : buffer{buffer} { setp(reinterpret_cast<char *>(buffer.data()), 0); }
 
@@ -45,12 +48,11 @@ namespace cwc::internal {
 			std::vector<std::uint8_t> & buffer;
 		};
 
-		obuffer buffer;
+		std::vector<std::uint8_t> data;
+		obuffer buffer{data};
 		std::ostream os{&buffer};
 	public:
-		oarchive(std::vector<std::uint8_t> & target) : buffer{target} {
-			os.exceptions(std::ios::badbit | std::ios::eofbit | std::ios::failbit);
-		}
+		oarchive() { os.exceptions(std::ios::badbit | std::ios::eofbit | std::ios::failbit); }
 
 		template<typename Type>
 		void operator&(const Type *) =delete;
@@ -124,7 +126,8 @@ namespace cwc::internal {
 			const std::vector<std::uint8_t> & buffer;
 		};
 
-		ibuffer buffer;
+		const std::vector<std::uint8_t> data;
+		ibuffer buffer{data};
 		std::istream is{&buffer};
 		std::vector<boost::shared_ptr<void>> cache;//TODO: better name
 
@@ -137,7 +140,7 @@ namespace cwc::internal {
 			}
 		}
 	public:
-		iarchive(const std::vector<std::uint8_t> & source) : buffer{source} { is.exceptions(std::ios::badbit | std::ios::eofbit | std::ios::failbit); }
+		iarchive(std::vector<std::uint8_t> && data) : data{std::move(data)} { is.exceptions(std::ios::badbit | std::ios::eofbit | std::ios::failbit); }
 
 		template<typename Type>
 		void operator&(Type *) =delete;

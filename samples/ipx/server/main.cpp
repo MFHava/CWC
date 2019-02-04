@@ -10,8 +10,7 @@ int main() {
 
 		cwc::array_ref<const std::uint16_t> input;
 
-		const auto ipacket{connection.receive()};
-		cwc::internal::iarchive iar{ipacket};
+		cwc::internal::iarchive iar{connection.receive()};
 		iar & input;
 
 		std::cout << "input: ";
@@ -21,9 +20,8 @@ int main() {
 		std::vector<std::uint16_t> result;
 		std::partial_sum(std::begin(input), std::end(input), std::back_inserter(result));
 
-		std::vector<std::uint8_t> opacket;
-		cwc::internal::oarchive oar{opacket};
+		cwc::internal::oarchive oar;
 		oar & cwc::array_ref<const std::uint16_t>{result};
-		connection.send(opacket);
+		connection.send(oar);
 	}
 }

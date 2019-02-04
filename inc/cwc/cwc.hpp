@@ -38,6 +38,7 @@ namespace cwc {
 
 #include "internal/detection.hpp"
 #include "internal/serialization.hpp"
+#include "internal/sockets.hpp"
 
 #include "public/types.hpp"
 

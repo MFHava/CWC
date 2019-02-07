@@ -197,7 +197,18 @@ namespace cwc::internal {
 			}
 		}
 
-		void operator&(cwc::string_ref & val) =delete;//TODO
+		void operator&(cwc::string_ref & val) {
+			std::size_t size;
+			*this & size;
+			if(!size) val = {};
+			else {
+				auto ptr{boost::make_shared<char[]>(size + 1)};
+				for(std::size_t i{0}; i < size; ++i) *this & ptr[i];
+				ptr[size] = '\0';
+				val = {ptr.get(), size};
+				cache.push_back(ptr);
+			}
+		}
 #if 0//TODO
 		template<typename... Types>
 		void operator&(cwc::tuple<Types...> & val) =delete;//TODO

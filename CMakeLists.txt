@@ -7,6 +7,9 @@
 cmake_minimum_required(VERSION 3.9)
 project(CWC)
 
+find_package(Git REQUIRED)
+execute_process(COMMAND ${GIT_EXECUTABLE} describe WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE CWC_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 option(CWC_BUILD_TESTS "Build tests" OFF)
 option(CWC_BUILD_SAMPLES "Build samples" OFF)
 
@@ -32,6 +35,7 @@ endif()
 add_library(cwc INTERFACE)
 target_include_directories(cwc INTERFACE "inc")
 target_link_libraries(cwc INTERFACE cwc_flags ptl ${CMAKE_DL_LIBS})
+install(DIRECTORY inc/cwc DESTINATION inc)
 
 find_package(Boost 1.59 REQUIRED program_options)
 
@@ -40,6 +44,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src/cwcc FILES ${CWCC})
 add_executable(cwcc ${CWCC})
 target_link_libraries(cwcc cwc Boost::program_options)
 set_target_properties(cwcc PROPERTIES FOLDER "C++ with Components")
+install(TARGETS cwcc DESTINATION bin)
 
 find_package(Doxygen)
 if(Doxygen_FOUND)
@@ -58,6 +63,7 @@ if(Doxygen_FOUND)
 	set(DOXYGEN_COLLABORATION_GRAPH NO)
 	doxygen_add_docs(CWC-Documentation "inc;docs")
 	set_target_properties(CWC-Documentation PROPERTIES FOLDER "C++ with Components")
+#	install(DIRECTORY ${CMAKE_BINARY_DIR}/docs DESTINATION .) #TODO: add to package
 endif()
 
 if(CWC_BUILD_TESTS)
@@ -94,3 +100,7 @@ if(CWC_BUILD_SAMPLES)
 		set_target_properties(sample-${sample}-exe PROPERTIES OUTPUT_NAME sample-${sample} FOLDER "C++ with Components/Samples")
 	endforeach(sample)
 endif()
+
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_PACKAGE_FILE_NAME "cwc-${CWC_VERSION}")
+include(CPack)

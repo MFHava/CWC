@@ -37,6 +37,6 @@ namespace cwcc {
 
 		cwc::array_ref<const cwc::string_ref> exports;
 		exportsPtr(&exports);
-		std::copy(std::begin(exports), std::end(exports), std::back_inserter(exports_));
+		std::transform(std::begin(exports), std::end(exports), std::back_inserter(exports_), [](auto sr) -> std::string { return {sr.begin(), sr.end()}; });
 	}
 }

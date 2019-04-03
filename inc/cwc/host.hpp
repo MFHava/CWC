@@ -258,7 +258,10 @@ namespace {
 
 		auto config() const -> cwc::intrusive_ptr<cwc::config_sections_enumerator> { return cwc::make_intrusive<config_sections_enumerator>(configuration); }
 
-		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> { return id ? plugin_factories.at(fqn).at(*id) : component_factories.at(fqn); }
+		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> {
+			const std::string key{fqn};//TODO: this copies the string, which should not be necessary with C++20s generic find
+			return id ? plugin_factories.at(key).at(std::string{*id}) : component_factories.at(key);
+		}
 	};
 
 	const cwc::intrusive_ptr<cwc::context> instance = [] {

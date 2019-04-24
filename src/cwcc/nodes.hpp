@@ -36,30 +36,24 @@ namespace cwcc {
 		auto operator<<(std::ostream & os, const untemplated_type & self) -> std::ostream & { return os << self.name; }
 	};
 
-	struct array_ref;
 	struct array;
+	struct array_ref;
+	struct bitset;
 	struct optional;
-	struct intrusive_ptr;
+	struct tuple;
 	struct variant;
+	struct intrusive_ptr;
 
 	using templated_type = boost::variant<
 		untemplated_type,
-		boost::recursive_wrapper<array_ref>,
 		boost::recursive_wrapper<array>,
+		boost::recursive_wrapper<array_ref>,
+		boost::recursive_wrapper<bitset>,
 		boost::recursive_wrapper<optional>,
+		boost::recursive_wrapper<tuple>,
 		boost::recursive_wrapper<variant>,
 		boost::recursive_wrapper<intrusive_ptr>
 	>;
-
-	struct array_ref final {
-		mutability mutable_;
-		templated_type type;
-
-		friend
-		auto operator==(const array_ref & lhs, const array_ref & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
-		friend
-		auto operator<<(std::ostream & os, const array_ref & self) -> std::ostream & { return os << "::cwc::array_ref<" << self.mutable_ << self.type << '>'; }
-	};
 
 	struct array final {
 		templated_type type;
@@ -71,6 +65,25 @@ namespace cwcc {
 		auto operator<<(std::ostream & os, const array & self) -> std::ostream & { return os << "::cwc::array<" << self.type << ", " << self.size << '>'; }
 	};
 
+	struct array_ref final {
+		mutability mutable_;
+		templated_type type;
+
+		friend
+		auto operator==(const array_ref & lhs, const array_ref & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
+		friend
+		auto operator<<(std::ostream & os, const array_ref & self) -> std::ostream & { return os << "::cwc::array_ref<" << self.mutable_ << self.type << '>'; }
+	};
+
+	struct bitset final {
+		std::size_t size;
+
+		friend
+		auto operator==(const bitset & lhs, const bitset & rhs) -> bool { return lhs.size == rhs.size; }
+		friend
+		auto operator<<(std::ostream & os, const bitset & self) -> std::ostream & { return os << "::cwc::bitset<" << self.size << '>'; }
+	};
+
 	struct optional final {
 		templated_type type;
 
@@ -80,14 +93,19 @@ namespace cwcc {
 		auto operator<<(std::ostream & os, const optional & self) -> std::ostream & { return os << "::cwc::optional<" << self.type << '>'; }
 	};
 
-	struct intrusive_ptr final {
-		mutability mutable_;
-		templated_type type;
+	struct tuple final {
+		std::vector<templated_type> types;
 
 		friend
-		auto operator==(const intrusive_ptr & lhs, const intrusive_ptr & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
+		auto operator==(const tuple & lhs, const tuple & rhs) -> bool { return lhs.types == rhs.types; }
 		friend
-		auto operator<<(std::ostream & os, const intrusive_ptr & self) -> std::ostream & { return os << "::cwc::intrusive_ptr<" << self.mutable_ << self.type << '>'; }
+		auto operator<<(std::ostream & os, const tuple & self) -> std::ostream & {
+			assert(!self.types.empty());
+			os << "::cwc::tuple<" << self.types[0];
+			for(std::size_t i{1}; i < self.types.size(); ++i) os << ", " << self.types[i];
+			os << '>';
+			return os;
+		}
 	};
 
 	struct variant final {
@@ -103,6 +121,16 @@ namespace cwcc {
 			os << '>';
 			return os;
 		}
+	};
+
+	struct intrusive_ptr final {
+		mutability mutable_;
+		templated_type type;
+
+		friend
+		auto operator==(const intrusive_ptr & lhs, const intrusive_ptr & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
+		friend
+		auto operator<<(std::ostream & os, const intrusive_ptr & self) -> std::ostream & { return os << "::cwc::intrusive_ptr<" << self.mutable_ << self.type << '>'; }
 	};
 
 	struct documentation final {
@@ -251,9 +279,11 @@ namespace cwcc {
 BOOST_FUSION_ADAPT_STRUCT(cwcc::untemplated_type, name)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::array, type, size)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::array_ref, mutable_, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::bitset, size)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::optional, type)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::intrusive_ptr, mutable_, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::tuple, types)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::variant, types)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::intrusive_ptr, mutable_, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::documentation, line)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member, lines, type, fields)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_, lines, name, members)

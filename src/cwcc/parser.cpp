@@ -88,11 +88,13 @@ namespace {
 			new_type           %= local_identifier[phx::bind(&bundle_parser::add_new_type, this, _1)];
 			existing_type      %= local_identifier[phx::bind(&bundle_parser::make_global_type, this, _1)] | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
 
-			templated_type     %= array_ref | array | optional | variant | intrusive_ptr | untemplated_type;
+			templated_type     %= array | array_ref | bitset | optional | tuple | variant | intrusive_ptr | untemplated_type;
 			untemplated_type   %= existing_type;
-			array_ref          %= keyword["array_ref"]     > '<' > mutable_ >> templated_type                        > '>';
 			array              %= keyword["array"]         > '<' >             templated_type > ',' > qi::uint_      > '>';
+			array_ref          %= keyword["array_ref"]     > '<' > mutable_ >> templated_type                        > '>';
+			bitset             %= keyword["bitset"]        > '<' >                                    qi::uint_      > '>';
 			optional           %= keyword["optional"]      > '<' >             templated_type                        > '>';
+			tuple              %= keyword["tuple"]         > '<' >             templated_type % ','                  > '>';
 			variant            %= keyword["variant"]       > '<' >             templated_type % ','                  > '>';
 			intrusive_ptr      %= keyword["intrusive_ptr"] > '<' > mutable_ >> templated_type                        > '>';
 
@@ -133,9 +135,11 @@ namespace {
 			BOOST_SPIRIT_DEBUG_NODE(documentation);
 			BOOST_SPIRIT_DEBUG_NODE(untemplated_type);
 			BOOST_SPIRIT_DEBUG_NODE(templated_type);
-			BOOST_SPIRIT_DEBUG_NODE(array_ref);
 			BOOST_SPIRIT_DEBUG_NODE(array);
+			BOOST_SPIRIT_DEBUG_NODE(array_ref);
+			BOOST_SPIRIT_DEBUG_NODE(bitset);
 			BOOST_SPIRIT_DEBUG_NODE(optional);
+			BOOST_SPIRIT_DEBUG_NODE(tuple);
 			BOOST_SPIRIT_DEBUG_NODE(variant);
 			BOOST_SPIRIT_DEBUG_NODE(intrusive_ptr);
 			BOOST_SPIRIT_DEBUG_NODE(constructor);
@@ -206,30 +210,36 @@ namespace {
 			ss << "^=== invalid token (expected: " << msg << ')';
 			throw std::runtime_error{ss.str()};
 		}
+
+		template<typename ReturnType>
+		using rule = qi::rule<Iterator, ReturnType(), Skipper>;
+
+		rule<cwcc::untemplated_type> untemplated_type;
+		rule<cwcc::templated_type> templated_type;
+		rule<cwcc::array> array;
+		rule<cwcc::array_ref> array_ref;
+		rule<cwcc::bitset> bitset;
+		rule<cwcc::optional> optional;
+		rule<cwcc::tuple> tuple;
+		rule<cwcc::variant> variant;
+		rule<cwcc::intrusive_ptr> intrusive_ptr;
+		rule<cwcc::component::constructor> constructor;
+		rule<cwcc::mutability> mutable_;
+		rule<cwcc::interface> interface;
+		rule<std::vector<cwcc::param>> params;
+		rule<cwcc::param> param;
+		rule<cwcc::interface::method> method;
+		rule<auto_method> auto_method_;
+		rule<void_method> void_method_;
+		rule<cwcc::enumerator> enumerator;
+		rule<cwcc::struct_::member> struct_members;
+		rule<cwcc::struct_> struct_;
+		rule<cwcc::enum_::member> enum_member;
+		rule<cwcc::enum_> enum_;
+		rule<cwcc::component> component;
+		rule<cwcc::typedef_> typedef_;
+		rule<cwcc::bundle> start;
 		qi::rule<Iterator, cwcc::documentation()> documentation;
-		qi::rule<Iterator, cwcc::untemplated_type(), Skipper> untemplated_type;
-		qi::rule<Iterator, cwcc::templated_type(), Skipper> templated_type;
-		qi::rule<Iterator, cwcc::array_ref(), Skipper> array_ref;
-		qi::rule<Iterator, cwcc::array(), Skipper> array;
-		qi::rule<Iterator, cwcc::optional(), Skipper> optional;
-		qi::rule<Iterator, cwcc::variant(), Skipper> variant;
-		qi::rule<Iterator, cwcc::intrusive_ptr(), Skipper> intrusive_ptr;
-		qi::rule<Iterator, cwcc::component::constructor(), Skipper> constructor;
-		qi::rule<Iterator, cwcc::mutability(), Skipper> mutable_;
-		qi::rule<Iterator, cwcc::interface(), Skipper> interface;
-		qi::rule<Iterator, std::vector<cwcc::param>(), Skipper> params;
-		qi::rule<Iterator, cwcc::param(), Skipper> param;
-		qi::rule<Iterator, cwcc::interface::method(), Skipper> method;
-		qi::rule<Iterator, auto_method(), Skipper> auto_method_;
-		qi::rule<Iterator, void_method(), Skipper> void_method_;
-		qi::rule<Iterator, cwcc::enumerator(), Skipper> enumerator;
-		qi::rule<Iterator, cwcc::struct_::member(), Skipper> struct_members;
-		qi::rule<Iterator, cwcc::struct_(), Skipper> struct_;
-		qi::rule<Iterator, cwcc::enum_::member(), Skipper> enum_member;
-		qi::rule<Iterator, cwcc::enum_(), Skipper> enum_;
-		qi::rule<Iterator, cwcc::component(), Skipper> component;
-		qi::rule<Iterator, cwcc::typedef_(), Skipper> typedef_;
-		qi::rule<Iterator, cwcc::bundle(), Skipper> start;
 		qi::rule<Iterator, std::string()> local_identifier, global_identifier, bundle_identifier, new_type, existing_type, cpp_comment;
 	};
 }

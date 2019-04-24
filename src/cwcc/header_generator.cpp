@@ -192,9 +192,11 @@ namespace cwcc {
 				dependencies.emplace_back(std::string(std::begin(self) + 2, it - 2));
 			}
 			void operator()(const untemplated_type & self) { (*this)(self.name); }
-			void operator()(const array_ref & self) { self.type.apply_visitor(*this); }
 			void operator()(const array & self) { self.type.apply_visitor(*this); }
+			void operator()(const array_ref & self) { self.type.apply_visitor(*this); }
+			void operator()(const bitset &) { /*nothing to do*/ }
 			void operator()(const optional & self) { self.type.apply_visitor(*this); }
+			void operator()(const tuple & self) { for(const auto & t : self.types) t.apply_visitor(*this); }
 			void operator()(const variant & self) { for(const auto & t : self.types) t.apply_visitor(*this); }
 			void operator()(const intrusive_ptr & self) { self.type.apply_visitor(*this); }
 			void operator()(const param & self) { self.type.apply_visitor(*this); }

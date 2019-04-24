@@ -13,9 +13,11 @@
 
 #include <ptl/array.hpp>
 #include <ptl/array_ref.hpp>
+#include <ptl/bitset.hpp>
 #include <ptl/optional.hpp>
-#include <ptl/variant.hpp>
 #include <ptl/string_ref.hpp>
+#include <ptl/tuple.hpp>
+#include <ptl/variant.hpp>
 
 #define CWC_HPP_HEADER_INCLUDED
 

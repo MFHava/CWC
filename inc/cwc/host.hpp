@@ -24,10 +24,15 @@
 	| --- | --- | --- |
 	| @c CWC_CONTEXT_INIT_STRING | source of the context initialization | @c "cwc.ini" <br/> (iff @c CWC_CONTEXT_INIT_IS_NOT_FILE is not defined) |
 	| @c CWC_CONTEXT_INIT_IS_NOT_FILE | controls how @c CWC_CONTEXT_INIT_STRING is interpreted <br/> if not defined: @c CWC_CONTEXT_INIT_STRING is name of an INI-file <br/> if defined: @c CWC_CONTEXT_INIT_STRING is string with complete configuration in INI-format | not defined |
+	| @c CWC_CONTEXT_INIT_PREFIX_DLL_PATH | override OS specific dll-path behavior and load DLLs only relative to host executable | @c true |
 	| @c CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH | maximum length of exceptions messages - longer exception messages will be truncated when transfered by CWC | @c 256 |
 
 	@attention No static object may depend on the CWC context as this may lead to Static-Initialization-Order-Fiasco!
 */
+
+#if !defined(CWC_CONTEXT_INIT_PREFIX_DLL_PATH)
+	#define CWC_CONTEXT_INIT_PREFIX_DLL_PATH true
+#endif
 
 #if !defined(CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH)
 	#define CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH 256
@@ -137,7 +142,7 @@ namespace {
 				if(const auto it{std::find(std::rbegin(exe), std::rend(exe), PATH_SEPARATOR)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
 				return exe;
 			}()};
-			file.insert(std::begin(file), std::begin(base), std::end(base));
+			if constexpr(CWC_CONTEXT_INIT_PREFIX_DLL_PATH) file.insert(std::begin(file), std::begin(base), std::end(base));
 			file.insert(std::find(std::rbegin(file), std::rend(file), PATH_SEPARATOR).base(), std::begin(prefix), std::end(prefix));
 			file.insert(std::end(file), std::begin(suffix), std::end(suffix));
 			return file;

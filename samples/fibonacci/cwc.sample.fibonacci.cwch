@@ -1,15 +1,9 @@
-
-//          Copyright Michael Florian Hava 2012.
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file ../../../LICENSE_1_0.txt or copy at
-//          http://www.boost.org/LICENSE_1_0.txt)
-
+//This file was generated for CWC by CWCC
+//ATTENTION: Do not modify this file as its content is highly dependent on the design of CWC!
 #pragma once
 #include <cwc/cwc.hpp>
 
-//! @brief CWC Sample "Fibonacci Generator"
-//! @author Michael Florian Hava
-namespace cwc {namespace sample {namespace fibonacci {
+namespace cwc::sample::fibonacci {
 	class sequence : public ::cwc::component {
 		virtual
 		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;
@@ -21,10 +15,10 @@ namespace cwc {namespace sample {namespace fibonacci {
 		}
 	};
 
-	struct generator : sequence {
+	struct generator : ::cwc::sample::fibonacci::sequence {
 		static
 		auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::fibonacci::generator"; }
-		using cwc_interfaces = ::cwc::internal::make_base_list_t<sequence>;
+		using cwc_interfaces = ::cwc::internal::make_base_list_t<::cwc::sample::fibonacci::sequence>;
 
 	class cwc_factory : public ::cwc::component {
 		virtual
@@ -37,11 +31,11 @@ namespace cwc {namespace sample {namespace fibonacci {
 		}
 	};
 	};
+}
 
-} } } 
 
 //ATTENTION: don't modify the following code, it contains necessary metadata for CWC
-namespace cwc { namespace internal {
+namespace cwc::internal {
 	template<>
 	struct interface_id<::cwc::sample::fibonacci::sequence> final : uuid_constant<0x55, 0x9, 0x67, 0x3D, 0x71, 0x7, 0x51, 0xC5, 0x97, 0xAA, 0x1F, 0xE8, 0xA8, 0x2A, 0x1A, 0x6> {};
 
@@ -62,4 +56,4 @@ namespace cwc { namespace internal {
 		void create();
 	};
 
-} }
+}

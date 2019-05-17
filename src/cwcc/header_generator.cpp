@@ -12,7 +12,6 @@
 #include "utils.hpp"
 #include "disclaimer.hpp"
 #include "generators.hpp"
-#include "wrap_in_namespace.hpp"
 
 namespace cwcc {
 	namespace {
@@ -234,14 +233,21 @@ namespace cwcc {
 		os << "#pragma once\n"
 		      "#include <cwc/cwc.hpp>\n";
 		for(const auto & d : dependencies(b)) os << "#include \"" << base_file_name(d) << ".cwch\"\n";
-		os << '\n';
-		wrap_in_namespace<header_visitor>(os, b);
-		os << "\n"
+		os << "\nnamespace " << b.name << " {";
+		{
+			header_visitor visitor{os, b};
+			for(const auto & m : b.members) {
+				os << '\n';
+				m.apply_visitor(visitor);
+			}
+		}
+		os << "}\n"
+		      "\n"
 		      "\n"
 		      "//ATTENTION: don't modify the following code, it contains necessary metadata for CWC\n"
-		      "namespace cwc { namespace internal {\n";
+		      "namespace cwc::internal {\n";
 		details_visitor visitor{os, b};
 		for(const auto & m : b.members) m.apply_visitor(visitor);
-		os << "} }\n";
+		os << "}\n";
 	}
 }

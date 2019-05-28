@@ -5,8 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#include <map>
-#include "../cwc.hpp"
+#include "../bundle.hpp"
 #include "error_handling.hpp"
 
 static
@@ -14,10 +13,15 @@ static
 
 namespace cwc {
 	namespace internal {
-		auto registered_factories() noexcept -> std::map<string_ref, intrusive_ptr<component>> & {
-			static std::map<string_ref, intrusive_ptr<component>> factories;
-			return factories;
+		namespace {
+			std::size_t nifty_counter;
+			std::aligned_storage_t<sizeof(factory_map), alignof(factory_map)> buffer;
 		}
+
+		factory_map & factories{reinterpret_cast<factory_map &>(buffer)};
+
+		factories_initializer::factories_initializer() { if(nifty_counter++ == 0) new(&buffer) factory_map; }
+		factories_initializer::~factories_initializer() { if(!--nifty_counter) factories.~factory_map(); }
 	}
 
 	auto this_context() -> intrusive_ptr<context> { return cwc_context; }
@@ -33,7 +37,7 @@ extern "C" CWC_EXPORT auto CWC_CALL cwc_factory(const ::cwc::string_ref * fqn, c
 	assert(fqn);
 	assert(result);
 	assert(cwc_context);
-	return ::cwc::internal::call_and_return_error([&] { *result = cwc::internal::registered_factories().at(*fqn); });
+	return ::cwc::internal::call_and_return_error([&] { *result = cwc::internal::factories.at(*fqn); });
 }
 
 extern "C" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_ref * definition) {
@@ -45,7 +49,7 @@ extern "C" CWC_EXPORT void CWC_CALL cwc_exports(::cwc::array_ref<const ::cwc::st
 	assert(exports);
 	static const auto data{[] {
 		std::vector<cwc::string_ref> result;
-		for(const auto & factory : cwc::internal::registered_factories()) result.push_back(factory.first);
+		for(const auto & factory : cwc::internal::factories) result.push_back(factory.first);
 		return result;
 	}()};
 	*exports = data;

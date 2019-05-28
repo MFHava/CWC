@@ -9,21 +9,28 @@
 #include "cwc.hpp"
 
 namespace cwc::internal {
-	auto registered_factories() noexcept -> std::map<string_ref, intrusive_ptr<component>> &;
+	using factory_map = std::map<string_ref, intrusive_ptr<component>>;
+
+	extern factory_map & factories;
+
+	static const struct factories_initializer {
+		factories_initializer();
+		~factories_initializer();
+	} factories_init;
 }
 
 #define CWC_INTERNAL_CAT(lhs, rhs) CWC_INTERNAL_CAT_(lhs, rhs)
 #define CWC_INTERNAL_CAT_(lhs, rhs) lhs ## rhs
 
 //! @brief register implementation for export
-//! @param[in] Component public component that is being exporter
+//! @param[in] Component public component that is being exported
 //! @param[in] Implementation the to be exported implementation of the public component
 #define CWC_EXPORT_COMPONENT(Component, Implementation)\
 	static\
 	const\
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){([] {\
 		static_assert(std::is_base_of_v<Component, Implementation>, "Implementation does not fulfill the requirements of exported Component");\
-		auto & tmp{cwc::internal::registered_factories()[Component::cwc_fqn()]};\
+		auto & tmp{cwc::internal::factories[Component::cwc_fqn()]};\
 		if(tmp) throw std::logic_error{"detected duplicated export of component"};\
 		tmp = cwc::make_intrusive<typename Implementation::cwc_component_factory>();\
 	}(), 0)}

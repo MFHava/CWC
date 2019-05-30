@@ -55,7 +55,7 @@ int main(int argc, char * argv[]) try {
 		}
 		if(vm.count("reflect")) {
 			file += ".bdl";//replace filename in case we want to generate header or source
-			std::ofstream os{file};
+			std::ofstream os{file, std::ios::binary};
 			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
 			os << lib.definition();
 		}
@@ -66,13 +66,13 @@ int main(int argc, char * argv[]) try {
 		const auto bundle{cwcc::parse(is)};
 		const auto base_name{cwcc::base_file_name(bundle.name) + '.'};
 		if(vm.count("header")) {
-			std::ofstream os{base_name + "cwch"};
+			std::ofstream os{base_name + "cwch", std::ios::binary};
 			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
 			cwcc::generate_header(os, bundle);
 		}
 		if(vm.count("source")) {
 			is.seekg(0).clear();
-			std::ofstream os{base_name + "cpp"};
+			std::ofstream os{base_name + "cpp", std::ios::binary};
 			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
 			cwcc::generate_source(is, os);
 		}

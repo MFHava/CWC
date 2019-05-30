@@ -10,6 +10,7 @@
 #include "line.hpp"
 #include "nodes.hpp"
 #include "utils.hpp"
+#include "indent.hpp"
 #include "disclaimer.hpp"
 #include "generators.hpp"
 
@@ -64,20 +65,26 @@ namespace cwcc {
 			void operator()(const struct_ & self) const { os << self << '\n'; }
 			void operator()(const typedef_ & self) const { os << self << '\n'; }
 			void operator()(const enumerator & self) const {
-				for(const auto & doc : self.lines) os << '\t' << doc << '\n';
-				os << "\tusing " << self.name << " = ::cwc::enumerator<" << self.type << ", " << name_to_uuid(this_bundle, self.name) << ">;\n";
+				for(const auto & doc : self.lines) os << indent << doc << '\n';
+				os << indent << "using " << self.name << " = ::cwc::enumerator<" << self.type << ", " << name_to_uuid(this_bundle, self.name) << ">;\n";
 			}
 			void operator()(const interface & self) const {
 				const auto mangled = mangled_names(this_bundle, self);
 				const auto vtable = vtable_entries(self, mangled);
-				for(const auto & doc : self.lines) os << '\t' << doc << '\n';
-				os << "\tclass " << self.name << " : public ::cwc::component {\n";
-				for(const auto & v : vtable) os << "\t\tvirtual\n\t\t" << v << "=0;\n";
-				os << "\tpublic:\n";
+				for(const auto & doc : self.lines) os << indent << doc << '\n';
+				os << indent << "class " << self.name << " : public ::cwc::component {\n";
+				{
+					indent_scope scope{os};//TODO: can be merged with loop in C++20
+					for(const auto & v : vtable)
+						os << indent << "virtual\n"
+						   << indent << v << "=0;\n";
+				}
+				os << indent << "public:\n";
 				for(std::size_t i{0}; i < vtable.size(); ++i) {
+					indent_scope scope{os};
 					const auto & method = self.methods[i];
-					for(const auto & doc : method.lines) os << "\t\t" << doc << '\n';
-					os << "\t\t" << (method.out ? "auto" : "void") << " " << method.name << '(';
+					for(const auto & doc : method.lines) os << indent << doc << '\n';
+					os << indent << (method.out ? "auto" : "void") << " " << method.name << '(';
 					if(!method.in.empty()) {
 						auto print_param = [&](const param & p) { os << p.mutable_ << p.type << " & " << p.name; };
 						print_param(method.in[0]);
@@ -89,42 +96,51 @@ namespace cwcc {
 					os << ") " << method.mutable_;
 					if(method.out) os << "-> " << *method.out << ' ';
 					os << "{\n";
-					if(method.out) os << "\t\t\t" << *method.out << " cwc_ret;\n";
-					os << "\t\t\t::cwc::internal::call(*this, &" << self.name << "::" << mangled[i];
-					const auto & params = method.params();
-					if(!params.empty()) {
-						os << ", ";
-						auto print_param = [&](const param & p) { os << '&' << p.name; };
-						print_param(params[0]);
-						for(std::size_t j{1}; j < params.size(); ++j) {
+					{
+						indent_scope scope{os};
+						if(method.out) os << indent << *method.out << " cwc_ret;\n";
+						os << indent << "::cwc::internal::call(*this, &" << self.name << "::" << mangled[i];
+						const auto & params = method.params();
+						if(!params.empty()) {
 							os << ", ";
-							print_param(params[j]);
-						}
+							auto print_param = [&](const param & p) { os << '&' << p.name; };
+							print_param(params[0]);
+							for(std::size_t j{1}; j < params.size(); ++j) {
+								os << ", ";
+								print_param(params[j]);
+							}
 
+						}
+						os << ");\n";
+						if(method.out) os << indent << "return cwc_ret;\n";
 					}
-					os << ");\n";
-					if(method.out) os << "\t\t\treturn cwc_ret;\n";
-					os << "\t\t}\n";
+					os << indent << "}\n";
 				}
-				os << "\t};\n";
+				os << indent << "};\n";
 			}
 			void operator()(const component & self) const {
 				bundle b;
 				b.name = this_bundle.name + "::" + self.name;
 				b.members.push_back(self.factory());
 
-				for(const auto & doc : self.lines) os << '\t' << doc << '\n';
-				os << "\tstruct " << self.name << " : " << self.interfaces[0];
+				for(const auto & doc : self.lines) os << indent << doc << '\n';
+				os << indent << "struct " << self.name << " : " << self.interfaces[0];
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
-				os << " {\n"
-				      "\t\tstatic\n"
-				      "\t\tauto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
-				      "\t\tusing cwc_interfaces = ::cwc::internal::make_base_list_t<" << self.interfaces[0];
+				{
+					indent_scope scope{os};
+					os << " {\n"
+					   << indent <<"static\n"
+					   << indent <<"auto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
+					   << indent <<"using cwc_interfaces = ::cwc::internal::make_base_list_t<" << self.interfaces[0];
+				}
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				os << ">;\n\n";
-				header_visitor visitor{os, b};
-				for(const auto & m : b.members) m.apply_visitor(visitor);
-				os << "\t};\n";
+				{
+					header_visitor visitor{os, b};
+					indent_scope scope{os};//TODO: can be merged with loop in C++20
+					for(const auto & m : b.members) m.apply_visitor(visitor);
+				}
+				os << indent << "};\n";
 			}
 		private:
 			std::ostream & os;
@@ -139,34 +155,37 @@ namespace cwcc {
 			void operator()(const typedef_ &) const { /*nothing to do*/ }
 			void operator()(const enumerator &) const { /*nothing to do*/ }
 			void operator()(const interface & self) const {
-				os << "\ttemplate<>\n"
-				      "\tstruct interface_id<::" << this_bundle.name << "::" << self.name << "> final : uuid_constant<" << name_to_uuid(this_bundle, self.name) << "> {};\n"
-				      "\n"
-				      "\ttemplate<typename Implementation, typename TypeList>\n"
-				      "\tclass vtable_implementation<" << this_bundle.name << "::" << self.name << ", Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {\n";
+				os << indent << "template<>\n"
+				   << indent << "struct interface_id<::" << this_bundle.name << "::" << self.name << "> final : uuid_constant<" << name_to_uuid(this_bundle, self.name) << "> {};\n"
+				                "\n"
+				   << indent << "template<typename Implementation, typename TypeList>\n"
+				   << indent << "class vtable_implementation<" << this_bundle.name << "::" << self.name << ", Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {\n";
 				const auto mangled = mangled_names(this_bundle, self);
 				const auto vtable = vtable_entries(self, mangled);
-				for(std::size_t i{0}; i < vtable.size(); ++i) {
-					const auto & method = self.methods[i];
-					os << "\t\t" << vtable[i] << "final { return ::cwc::internal::call_and_return_error([&] { ";
-					if(method.out) os << "*cwc_ret = ";
-					os << "static_cast<" << method.mutable_ << "Implementation &>(*this)." << method.name << '(';
-					if(!method.in.empty()) {
-						auto print_param = [&](const param & p) { os << '*' << p.name; };
-						print_param(method.in[0]);
-						for(std::size_t j{1}; j < method.in.size(); ++j) {
-							os << ", ";
-							print_param(method.in[j]);
+				{
+					indent_scope scope{os};
+					for(std::size_t i{0}; i < vtable.size(); ++i) {
+						const auto & method = self.methods[i];
+						os << indent << vtable[i] << "final { return ::cwc::internal::call_and_return_error([&] { ";
+						if(method.out) os << "*cwc_ret = ";
+						os << "static_cast<" << method.mutable_ << "Implementation &>(*this)." << method.name << '(';
+						if(!method.in.empty()) {
+							auto print_param = [&](const param & p) { os << '*' << p.name; };
+							print_param(method.in[0]);
+							for(std::size_t j{1}; j < method.in.size(); ++j) {
+								os << ", ";
+								print_param(method.in[j]);
+							}
 						}
+						os << "); }); }\n";
 					}
-					os << "); }); }\n";
+					os << indent << "//detect missing methods:\n";
+					std::vector<std::string> methods;
+					std::transform(std::begin(self.methods), std::end(self.methods), std::back_inserter(methods), [](const auto & method) { return method.name; });
+					methods.erase(std::unique(std::begin(methods), std::end(methods)), std::end(methods));
+					for(const auto & method : methods) os << indent << "void " << method << "();\n";
 				}
-				os << "\t\t//detect missing methods:\n";
-				std::vector<std::string> methods;
-				std::transform(std::begin(self.methods), std::end(self.methods), std::back_inserter(methods), [](const auto & method) { return method.name; });
-				methods.erase(std::unique(std::begin(methods), std::end(methods)), std::end(methods));
-				for(const auto & method : methods) os << "\t\tvoid " << method << "();\n";
-				os << "\t};\n\n";
+				os << indent << "};\n\n";
 			}
 			void operator()(const component & self) const {
 				bundle b;
@@ -236,6 +255,7 @@ namespace cwcc {
 		os << "\nnamespace " << b.name << " {";
 		{
 			header_visitor visitor{os, b};
+			indent_scope scope{os};//TODO: can be merged with loop in C++20
 			for(const auto & m : b.members) {
 				os << '\n';
 				m.apply_visitor(visitor);
@@ -247,6 +267,7 @@ namespace cwcc {
 		      "//ATTENTION: don't modify the following code, it contains necessary metadata for CWC\n"
 		      "namespace cwc::internal {\n";
 		details_visitor visitor{os, b};
+		indent_scope scope{os}; //TODO: can be merged with loop in C++20
 		for(const auto & m : b.members) m.apply_visitor(visitor);
 		os << "}\n";
 	}

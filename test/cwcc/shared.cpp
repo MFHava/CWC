@@ -5,6 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include "../../src/cwcc/nodes.cpp"
+#include "../../src/cwcc/indent.cpp"
 #include "../../src/cwcc/parser.cpp"
 
 auto parse(const char * testcase) -> cwcc::bundle {

@@ -1,9 +1,5 @@
-
-//          Copyright Michael Florian Hava 2012.
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file ../../../LICENSE_1_0.txt or copy at
-//          http://www.boost.org/LICENSE_1_0.txt)
-
+//This file was generated for CWC by CWCC
+//ATTENTION: Do not modify this file as its content is highly dependent on the design of CWC!
 static
 constexpr
 auto cwc_definition{

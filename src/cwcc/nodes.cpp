@@ -5,27 +5,35 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include "nodes.hpp"
+#include "indent.hpp"
 
 namespace cwcc {
 	auto operator<<(std::ostream & os, const enum_::member & self) -> std::ostream & {
-		for(const auto & doc : self.lines) os << "\t\t" << doc << '\n';
-		return os << "\t\t" << self.name << ',';
+		indent_scope scope{os};
+		for(const auto & doc : self.lines) os << indent << doc << '\n';
+		return os << indent << self.name << ',';
 	}
 
 	auto operator<<(std::ostream & os, const enum_ & self) -> std::ostream & {
 		if(self.members.size() > self.max_size) throw std::length_error{"ERROR: enums only support up to " + std::to_string(self.max_size) + " members"};
 		if(self.members.empty()) throw std::logic_error{"ERROR: empty enums are not supported"};
-		for(const auto & doc : self.lines) os << '\t' << doc << '\n';
-		os << "\tenum class " << self.name << " : ::cwc::uint8 {\n";
+		for(const auto & doc : self.lines) os << indent << doc << '\n';
+		os << indent << "enum class " << self.name << " : ::cwc::uint8 {\n";
 		for(const auto & e : self.members) os << e << '\n';
-		os << "\t};\n"
-		      "\tinline\n"
-		      "\tauto operator<<(std::ostream & os, const " << self.name << " & self) -> std::ostream & {\n"
-		      "\t\tswitch(self) {\n";
-		for(const auto & e : self.members) os << "\t\t\tcase " << self.name << "::" << e.name << ": return os << \"" << self.name << "::" << e.name << "\";\n";
-		os << "\t\t\tdefault: return os << \"invalid value for enum \\\"" << self.name << "\\\"\";\n"
-		      "\t\t}\n"
-		      "\t}\n";
+		os << indent << "};\n"
+		   << indent << "inline\n"
+		   << indent << "auto operator<<(std::ostream & os, const " << self.name << " & self) -> std::ostream & {\n";
+		{
+			indent_scope scope{os};
+			os << indent << "switch(self) {\n";
+			{
+				indent_scope scope{os};//TODO: can be merged with loop in C++20
+				for(const auto & e : self.members) os << indent << "case " << self.name << "::" << e.name << ": return os << \"" << self.name << "::" << e.name << "\";\n";
+				os << indent << "default: return os << \"invalid value for enum \\\"" << self.name << "\\\"\";\n";
+			}
+			os << indent << "}\n";
+		}
+		os << indent << "}\n";
 		return os;
 	}
 
@@ -36,22 +44,25 @@ namespace cwcc {
 	}
 
 	auto operator<<(std::ostream & os, const struct_ & self) -> std::ostream & {
-		os << "\tCWC_PACK_BEGIN\n";
-		for(const auto & doc : self.lines) os << '\t' << doc << '\n';
-		os << "\tstruct " << self.name << " {\n";
-		for(auto & member : self.members) {
-			for(const auto & doc : member.lines) os << "\t\t" << doc << '\n';
-			os << "\t\t" << member << '\n';
+		os << indent << "CWC_PACK_BEGIN\n";
+		for(const auto & doc : self.lines) os << indent << doc << '\n';
+		os << indent << "struct " << self.name << " {\n";
+		{
+			indent_scope scope{os};
+			for(auto & member : self.members) {
+				for(const auto & doc : member.lines) os << indent << doc << '\n';
+				os << indent << member << '\n';
+			}
+			for(const auto & member : self.members) os << indent << "static_assert(std::is_standard_layout_v<" << member.type << ">);\n";
 		}
-		for(const auto & member : self.members) os << "\t\tstatic_assert(std::is_standard_layout_v<" << member.type << ">);\n";
-		return os << "\t};\n"
-		             "\tCWC_PACK_END";
+		return os << indent << "};\n"
+		          << indent << "CWC_PACK_END";
 	}
 
 	auto operator<<(std::ostream & os, const typedef_ & self) -> std::ostream & {
-		for(const auto & doc : self.lines) os << '\t' << doc << '\n';
-		return os << "\tusing " << self.name << " = " << self.type << ";\n"
-		             "\tstatic_assert(std::is_standard_layout_v<" << self.type << ">);";//TODO: is it safe to generate this every time?!
+		for(const auto & doc : self.lines) os << indent << doc << '\n';
+		return os << indent << "using " << self.name << " = " << self.type << ";\n"
+		          << indent << "static_assert(std::is_standard_layout_v<" << self.type << ">);";//TODO: is it safe to generate this every time?!
 	}
 
 	auto component::factory() const -> interface {

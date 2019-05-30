@@ -20,16 +20,16 @@ namespace cwc::sample::fibonacci {
 		auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::fibonacci::generator"; }
 		using cwc_interfaces = ::cwc::internal::make_base_list_t<::cwc::sample::fibonacci::sequence>;
 
-	class cwc_factory : public ::cwc::component {
-		virtual
-		auto CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;
-	public:
-		auto create() const -> ::cwc::intrusive_ptr<::cwc::component> {
-			::cwc::intrusive_ptr<::cwc::component> cwc_ret;
-			::cwc::internal::call(*this, &cwc_factory::cwc$sample$fibonacci$generator$cwc_factory$create$0, &cwc_ret);
-			return cwc_ret;
-		}
-	};
+		class cwc_factory : public ::cwc::component {
+			virtual
+			auto CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;
+		public:
+			auto create() const -> ::cwc::intrusive_ptr<::cwc::component> {
+				::cwc::intrusive_ptr<::cwc::component> cwc_ret;
+				::cwc::internal::call(*this, &cwc_factory::cwc$sample$fibonacci$generator$cwc_factory$create$0, &cwc_ret);
+				return cwc_ret;
+			}
+		};
 	};
 }
 

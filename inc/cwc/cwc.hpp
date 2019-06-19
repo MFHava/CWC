@@ -51,6 +51,7 @@ namespace cwc {
 #include "internal/default_implementation_chaining.hpp"
 #include "internal/cast_to_interface.hpp"
 
+#include "public/delegate.hpp"
 #include "public/component.hpp"
 #include "public/enumerator.hpp"
 #include "public/config_enumerators.hpp"

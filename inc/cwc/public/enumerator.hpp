@@ -91,7 +91,7 @@ namespace cwc {
 		//! @returns true iff end was reached
 		auto end() const -> boolean {
 			boolean cwc_ret;
-			internal::call(*this, &enumerator::cwc$enumerator$end$0, &cwc_ret);
+			internal::call(*this, &enumerator::cwc$enumerator$end$0, cwc_ret);
 			return cwc_ret;
 		}
 		
@@ -104,7 +104,7 @@ namespace cwc {
 		//! @returns the currently pointed to element
 		auto get() const -> Type {
 			Type cwc_ret;
-			internal::call(*this, &enumerator::cwc$enumerator$get$2, &cwc_ret);
+			internal::call(*this, &enumerator::cwc$enumerator$get$2, cwc_ret);
 			return cwc_ret;
 		}
 	};

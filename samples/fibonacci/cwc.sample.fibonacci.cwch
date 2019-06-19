@@ -4,14 +4,21 @@
 #include <cwc/cwc.hpp>
 
 namespace cwc::sample::fibonacci {
+	using handler = ::cwc::delegate<const ::cwc::uint64 /*no*/>;
+
 	class sequence : public ::cwc::component {
 		virtual
 		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;
+		virtual
+		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::uint8 * first, const ::cwc::uint8 * last, const ::cwc::sample::fibonacci::handler * callback) const noexcept -> const ::cwc::internal::error * =0;
 	public:
 		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 {
 			::cwc::uint64 cwc_ret;
-			::cwc::internal::call(*this, &sequence::cwc$sample$fibonacci$sequence$calculate$0, &no, &cwc_ret);
+			::cwc::internal::call(*this, &sequence::cwc$sample$fibonacci$sequence$calculate$0, no, cwc_ret);
 			return cwc_ret;
+		}
+		void calculate(const ::cwc::uint8 & first, const ::cwc::uint8 & last, const ::cwc::sample::fibonacci::handler & callback) const {
+			::cwc::internal::call(*this, &sequence::cwc$sample$fibonacci$sequence$calculate$1, first, last, callback);
 		}
 	};
 
@@ -26,7 +33,7 @@ namespace cwc::sample::fibonacci {
 		public:
 			auto create() const -> ::cwc::intrusive_ptr<::cwc::component> {
 				::cwc::intrusive_ptr<::cwc::component> cwc_ret;
-				::cwc::internal::call(*this, &cwc_factory::cwc$sample$fibonacci$generator$cwc_factory$create$0, &cwc_ret);
+				::cwc::internal::call(*this, &cwc_factory::cwc$sample$fibonacci$generator$cwc_factory$create$0, cwc_ret);
 				return cwc_ret;
 			}
 		};
@@ -42,6 +49,7 @@ namespace cwc::internal {
 	template<typename Implementation, typename TypeList>
 	class vtable_implementation<cwc::sample::fibonacci::sequence, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
 		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).calculate(*no); }); }
+		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::uint8 * first, const ::cwc::uint8 * last, const ::cwc::sample::fibonacci::handler * callback) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { static_cast<const Implementation &>(*this).calculate(*first, *last, *callback); }); }
 		//detect missing methods:
 		void calculate();
 	};

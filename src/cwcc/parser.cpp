@@ -114,6 +114,8 @@ namespace {
 
 			enumerator         %= *documentation >> keyword["enumerator"] > new_type > "->" > templated_type;
 
+			delegate           %= *documentation >> keyword["delegate"] > new_type > params;
+
 			mutable_           %= (keyword["mutable"] >> qi::attr(true)) | qi::attr(false);
 
 			params             %= '(' > -(param % ',') > ')';
@@ -128,7 +130,7 @@ namespace {
 
 			documentation      %= cpp_comment;
 
-			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((component | enum_ | struct_ | interface | typedef_ | enumerator) > ';') > '}';
+			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((component | enum_ | struct_ | interface | typedef_ | enumerator | delegate) > ';') > '}';
 
 			qi::on_error(start, phx::bind(error_handler, _1, _3, _2, _4));//register handler for parser errors
 
@@ -151,6 +153,7 @@ namespace {
 			BOOST_SPIRIT_DEBUG_NODE(auto_method_);
 			BOOST_SPIRIT_DEBUG_NODE(void_method_);
 			BOOST_SPIRIT_DEBUG_NODE(enumerator);
+			BOOST_SPIRIT_DEBUG_NODE(delegate);
 			BOOST_SPIRIT_DEBUG_NODE(struct_members);
 			BOOST_SPIRIT_DEBUG_NODE(struct_);
 			BOOST_SPIRIT_DEBUG_NODE(enum_member);
@@ -232,6 +235,7 @@ namespace {
 		rule<auto_method> auto_method_;
 		rule<void_method> void_method_;
 		rule<cwcc::enumerator> enumerator;
+		rule<cwcc::delegate> delegate;
 		rule<cwcc::struct_::member> struct_members;
 		rule<cwcc::struct_> struct_;
 		rule<cwcc::enum_::member> enum_member;

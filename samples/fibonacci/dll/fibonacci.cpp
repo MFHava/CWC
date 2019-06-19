@@ -18,6 +18,20 @@ namespace sample {
 		}
 		return a;
 	}
+
+	void fibonacci::calculate(::cwc::uint8 first, ::cwc::uint8 last, const ::cwc::sample::fibonacci::handler & callback) const {
+		if(first > last) throw std::invalid_argument{"fist must be <= last"};
+		if(first > 93 || last > 93) throw std::out_of_range{"fibonacci number 93 is the last to fit into uint64"};
+
+		::cwc::uint64 a{0}, b{1};
+		for(decltype(first) i{0}; i < last; ++i) {
+			if(i >= first) callback(a);
+			const auto c{a + b};
+			a = b;
+			b = c;
+		}
+
+	}
 }
 
 namespace {

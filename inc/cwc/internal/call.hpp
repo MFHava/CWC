@@ -12,7 +12,7 @@
 
 namespace cwc::internal {
 	template<typename Type, typename Func, typename... Args>
-	void call(Type & self, Func func, Args &&... args) { internal::validate((self.*func)(std::forward<Args>(args)...)); }
+	void call(Type & self, Func func, Args &&... args) { validate((self.*func)(&args...)); }
 
 	template<typename Type, typename Func, typename... Args>
 	void call(const intrusive_ptr<Type> & ptr, Func func, Args &&... args) { call(*ptr, func, std::forward<Args>(args)...); }

@@ -266,10 +266,19 @@ namespace cwcc {
 		auto operator==(const enumerator & lhs, const enumerator & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.type == rhs.type); }
 	};
 
+	struct delegate final {
+		std::vector<documentation> lines;
+		std::string name;
+		std::vector<param> params;
+
+		friend
+		auto operator==(const delegate & lhs, const delegate & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.params == rhs.params); }
+	};
+
 	struct bundle final {
 		std::vector<documentation> lines;
 		std::string name;
-		std::vector<boost::variant<component, enum_, struct_, typedef_, interface, enumerator>> members;
+		std::vector<boost::variant<component, enum_, struct_, typedef_, interface, enumerator, delegate>> members;
 
 		friend
 		auto operator==(const bundle & lhs, const bundle & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.members == rhs.members); }
@@ -295,5 +304,6 @@ BOOST_FUSION_ADAPT_STRUCT(cwcc::component, lines, name, interfaces, members)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::param, mutable_, type, name)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::interface::method, lines, name, in, mutable_, out)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::enumerator, lines, name, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::delegate, lines, name, params)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::interface, lines, name, methods)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::bundle, lines, name, members)

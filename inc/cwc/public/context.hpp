@@ -32,7 +32,7 @@ namespace cwc {
 		//! @returns enumerator for all sections
 		auto config() const -> intrusive_ptr<config_sections_enumerator> {
 			intrusive_ptr<config_sections_enumerator> cwc_ret;
-			internal::call(*this, &context::cwc$context$config$1, &cwc_ret);
+			internal::call(*this, &context::cwc$context$config$1, cwc_ret);
 			return cwc_ret;
 		}
 
@@ -44,7 +44,7 @@ namespace cwc {
 		auto factory(const optional<const string_ref> & id = std::nullopt) const -> intrusive_ptr<typename Component::cwc_factory> {
 			intrusive_ptr<component> cwc_ret;
 			const auto & fqn = Component::cwc_fqn();
-			internal::call(*this, &context::cwc$context$factory$2, &fqn, &id, &cwc_ret);
+			internal::call(*this, &context::cwc$context$factory$2, fqn, id, cwc_ret);
 			return cwc_ret;
 		}
 

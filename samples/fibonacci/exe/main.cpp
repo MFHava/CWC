@@ -18,4 +18,8 @@ int main() {
 	const cwc::intrusive_ptr<cwc::sample::fibonacci::sequence> generator{cwc::this_context()->factory<cwc::sample::fibonacci::generator>()->create()};
 
 	for(cwc::uint8 i{0}; i < 94; ++i) std::cout << "fibonacci(" << std::setw(2) << static_cast<int>(i) << ") = " << std::right << std::setw(20) << generator->calculate(i) << '\n';
+
+	std::cout << "\n\n\n";
+
+	generator->calculate(5, 10, [&](auto value) { std::cout << value << "\n"; });
 }

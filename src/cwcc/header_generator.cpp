@@ -18,9 +18,9 @@ namespace cwcc {
 	namespace {
 		auto name_to_uuid(const bundle & this_bundle, const std::string & s) -> std::string {
 			static boost::uuids::name_generator uuid_generator{boost::uuids::string_generator{}("{E4F6FD20-A501-44BB-A840-E9F2B61717F2}")};
-			const auto uuid = uuid_generator(this_bundle.name + "::" + s);
+			const auto uuid{uuid_generator(this_bundle.name + "::" + s)};
 			std::stringstream ss;
-			const auto last = std::end(uuid.data) - 1;
+			const auto last{std::end(uuid.data) - 1};
 			std::copy(std::begin(uuid.data), last, std::ostream_iterator<int>{ss << std::hex << std::uppercase << "0x", ", 0x"});
 			ss << static_cast<int>(*last);
 			return ss.str();
@@ -30,7 +30,7 @@ namespace cwcc {
 			std::vector<std::string> result;
 			result.reserve(self.methods.size());
 			for(std::size_t i{0}; i < self.methods.size(); ++i) {
-				auto tmp = remove_double_colon(this_bundle.name + "::" + self.name + "::" + self.methods[i].name + "::");
+				auto tmp{remove_double_colon(this_bundle.name + "::" + self.name + "::" + self.methods[i].name + "::")};
 				std::replace(std::begin(tmp), std::end(tmp), ':', '$');
 				tmp += std::to_string(i);
 				result.push_back(std::move(tmp));
@@ -41,12 +41,12 @@ namespace cwcc {
 		auto vtable_entries(const interface & self, const std::vector<std::string> & mangled) -> std::vector<std::string> {
 			std::vector<std::string> result;
 			for(std::size_t i{0}; i < mangled.size(); ++i) {
-				const auto & method = self.methods[i];
+				const auto & method{self.methods[i]};
 				std::stringstream ss;
 				ss << "auto CWC_CALL " << mangled[i] << '(';
-				const auto & params = method.params();
+				const auto & params{method.params()};
 				if(!params.empty()) {
-					auto print_param = [&](const param & p) { ss << p.mutable_ << p.type << " * " << p.name; };
+					auto print_param{[&](const param & p) { ss << p.mutable_ << p.type << " * " << p.name; }};
 					print_param(params[0]);
 					for(std::size_t j{1}; j < params.size(); ++j) {
 						ss << ", ";
@@ -68,9 +68,22 @@ namespace cwcc {
 				for(const auto & doc : self.lines) os << indent << doc << '\n';
 				os << indent << "using " << self.name << " = ::cwc::enumerator<" << self.type << ", " << name_to_uuid(this_bundle, self.name) << ">;\n";
 			}
+			void operator()(const delegate & self) const {
+				for(const auto & doc : self.lines) os << indent << doc << '\n';
+				os << indent << "using " << self.name << " = ::cwc::delegate<";
+				if(!self.params.empty()) {
+					auto print_param{[&](const param & p) { os << p.mutable_ << p.type << " /*" << p.name << "*/"; }};
+					print_param(self.params[0]);
+					for(std::size_t i{1}; i < self.params.size(); ++i) {
+						os << ", ";
+						print_param(self.params[i]);
+					}
+				}
+				os << ">;\n";
+			}
 			void operator()(const interface & self) const {
-				const auto mangled = mangled_names(this_bundle, self);
-				const auto vtable = vtable_entries(self, mangled);
+				const auto mangled{mangled_names(this_bundle, self)};
+				const auto vtable{vtable_entries(self, mangled)};
 				for(const auto & doc : self.lines) os << indent << doc << '\n';
 				os << indent << "class " << self.name << " : public ::cwc::component {\n";
 				{
@@ -81,12 +94,12 @@ namespace cwcc {
 				}
 				os << indent << "public:\n";
 				for(std::size_t i{0}; i < vtable.size(); ++i) {
-					indent_scope scope{os};
-					const auto & method = self.methods[i];
+					indent_scope scope{os};//TODO: why is this nested and not in the outer scope?!
+					const auto & method{self.methods[i]};
 					for(const auto & doc : method.lines) os << indent << doc << '\n';
 					os << indent << (method.out ? "auto" : "void") << " " << method.name << '(';
 					if(!method.in.empty()) {
-						auto print_param = [&](const param & p) { os << p.mutable_ << p.type << " & " << p.name; };
+						auto print_param{[&](const param & p) { os << p.mutable_ << p.type << " & " << p.name; }};
 						print_param(method.in[0]);
 						for(std::size_t j{1}; j < method.in.size(); ++j) {
 							os << ", ";
@@ -100,17 +113,7 @@ namespace cwcc {
 						indent_scope scope{os};
 						if(method.out) os << indent << *method.out << " cwc_ret;\n";
 						os << indent << "::cwc::internal::call(*this, &" << self.name << "::" << mangled[i];
-						const auto & params = method.params();
-						if(!params.empty()) {
-							os << ", ";
-							auto print_param = [&](const param & p) { os << '&' << p.name; };
-							print_param(params[0]);
-							for(std::size_t j{1}; j < params.size(); ++j) {
-								os << ", ";
-								print_param(params[j]);
-							}
-
-						}
+						for(const auto & p : method.params()) os << ", " << p.name;
 						os << ");\n";
 						if(method.out) os << indent << "return cwc_ret;\n";
 					}
@@ -154,23 +157,24 @@ namespace cwcc {
 			void operator()(const struct_ &) const { /*nothing to do*/ }
 			void operator()(const typedef_ &) const { /*nothing to do*/ }
 			void operator()(const enumerator &) const { /*nothing to do*/ }
+			void operator()(const delegate &) const { /*nothing to do*/ }
 			void operator()(const interface & self) const {
 				os << indent << "template<>\n"
 				   << indent << "struct interface_id<::" << this_bundle.name << "::" << self.name << "> final : uuid_constant<" << name_to_uuid(this_bundle, self.name) << "> {};\n"
 				                "\n"
 				   << indent << "template<typename Implementation, typename TypeList>\n"
 				   << indent << "class vtable_implementation<" << this_bundle.name << "::" << self.name << ", Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {\n";
-				const auto mangled = mangled_names(this_bundle, self);
-				const auto vtable = vtable_entries(self, mangled);
+				const auto mangled{mangled_names(this_bundle, self)};
+				const auto vtable{vtable_entries(self, mangled)};
 				{
 					indent_scope scope{os};
 					for(std::size_t i{0}; i < vtable.size(); ++i) {
-						const auto & method = self.methods[i];
+						const auto & method{self.methods[i]};
 						os << indent << vtable[i] << "final { return ::cwc::internal::call_and_return_error([&] { ";
 						if(method.out) os << "*cwc_ret = ";
 						os << "static_cast<" << method.mutable_ << "Implementation &>(*this)." << method.name << '(';
 						if(!method.in.empty()) {
-							auto print_param = [&](const param & p) { os << '*' << p.name; };
+							auto print_param{[&](const param & p) { os << '*' << p.name; }};
 							print_param(method.in[0]);
 							for(std::size_t j{1}; j < method.in.size(); ++j) {
 								os << ", ";
@@ -205,7 +209,7 @@ namespace cwcc {
 			dependencies_visitor(std::vector<std::string> & dependencies) : dependencies{dependencies} {}
 
 			void operator()(const std::string & self) {
-				const auto it = std::find(self.rbegin(), self.rend(), ':').base();
+				const auto it{std::find(self.rbegin(), self.rend(), ':').base()};
 				if(it == std::begin(self)) return;//not scoped!
 				dependencies.emplace_back(std::string(std::begin(self) + 2, it - 2));
 			}
@@ -224,6 +228,7 @@ namespace cwcc {
 			void operator()(const interface & self) { for(const auto & m : self.methods) (*this)(m); }
 			void operator()(const interface::method & self) { for(const auto & p : self.params()) (*this)(p); }
 			void operator()(const enumerator & self) { self.type.apply_visitor(*this); }
+			void operator()(const delegate & self) { for(const auto & p : self.params) (*this)(p); }
 			void operator()(const component & self) {
 				for(const auto & s : self.interfaces) (*this)(s);
 				for(const auto & c : self.members) (*this)(c);
@@ -239,10 +244,9 @@ namespace cwcc {
 			std::sort(std::begin(dependencies), std::end(dependencies));
 			dependencies.erase(std::unique(std::begin(dependencies), std::end(dependencies)), std::end(dependencies));
 			const std::string tmp[]{"cwc", b.name};
-			for(auto & s : tmp) {
-				const auto it = std::find(std::begin(dependencies), std::end(dependencies), s);
-				if(it != std::end(dependencies)) dependencies.erase(it);
-			}
+			for(auto & s : tmp)
+				if(const auto it{std::find(std::begin(dependencies), std::end(dependencies), s)}; it != std::end(dependencies))
+					dependencies.erase(it);
 			return dependencies;
 		}
 	}

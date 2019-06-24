@@ -18,7 +18,7 @@ namespace cwc {
 			std::aligned_storage_t<sizeof(factory_map), alignof(factory_map)> buffer;
 		}
 
-		factory_map & factories{reinterpret_cast<factory_map &>(buffer)};
+		factory_map & factories = reinterpret_cast<factory_map &>(buffer);
 
 		factories_initializer::factories_initializer() { if(nifty_counter++ == 0) new(&buffer) factory_map; }
 		factories_initializer::~factories_initializer() { if(!--nifty_counter) factories.~factory_map(); }

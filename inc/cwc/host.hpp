@@ -66,6 +66,7 @@
 	#define PATH_SEPARATOR '\\'
 #elif CWC_OS_LINUX
 	#include <dlfcn.h>
+	#include <unistd.h>
 	#define HMODULE void *
 	#define MAX_PATH PATH_MAX
 	#define LoadLibrary(file) dlopen(file, RTLD_NOW)

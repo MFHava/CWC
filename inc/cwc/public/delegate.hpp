@@ -25,7 +25,7 @@ namespace cwc {
 			virtual
 			auto CWC_CALL invoke(std::add_pointer_t<Params>... args) const noexcept -> const internal::error * =0;
 			virtual
-			~cwc_interface() noexcept =default;
+			void CWC_CALL destroy() noexcept =0;
 		};
 
 		template<typename Functor>
@@ -35,6 +35,8 @@ namespace cwc {
 			cwc_implementation(Functor && func) noexcept : cwc_functor{std::move(func)} {}
 
 			auto CWC_CALL invoke(std::add_pointer_t<Params>... args) const noexcept -> const internal::error * final { return internal::call_and_return_error([&] { cwc_functor(*args...); }); }
+
+			void CWC_CALL destroy() noexcept final { delete this; }
 		};
 
 		cwc_interface * const cwc_func;
@@ -53,7 +55,7 @@ namespace cwc {
 		delegate(delegate &&) noexcept =delete;
 		auto operator=(const delegate &) -> delegate & =delete;
 		auto operator=(delegate &&) noexcept -> delegate & =delete;
-		~delegate() noexcept { delete cwc_func; }
+		~delegate() noexcept { cwc_func->destroy(); }
 
 		void operator()(std::add_lvalue_reference_t<Params>...  args) const {
 			internal::call(*cwc_func, &cwc_interface::invoke, args...);

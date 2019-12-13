@@ -33,7 +33,6 @@ BOOST_FUSION_ADAPT_STRUCT(cwcc::typedef_, lines, name, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::component, lines, name, interfaces, members)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::param, mutable_, type, name)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::interface::method, lines, name, in, mutable_, out)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::enumerator, lines, name, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::delegate, lines, name, in, out)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::interface, lines, name, methods)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::bundle, lines, name, members)
@@ -167,8 +166,6 @@ namespace {
 			auto_method_       %= *documentation >> keyword["auto"] > local_identifier > params > mutable_ > "->" > templated_type;
 			method             %= (void_method_ | auto_method_) > ';';
 
-			enumerator         %= *documentation >> keyword["enumerator"] > new_type > "->" > templated_type;
-
 			void_delegate_     %= *documentation >> keyword["delegate"] >> keyword["void"] > new_type > params;
 			auto_delegate_     %= *documentation >> keyword["delegate"] >> keyword["auto"] > new_type > params > "->" > templated_type;
 			delegate           %= (void_delegate_ | auto_delegate_);
@@ -187,7 +184,7 @@ namespace {
 
 			documentation      %= cpp_comment;
 
-			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((component | enum_ | struct_ | interface | typedef_ | enumerator | delegate) > ';') > '}';
+			start              %= *documentation >> keyword["bundle"] > bundle_identifier[phx::bind(&bundle_parser::set_bundle, this, _1)] > '{' > *((component | enum_ | struct_ | interface | typedef_ | delegate) > ';') > '}';
 
 			qi::on_error(start, phx::bind(error_handler, _1, _3, _2, _4));//register handler for parser errors
 
@@ -209,7 +206,6 @@ namespace {
 			BOOST_SPIRIT_DEBUG_NODE(method);
 			BOOST_SPIRIT_DEBUG_NODE(auto_method_);
 			BOOST_SPIRIT_DEBUG_NODE(void_method_);
-			BOOST_SPIRIT_DEBUG_NODE(enumerator);
 			BOOST_SPIRIT_DEBUG_NODE(delegate);
 			BOOST_SPIRIT_DEBUG_NODE(auto_delegate_);
 			BOOST_SPIRIT_DEBUG_NODE(void_delegate_);
@@ -293,7 +289,6 @@ namespace {
 		rule<cwcc::interface::method> method;
 		rule<auto_method> auto_method_;
 		rule<void_method> void_method_;
-		rule<cwcc::enumerator> enumerator;
 		rule<cwcc::delegate> delegate;
 		rule<auto_delegate> auto_delegate_;
 		rule<void_delegate> void_delegate_;

@@ -64,10 +64,6 @@ namespace cwcc {
 			void operator()(const enum_ & self) const { os << self << '\n'; }
 			void operator()(const struct_ & self) const { os << self << '\n'; }
 			void operator()(const typedef_ & self) const { os << self << '\n'; }
-			void operator()(const enumerator & self) const {
-				for(const auto & doc : self.lines) os << indent << doc << '\n';
-				os << indent << "using " << self.name << " = ::cwc::enumerator<" << self.type << ", " << name_to_uuid(this_bundle, self.name) << ">;\n";
-			}
 			void operator()(const delegate & self) const {
 				for(const auto & doc : self.lines) os << indent << doc << '\n';
 				os << indent << "using " << self.name << " = ::cwc::delegate<";
@@ -160,7 +156,6 @@ namespace cwcc {
 			void operator()(const enum_ &) const { /*nothing to do*/ }
 			void operator()(const struct_ &) const { /*nothing to do*/ }
 			void operator()(const typedef_ &) const { /*nothing to do*/ }
-			void operator()(const enumerator &) const { /*nothing to do*/ }
 			void operator()(const delegate &) const { /*nothing to do*/ }
 			void operator()(const interface & self) const {
 				os << indent << "template<>\n"
@@ -231,7 +226,6 @@ namespace cwcc {
 			void operator()(const typedef_ & self) { self.type.apply_visitor(*this); }
 			void operator()(const interface & self) { for(const auto & m : self.methods) (*this)(m); }
 			void operator()(const interface::method & self) { for(const auto & p : self.params()) (*this)(p); }
-			void operator()(const enumerator & self) { self.type.apply_visitor(*this); }
 			void operator()(const delegate & self) { for(const auto & p : self.in) (*this)(p); }
 			void operator()(const component & self) {
 				for(const auto & s : self.interfaces) (*this)(s);

@@ -219,45 +219,8 @@ namespace {
 			return result;
 		}
 
-		class config_section_enumerator : public cwc::interface_implementation<config_section_enumerator, cwc::config_section_enumerator> {
-			key_value_map::const_iterator it, last;
-		public:
-			config_section_enumerator(const key_value_map & config) : it{std::begin(config)}, last{std::end(config)} {}
-
-			auto end() const -> bool { return it == last; }
-
-			void next() {
-				if(end()) throw std::runtime_error{"already at end"};
-				++it;
-			}
-
-			auto get() const -> cwc::config_entry {
-				if(end()) throw std::runtime_error{"at end"};
-				return {it->first.c_str(), it->second.c_str()};
-			}
-		};
-
-		class config_sections_enumerator : public cwc::interface_implementation<config_sections_enumerator, cwc::config_sections_enumerator> {
-			config_map::const_iterator it, last;
-		public:
-			config_sections_enumerator(const config_map & config) : it{std::begin(config)}, last{std::end(config)} {}
-
-			auto end() const -> bool { return it == last; }
-
-			void next() {
-				if(end()) throw std::runtime_error{"already at end"};
-				++it;
-			}
-
-			auto get() const -> cwc::config_section {
-				if(end()) throw std::runtime_error{"at end"};
-				return {it->first.c_str(), cwc::make_intrusive<config_section_enumerator>(it->second)};
-			}
-		};
-
 		auto CWC_CALL cwc$context$exception$0(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * final { return this->exception(err); }
-		auto CWC_CALL cwc$context$config$1(cwc::intrusive_ptr<cwc::config_sections_enumerator> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->config(); }); }
-		auto CWC_CALL cwc$context$factory$2(const cwc::string_ref * fqn, const cwc::optional<const cwc::string_ref> * id, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn, *id); }); }
+		auto CWC_CALL cwc$context$factory$1(const cwc::string_ref * fqn, const cwc::optional<const cwc::string_ref> * id, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn, *id); }); }
 	public:
 		context_impl(std::istream & is) : configuration{parse_ini(is)} {
 			key_value_map components;
@@ -292,8 +255,6 @@ namespace {
 			std::strncat(last_message, err->message, std::min(sizeof(last_message) - 1, std::strlen(err->message)));
 			return &last_error;
 		}
-
-		auto config() const -> cwc::intrusive_ptr<cwc::config_sections_enumerator> { return cwc::make_intrusive<config_sections_enumerator>(configuration); }
 
 		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> {
 			const std::string key{fqn};//TODO: this copies the string, which should not be necessary with C++20s generic find

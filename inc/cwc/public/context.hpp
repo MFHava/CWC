@@ -16,9 +16,7 @@ namespace cwc {
 		virtual
 		auto CWC_CALL cwc$context$exception$0(const internal::error * err) const noexcept -> const internal::error * =0;
 		virtual
-		auto CWC_CALL cwc$context$config$1(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept -> const internal::error * =0;
-		virtual
-		auto CWC_CALL cwc$context$factory$2(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept -> const internal::error * =0;
+		auto CWC_CALL cwc$context$factory$1(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept -> const internal::error * =0;
 
 		friend
 		void internal::validate(const internal::error * err);
@@ -28,14 +26,6 @@ namespace cwc {
 
 		auto exception(const internal::error & err) const -> const internal::error * { return cwc$context$exception$0(&err); }
 	public:
-		//! @brief get read-only access to the current configuration
-		//! @returns enumerator for all sections
-		auto config() const -> intrusive_ptr<config_sections_enumerator> {
-			intrusive_ptr<config_sections_enumerator> cwc_ret;
-			internal::call(*this, &context::cwc$context$config$1, cwc_ret);
-			return cwc_ret;
-		}
-
 		//! @brief create factory for component type
 		//! @tparam Component component type to create factory for
 		//! @param[in] id optional id of the plugin
@@ -44,7 +34,7 @@ namespace cwc {
 		auto factory(const optional<const string_ref> & id = std::nullopt) const -> intrusive_ptr<typename Component::cwc_factory> {
 			intrusive_ptr<component> cwc_ret;
 			const auto & fqn = Component::cwc_fqn();
-			internal::call(*this, &context::cwc$context$factory$2, fqn, id, cwc_ret);
+			internal::call(*this, &context::cwc$context$factory$1, fqn, id, cwc_ret);
 			return cwc_ret;
 		}
 

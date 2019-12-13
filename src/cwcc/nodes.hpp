@@ -257,15 +257,6 @@ namespace cwcc {
 		auto operator==(const component & lhs, const component & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.interfaces == rhs.interfaces) && (lhs.members == rhs.members); }
 	};
 
-	struct enumerator final {
-		std::vector<documentation> lines;
-		std::string name;
-		templated_type type;
-
-		friend
-		auto operator==(const enumerator & lhs, const enumerator & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.type == rhs.type); }
-	};
-
 	struct delegate final {
 		std::vector<documentation> lines;
 		std::string name;
@@ -279,7 +270,7 @@ namespace cwcc {
 	struct bundle final {
 		std::vector<documentation> lines;
 		std::string name;
-		std::vector<boost::variant<component, enum_, struct_, typedef_, interface, enumerator, delegate>> members;
+		std::vector<boost::variant<component, enum_, struct_, typedef_, interface, delegate>> members;
 
 		friend
 		auto operator==(const bundle & lhs, const bundle & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.members == rhs.members); }

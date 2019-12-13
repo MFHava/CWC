@@ -53,7 +53,5 @@ namespace cwc {
 
 #include "public/delegate.hpp"
 #include "public/component.hpp"
-#include "public/enumerator.hpp"
-#include "public/config_enumerators.hpp"
 #include "public/context.hpp"
 #include "public/default_implementations.hpp"

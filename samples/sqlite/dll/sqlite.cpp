@@ -24,48 +24,62 @@ namespace sample {
 	}
 
 	void sqlite::execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const {
-		sqlite3_stmt * stmt{nullptr};
-		if(sqlite3_prepare(db, sql.data(), static_cast<int>(sql.size()), &stmt, nullptr)) {
-			sqlite3_finalize(stmt);
-			throw std::runtime_error{"could not prepare statement"};
-		}
+		const struct prepared_stmt {
+			prepared_stmt(sqlite3 * db, cwc::string_ref sql) {
+				if(sqlite3_prepare(db, sql.data(), static_cast<int>(sql.size()), &ptr, nullptr)) {
+					sqlite3_finalize(ptr);
+					//TODO: add error message
+					throw std::runtime_error{"could not prepare statement"};
+				}
+			}
+			~prepared_stmt() noexcept { sqlite3_finalize(ptr); }
+
+			void bind(int index, double d) const { if(sqlite3_bind_double(ptr, index, d)) throw std::runtime_error{"could not bind double"}; }
+			void bind(int index, long long l) const { if(sqlite3_bind_int64(ptr, index, l)) throw std::runtime_error{"could not bind long"}; }
+			void bind(int index, cwc::string_ref s) const { if(sqlite3_bind_text(ptr, index, s.data(), static_cast<int>(s.size()), SQLITE_STATIC)) throw std::runtime_error{"could not bind string"}; }
+			void bind(int index, cwc::array_ref<const uint8_t> b) const { if(sqlite3_bind_blob(ptr, index, b.data(), static_cast<int>(b.size()), SQLITE_STATIC)) throw std::runtime_error{"coult not bind blob"}; }
+
+			auto step() const -> bool {
+				const auto result{sqlite3_step(ptr)};
+				if(result == SQLITE_ROW) return true;
+				if(result == SQLITE_DONE) return false;
+				//TODO: just assume error
+				throw std::runtime_error{"an error occured"}; //TODO: add error message
+			}
+
+			auto column_count() const noexcept -> int { return sqlite3_data_count(ptr); }
+
+			auto get(int index) const -> entry {
+				switch(sqlite3_column_type(ptr, index)) {
+					case SQLITE_INTEGER: return sqlite3_column_int64(ptr, index);
+					case SQLITE_FLOAT:   return sqlite3_column_double(ptr, index);
+					case SQLITE_TEXT:    return cwc::string_ref{reinterpret_cast<const cwc::utf8 *>(sqlite3_column_text(ptr, index)), static_cast<std::size_t>(sqlite3_column_bytes(ptr, index))};
+					case SQLITE_BLOB:    return cwc::array_ref{reinterpret_cast<const cwc::uint8 *>(sqlite3_column_blob(ptr, index)), static_cast<std::size_t>(sqlite3_column_bytes(ptr, index))};
+					default: throw std::runtime_error{"unknown type detected"};
+				}
+			}
+		private:
+			sqlite3_stmt * ptr{nullptr};
+		} stmt{db, sql};
 
 		{//argument binding
-			auto index{1};
-			for(auto & arg : args) {
-				arg.visit(
-					[&](double d) { if(sqlite3_bind_double(stmt, index, d)) throw std::runtime_error{"could not bind double"}; },
-					[&](long long l) { if(sqlite3_bind_int64(stmt, index, l)) throw std::runtime_error{"could not bind long"}; },
-					[&](cwc::string_ref s) { if(sqlite3_bind_text(stmt, index, s.data(), static_cast<int>(s.size()), SQLITE_STATIC)) throw std::runtime_error{"could not bind string"}; },
-					[&](cwc::array_ref<const uint8_t> b) { if(sqlite3_bind_blob(stmt, index, b.data(), static_cast<int>(b.size()), SQLITE_STATIC)) throw std::runtime_error{"coult not bind blob"}; }
-				);
+			auto index{1};//could be init-range-for in C++20
+			for(auto & arg : args) { 
+				arg.visit([&](auto val) { stmt.bind(index, val); });
 				++index;
 			}
 		}
 
-		auto result{SQLITE_OK};
 		{//execute and invoke callback
 			std::vector<entry> entries;
-			while((result = sqlite3_step(stmt)) == SQLITE_ROW) {
-				const auto size{sqlite3_data_count(stmt)};
+			while(stmt.step()) {
+				const auto size{stmt.column_count()};
 				assert(size >= 0);
 				entries.resize(size);
-				for(int index{0}; index < size; ++index) {
-					const auto type{sqlite3_column_type(stmt, index)};
-					switch(type) {
-						case SQLITE_INTEGER: entries[index] = sqlite3_column_int64(stmt, index); break;
-						case SQLITE_FLOAT:   entries[index] = sqlite3_column_double(stmt, index); break;
-						case SQLITE_TEXT:    entries[index] = cwc::string_ref{reinterpret_cast<const cwc::utf8 *>(sqlite3_column_text(stmt, index)), static_cast<std::size_t>(sqlite3_column_bytes(stmt, index))}; break;
-						case SQLITE_BLOB:    entries[index] = cwc::array_ref{reinterpret_cast<const cwc::uint8 *>(sqlite3_column_blob(stmt, index)), static_cast<std::size_t>(sqlite3_column_bytes(stmt, index))}; break;
-					}
-
-				}
+				for(int index{0}; index < size; ++index) entries[index] = stmt.get(index);
 				callback(entries);//TODO: try-catch
 			}
-
 		}
-		sqlite3_finalize(stmt);
-		if(result != SQLITE_DONE) throw std::runtime_error{"an error occured"};
 	}
 }
 

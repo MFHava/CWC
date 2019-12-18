@@ -1,0 +1,65 @@
+//This file was generated for CWC by CWCC
+//ATTENTION: Do not modify this file as its content is highly dependent on the design of CWC!
+#pragma once
+#include <cwc/cwc.hpp>
+
+namespace cwc::sample::sqlite {
+	using blob_ref = ::cwc::array_ref<const ::cwc::uint8>;
+	static_assert(std::is_standard_layout_v<::cwc::array_ref<const ::cwc::uint8>>);
+
+	using entry = ::cwc::variant<::cwc::float32, ::cwc::int32, ::cwc::int64, ::cwc::string_ref, ::cwc::sample::sqlite::blob_ref>;
+	static_assert(std::is_standard_layout_v<::cwc::variant<::cwc::float32, ::cwc::int32, ::cwc::int64, ::cwc::string_ref, ::cwc::sample::sqlite::blob_ref>>);
+
+	using handler = ::cwc::delegate<const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> /*result_set*/>;
+
+	class database : public ::cwc::component {
+		virtual
+		auto CWC_CALL cwc$sample$sqlite$database$execute$0(const ::cwc::string_ref * sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> * args, const ::cwc::sample::sqlite::handler * callback) const noexcept -> const ::cwc::internal::error * =0;
+	public:
+		void execute(const ::cwc::string_ref & sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> & args, const ::cwc::sample::sqlite::handler & callback) const {
+			::cwc::internal::call(*this, &database::cwc$sample$sqlite$database$execute$0, sql, args, callback);
+		}
+	};
+
+	struct file : ::cwc::sample::sqlite::database {
+		static
+		auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::sqlite::file"; }
+		using cwc_interfaces = ::cwc::internal::make_base_list_t<::cwc::sample::sqlite::database>;
+
+		class cwc_factory : public ::cwc::component {
+			virtual
+			auto CWC_CALL cwc$sample$sqlite$file$cwc_factory$create$0(const ::cwc::string_ref * path, ::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;
+		public:
+			auto create(const ::cwc::string_ref & path) const -> ::cwc::intrusive_ptr<::cwc::component> {
+				::cwc::intrusive_ptr<::cwc::component> cwc_ret;
+				::cwc::internal::call(*this, &cwc_factory::cwc$sample$sqlite$file$cwc_factory$create$0, path, cwc_ret);
+				return cwc_ret;
+			}
+		};
+	};
+}
+
+
+//ATTENTION: don't modify the following code, it contains necessary metadata for CWC
+namespace cwc::internal {
+	template<>
+	struct interface_id<::cwc::sample::sqlite::database> final : uuid_constant<0x20, 0x54, 0xEE, 0x18, 0xD1, 0x74, 0x51, 0xED, 0xA1, 0xFA, 0x4E, 0x6D, 0x7C, 0x75, 0x14, 0x3D> {};
+
+	template<typename Implementation, typename TypeList>
+	class vtable_implementation<cwc::sample::sqlite::database, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
+		auto CWC_CALL cwc$sample$sqlite$database$execute$0(const ::cwc::string_ref * sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> * args, const ::cwc::sample::sqlite::handler * callback) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { static_cast<const Implementation &>(*this).execute(*sql, *args, *callback); }); }
+		//detect missing methods:
+		void execute();
+	};
+
+	template<>
+	struct interface_id<::cwc::sample::sqlite::file::cwc_factory> final : uuid_constant<0x7E, 0x41, 0xD8, 0xA1, 0xFC, 0xDF, 0x5B, 0xD6, 0x83, 0x23, 0x49, 0x9A, 0x88, 0xC5, 0x1A, 0xAB> {};
+
+	template<typename Implementation, typename TypeList>
+	class vtable_implementation<cwc::sample::sqlite::file::cwc_factory, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
+		auto CWC_CALL cwc$sample$sqlite$file$cwc_factory$create$0(const ::cwc::string_ref * path, ::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).create(*path); }); }
+		//detect missing methods:
+		void create();
+	};
+
+}

@@ -1,0 +1,23 @@
+//! @brief CWC Sample "SQLite binding"
+//! @author Michael Florian Hava
+bundle cwc::sample::sqlite {
+	using blob_ref = array_ref<::cwc::uint8>;
+
+	using entry = variant<
+		::cwc::float32,
+		::cwc::int32,
+		::cwc::int64,
+		::cwc::string_ref,
+		blob_ref
+	>;
+
+	delegate handler(array_ref<entry> result_set);
+
+	interface database {
+		void execute(::cwc::string_ref sql, array_ref<entry> args, handler callback);
+	};
+
+	component file : database {
+		constructor(::cwc::string_ref path);
+	};
+}

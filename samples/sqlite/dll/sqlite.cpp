@@ -9,11 +9,12 @@
 
 namespace sample {
 	sqlite::sqlite(cwc::string_ref path) {
-		const std::string tmp{path};
-		if(sqlite3_open(tmp.c_str(), &db)) {
-			std::string tmp{sqlite3_errmsg(db)};
+		if(std::string tmp{path}; sqlite3_open(tmp.c_str(), &db)) {
+			tmp = "could not open DB (";
+			tmp += sqlite3_errmsg(db);
+			tmp += ")";
 			sqlite3_close(db);
-			throw std::runtime_error{"could not open DB (" + tmp + ")"};
+			throw std::runtime_error{tmp};
 		}
 	}
 
@@ -23,11 +24,10 @@ namespace sample {
 	}
 
 	//TODO: there is no need for 32bit INT as internally only signed 64bit is supported anyways (no way to extract 32bit automatically)
-	//TODO: ther si no need for 32bit FLOAT as internally only 64bit FLOAT is supported
+	//TODO: their is no need for 32bit FLOAT as internally only 64bit FLOAT is supported
 	void sqlite::execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const {
-		const std::string tmp{sql};
 		sqlite3_stmt * stmt{nullptr};
-		if(sqlite3_prepare(db, tmp.c_str(), -1, &stmt, nullptr)) {
+		if(sqlite3_prepare(db, sql.data(), sql.size(), &stmt, nullptr)) {
 			sqlite3_finalize(stmt);
 			throw std::runtime_error{"could not prepare statement"};
 		}
@@ -39,16 +39,8 @@ namespace sample {
 					[&](float f) { if(sqlite3_bind_double(stmt, index, f)) throw std::runtime_error{"could not bind double"}; },
 					[&](int i) { if(sqlite3_bind_int(stmt, index, i)) throw std::runtime_error{"could not bind int"}; },
 					[&](long long l) { if(sqlite3_bind_int64(stmt, index, l)) throw std::runtime_error{"could not bind long"}; },
-					[&](cwc::string_ref s) {
-						const std::string tmp{s};
-						const auto error{sqlite3_bind_text(stmt, index, tmp.c_str(), -1, SQLITE_TRANSIENT)};
-						if(error) {
-							throw std::runtime_error{sqlite3_errmsg(db)};
-						}
-					},
-					[&](cwc::array_ref<const uint8_t> b) {
-						//TODO
-					}
+					[&](cwc::string_ref s) { if(sqlite3_bind_text(stmt, index, s.data(), s.size(), SQLITE_STATIC)) throw std::runtime_error{"could not bind string"}; },
+					[&](cwc::array_ref<const uint8_t> b) { if(sqlite3_bind_blob(stmt, index, b.data(), b.size(), SQLITE_STATIC)) throw std::runtime_error{"coult not bind blob"}; }
 				);
 				++index;
 			}
@@ -66,8 +58,8 @@ namespace sample {
 					switch(type) {
 						case SQLITE_INTEGER: entries[index] = sqlite3_column_int64(stmt, index); break;
 						case SQLITE_FLOAT:   entries[index] = static_cast<float>(sqlite3_column_double(stmt, index)); break;
-						case SQLITE_TEXT:    entries[index] = cwc::string_ref{reinterpret_cast<const cwc::utf8 *>(sqlite3_column_text(stmt, index))}; break;
-						case SQLITE_BLOB: /*TODO*/ break;
+						case SQLITE_TEXT:    entries[index] = cwc::string_ref{reinterpret_cast<const cwc::utf8 *>(sqlite3_column_text(stmt, index)), static_cast<std::size_t>(sqlite3_column_bytes(stmt, index))}; break;
+						case SQLITE_BLOB:    entries[index] = cwc::array_ref{reinterpret_cast<const cwc::uint8 *>(sqlite3_column_blob(stmt, index)), static_cast<std::size_t>(sqlite3_column_bytes(stmt, index))}; break;
 					}
 
 				}

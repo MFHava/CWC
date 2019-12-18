@@ -23,11 +23,9 @@ namespace sample {
 		sqlite3_close(db);
 	}
 
-	//TODO: there is no need for 32bit INT as internally only signed 64bit is supported anyways (no way to extract 32bit automatically)
-	//TODO: their is no need for 32bit FLOAT as internally only 64bit FLOAT is supported
 	void sqlite::execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const {
 		sqlite3_stmt * stmt{nullptr};
-		if(sqlite3_prepare(db, sql.data(), sql.size(), &stmt, nullptr)) {
+		if(sqlite3_prepare(db, sql.data(), static_cast<int>(sql.size()), &stmt, nullptr)) {
 			sqlite3_finalize(stmt);
 			throw std::runtime_error{"could not prepare statement"};
 		}
@@ -36,11 +34,10 @@ namespace sample {
 			auto index{1};
 			for(auto & arg : args) {
 				arg.visit(
-					[&](float f) { if(sqlite3_bind_double(stmt, index, f)) throw std::runtime_error{"could not bind double"}; },
-					[&](int i) { if(sqlite3_bind_int(stmt, index, i)) throw std::runtime_error{"could not bind int"}; },
+					[&](double d) { if(sqlite3_bind_double(stmt, index, d)) throw std::runtime_error{"could not bind double"}; },
 					[&](long long l) { if(sqlite3_bind_int64(stmt, index, l)) throw std::runtime_error{"could not bind long"}; },
-					[&](cwc::string_ref s) { if(sqlite3_bind_text(stmt, index, s.data(), s.size(), SQLITE_STATIC)) throw std::runtime_error{"could not bind string"}; },
-					[&](cwc::array_ref<const uint8_t> b) { if(sqlite3_bind_blob(stmt, index, b.data(), b.size(), SQLITE_STATIC)) throw std::runtime_error{"coult not bind blob"}; }
+					[&](cwc::string_ref s) { if(sqlite3_bind_text(stmt, index, s.data(), static_cast<int>(s.size()), SQLITE_STATIC)) throw std::runtime_error{"could not bind string"}; },
+					[&](cwc::array_ref<const uint8_t> b) { if(sqlite3_bind_blob(stmt, index, b.data(), static_cast<int>(b.size()), SQLITE_STATIC)) throw std::runtime_error{"coult not bind blob"}; }
 				);
 				++index;
 			}
@@ -57,7 +54,7 @@ namespace sample {
 					const auto type{sqlite3_column_type(stmt, index)};
 					switch(type) {
 						case SQLITE_INTEGER: entries[index] = sqlite3_column_int64(stmt, index); break;
-						case SQLITE_FLOAT:   entries[index] = static_cast<float>(sqlite3_column_double(stmt, index)); break;
+						case SQLITE_FLOAT:   entries[index] = sqlite3_column_double(stmt, index); break;
 						case SQLITE_TEXT:    entries[index] = cwc::string_ref{reinterpret_cast<const cwc::utf8 *>(sqlite3_column_text(stmt, index)), static_cast<std::size_t>(sqlite3_column_bytes(stmt, index))}; break;
 						case SQLITE_BLOB:    entries[index] = cwc::array_ref{reinterpret_cast<const cwc::uint8 *>(sqlite3_column_blob(stmt, index)), static_cast<std::size_t>(sqlite3_column_bytes(stmt, index))}; break;
 					}

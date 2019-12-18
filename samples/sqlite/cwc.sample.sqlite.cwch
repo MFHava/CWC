@@ -7,8 +7,8 @@ namespace cwc::sample::sqlite {
 	using blob_ref = ::cwc::array_ref<const ::cwc::uint8>;
 	static_assert(std::is_standard_layout_v<::cwc::array_ref<const ::cwc::uint8>>);
 
-	using entry = ::cwc::variant<::cwc::float32, ::cwc::int32, ::cwc::int64, ::cwc::string_ref, ::cwc::sample::sqlite::blob_ref>;
-	static_assert(std::is_standard_layout_v<::cwc::variant<::cwc::float32, ::cwc::int32, ::cwc::int64, ::cwc::string_ref, ::cwc::sample::sqlite::blob_ref>>);
+	using entry = ::cwc::variant<::cwc::float64, ::cwc::int64, ::cwc::string_ref, ::cwc::sample::sqlite::blob_ref>;
+	static_assert(std::is_standard_layout_v<::cwc::variant<::cwc::float64, ::cwc::int64, ::cwc::string_ref, ::cwc::sample::sqlite::blob_ref>>);
 
 	using handler = ::cwc::delegate<const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> /*result_set*/>;
 

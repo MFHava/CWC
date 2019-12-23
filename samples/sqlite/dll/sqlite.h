@@ -12,12 +12,12 @@ namespace sample {
 	using cwc::sample::sqlite::handler;
 	using cwc::sample::sqlite::entry;
 
-	struct sqlite {
-		sqlite(cwc::string_ref path);
-		~sqlite() noexcept;
+	struct sqlite3 {
+		sqlite3(cwc::string_ref path);
+		~sqlite3() noexcept;
 
 		void execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const;
 	private:
-		sqlite3 * db{nullptr};
+		::sqlite3 * db{nullptr};
 	};
 }

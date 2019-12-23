@@ -8,7 +8,7 @@
 #include <cwc/bundle.hpp>
 
 namespace sample {
-	sqlite::sqlite(cwc::string_ref path) {
+	sqlite3::sqlite3(cwc::string_ref path) {
 		if(std::string tmp{path}; sqlite3_open(tmp.c_str(), &db)) {
 			tmp = "could not open DB (";
 			tmp += sqlite3_errmsg(db);
@@ -18,14 +18,14 @@ namespace sample {
 		}
 	}
 
-	sqlite::~sqlite() noexcept {
+	sqlite3::~sqlite3() noexcept {
 		assert(db);
 		sqlite3_close(db);
 	}
 
-	void sqlite::execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const {
+	void sqlite3::execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const {
 		const struct prepared_stmt {
-			prepared_stmt(sqlite3 * db, cwc::string_ref sql) {
+			prepared_stmt(::sqlite3 * db, cwc::string_ref sql) {
 				if(sqlite3_prepare(db, sql.data(), static_cast<int>(sql.size()), &ptr, nullptr)) {
 					sqlite3_finalize(ptr);
 					//TODO: add error message
@@ -85,10 +85,10 @@ namespace sample {
 
 namespace {
 	//exporting sqlite as implementation of file
-	struct sqlite : cwc::component_implementation<sqlite, cwc::sample::sqlite::file>, private ::sample::sqlite {
+	struct sqlite : cwc::component_implementation<sqlite, cwc::sample::sqlite::file>, private ::sample::sqlite3 {
 		//export member functions to component_implementation
-		using ::sample::sqlite::sqlite;
-		using ::sample::sqlite::execute;
+		using ::sample::sqlite3::sqlite3;
+		using ::sample::sqlite3::execute;
 	};
 }
 

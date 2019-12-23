@@ -71,15 +71,19 @@ namespace cwcc {
 			void operator()(const delegate & self) const {
 				for(const auto & doc : self.lines) os << indent << doc << '\n';
 				os << indent << "using " << self.name << " = ::cwc::delegate<";
-				if(!self.params.empty()) {
-					auto print_param{[&](const param & p) { os << p.mutable_ << p.type << " /*" << p.name << "*/"; }};
-					print_param(self.params[0]);
-					for(std::size_t i{1}; i < self.params.size(); ++i) {
+				if(self.out) os << *self.out;
+				else os << "void";
+				os << "(";
+
+				if(!self.in.empty()) {
+					auto print_param{[&](const param & p) { os << p.mutable_ << p.type << " & /*" << p.name << "*/"; }};
+					print_param(self.in[0]);
+					for(std::size_t i{1}; i < self.in.size(); ++i) {
 						os << ", ";
-						print_param(self.params[i]);
+						print_param(self.in[i]);
 					}
 				}
-				os << ">;\n";
+				os << ")>;\n";
 			}
 			void operator()(const interface & self) const {
 				const auto mangled{mangled_names(this_bundle, self)};
@@ -228,7 +232,7 @@ namespace cwcc {
 			void operator()(const interface & self) { for(const auto & m : self.methods) (*this)(m); }
 			void operator()(const interface::method & self) { for(const auto & p : self.params()) (*this)(p); }
 			void operator()(const enumerator & self) { self.type.apply_visitor(*this); }
-			void operator()(const delegate & self) { for(const auto & p : self.params) (*this)(p); }
+			void operator()(const delegate & self) { for(const auto & p : self.in) (*this)(p); }
 			void operator()(const component & self) {
 				for(const auto & s : self.interfaces) (*this)(s);
 				for(const auto & c : self.members) (*this)(c);

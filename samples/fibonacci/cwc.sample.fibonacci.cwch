@@ -4,7 +4,7 @@
 #include <cwc/cwc.hpp>
 
 namespace cwc::sample::fibonacci {
-	using handler = ::cwc::delegate<const ::cwc::uint64 /*no*/>;
+	using handler = ::cwc::delegate<void(const ::cwc::uint64 & /*no*/)>;
 
 	class sequence : public ::cwc::component {
 		virtual

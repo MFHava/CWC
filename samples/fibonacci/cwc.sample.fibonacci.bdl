@@ -1,7 +1,7 @@
 //! @brief CWC Sample "Fibonacci Generator"
 //! @author Michael Florian Hava
 bundle cwc::sample::fibonacci {
-	delegate handler(::cwc::uint64 no);
+	delegate void handler(::cwc::uint64 no);
 
 	interface sequence {
 		auto calculate(::cwc::uint8 no) -> ::cwc::uint64;

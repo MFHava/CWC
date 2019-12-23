@@ -6,7 +6,7 @@ auto cwc_definition{
 "//! @brief CWC Sample \"Fibonacci Generator\"\n"
 "//! @author Michael Florian Hava\n"
 "bundle cwc::sample::fibonacci {\n"
-"	delegate handler(::cwc::uint64 no);\n"
+"	delegate void handler(::cwc::uint64 no);\n"
 "\n"
 "	interface sequence {\n"
 "		auto calculate(::cwc::uint8 no) -> ::cwc::uint64;\n"

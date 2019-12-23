@@ -15,6 +15,29 @@
 #include "nodes.hpp"
 #include "parser.hpp"
 
+BOOST_FUSION_ADAPT_STRUCT(cwcc::untemplated_type, name)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::array, type, size)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::array_ref, mutable_, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::bitset, size)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::optional, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::tuple, types)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::variant, types)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::intrusive_ptr, mutable_, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::documentation, line)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member, lines, type, fields)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_, lines, name, members)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::component::constructor, lines, params)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::enum_::member, lines, name)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::enum_, lines, name, members)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::typedef_, lines, name, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::component, lines, name, interfaces, members)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::param, mutable_, type, name)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::interface::method, lines, name, in, mutable_, out)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::enumerator, lines, name, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::delegate, lines, name, in, out)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::interface, lines, name, methods)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::bundle, lines, name, members)
+
 namespace {
 	struct auto_method {
 		std::vector<cwcc::documentation> lines;
@@ -49,10 +72,42 @@ namespace {
 			return m;
 		}
 	};
+
+	struct auto_delegate {
+		std::vector<cwcc::documentation> lines;
+		std::string name;
+		std::vector<cwcc::param> in;
+		cwcc::templated_type out;
+
+		operator cwcc::delegate() const {
+			cwcc::delegate d;
+			d.lines = lines;
+			d.name = name;
+			d.in = in;
+			d.out = out;
+			return d;
+		}
+	};
+
+	struct void_delegate {
+		std::vector<cwcc::documentation> lines;
+		std::string name;
+		std::vector<cwcc::param> in;
+
+		operator cwcc::delegate() const {
+			cwcc::delegate d;
+			d.lines = lines;
+			d.name = name;
+			d.in = in;
+			return d;
+		}
+	};
 }
 
 BOOST_FUSION_ADAPT_STRUCT(auto_method, lines, name, in, mutable_, out)
 BOOST_FUSION_ADAPT_STRUCT(void_method, lines, name, in, mutable_)
+BOOST_FUSION_ADAPT_STRUCT(auto_delegate, lines, name, in, out)
+BOOST_FUSION_ADAPT_STRUCT(void_delegate, lines, name, in)
 
 namespace {
 	using namespace boost::spirit;
@@ -109,12 +164,14 @@ namespace {
 			constructor        %= *documentation >> keyword["constructor"] > params > ';';
 
 			void_method_       %= *documentation >> keyword["void"] > local_identifier > params > mutable_;
-			auto_method_       %= *documentation >> keyword["auto"] > local_identifier > params > mutable_ > "->" >> templated_type;
+			auto_method_       %= *documentation >> keyword["auto"] > local_identifier > params > mutable_ > "->" > templated_type;
 			method             %= (void_method_ | auto_method_) > ';';
 
 			enumerator         %= *documentation >> keyword["enumerator"] > new_type > "->" > templated_type;
 
-			delegate           %= *documentation >> keyword["delegate"] > new_type > params;
+			void_delegate_     %= *documentation >> keyword["delegate"] >> keyword["void"] > new_type > params;
+			auto_delegate_     %= *documentation >> keyword["delegate"] >> keyword["auto"] > new_type > params > "->" > templated_type;
+			delegate           %= (void_delegate_ | auto_delegate_);
 
 			mutable_           %= (keyword["mutable"] >> qi::attr(true)) | qi::attr(false);
 
@@ -154,6 +211,8 @@ namespace {
 			BOOST_SPIRIT_DEBUG_NODE(void_method_);
 			BOOST_SPIRIT_DEBUG_NODE(enumerator);
 			BOOST_SPIRIT_DEBUG_NODE(delegate);
+			BOOST_SPIRIT_DEBUG_NODE(auto_delegate_);
+			BOOST_SPIRIT_DEBUG_NODE(void_delegate_);
 			BOOST_SPIRIT_DEBUG_NODE(struct_members);
 			BOOST_SPIRIT_DEBUG_NODE(struct_);
 			BOOST_SPIRIT_DEBUG_NODE(enum_member);
@@ -236,6 +295,8 @@ namespace {
 		rule<void_method> void_method_;
 		rule<cwcc::enumerator> enumerator;
 		rule<cwcc::delegate> delegate;
+		rule<auto_delegate> auto_delegate_;
+		rule<void_delegate> void_delegate_;
 		rule<cwcc::struct_::member> struct_members;
 		rule<cwcc::struct_> struct_;
 		rule<cwcc::enum_::member> enum_member;

@@ -9,25 +9,35 @@
 BOOST_AUTO_TEST_CASE(delegate) {
 	const auto & b = parse(
 		"bundle UT {\n"
-		"	delegate Delegate0();\n"
-		"	delegate Delegate1(::cwc::int val1);\n"
-		"	delegate Delegate2(::cwc::int val1, ::cwc::int val2);\n"
+		"	delegate void VDelegate0();\n"
+		"	delegate void VDelegate1(::cwc::int val1);\n"
+		"	delegate void VDelegate2(::cwc::int val1, ::cwc::int val2);\n"
 		"	//test\n"
-		"	delegate Delegate3();\n"
+		"	delegate void VDelegate3();\n"
 		"	//test\n"
-		"	delegate Delegate4(::cwc::int val1);\n"
+		"	delegate void VDelegate4(::cwc::int val1);\n"
 		"	//test\n"
-		"	delegate Delegate5(::cwc::int val1, ::cwc::int val2);\n"
+		"	delegate void VDelegate5(::cwc::int val1, ::cwc::int val2);\n"
+		"	delegate auto ADelegate0() -> ::cwc::int;\n"
+		"	delegate auto ADelegate1(::cwc::int val1) -> ::cwc::int;\n"
+		"	delegate auto ADelegate2(::cwc::int val1, ::cwc::int val2) -> ::cwc::int;\n"
+		"	//test\n"
+		"	delegate auto ADelegate3() -> ::cwc::int;\n"
+		"	//test\n"
+		"	delegate auto ADelegate4(::cwc::int val1) -> ::cwc::int;\n"
+		"	//test\n"
+		"	delegate auto ADelegate5(::cwc::int val1, ::cwc::int val2) -> ::cwc::int;\n"
 		"}"
 	);
 
 	cwcc::bundle reference;
 	reference.name = "UT";
-	auto append = [&](std::vector<cwcc::documentation> lines, std::string name, std::vector<cwcc::param> params) {
+	auto append = [&](std::vector<cwcc::documentation> lines, std::string name, std::vector<cwcc::param> params, boost::optional<cwcc::untemplated_type> out) {
 		cwcc::delegate d;
 		d.lines = std::move(lines);
 		d.name = std::move(name);
-		d.params = std::move(params);
+		d.in = std::move(params);
+		d.out = out;
 		reference.members.push_back(d);
 	};
 
@@ -44,13 +54,18 @@ BOOST_AUTO_TEST_CASE(delegate) {
 		params2.push_back(p);
 	}
 
-	append({},         "Delegate0", params0);
-	append({},         "Delegate1", params1);
-	append({},         "Delegate2", params2);
-
-	append({{"test"}}, "Delegate3", params0);
-	append({{"test"}}, "Delegate4", params1);
-	append({{"test"}}, "Delegate5", params2);
+	append({},         "VDelegate0", params0, boost::none);
+	append({},         "VDelegate1", params1, boost::none);
+	append({},         "VDelegate2", params2, boost::none);
+	append({{"test"}}, "VDelegate3", params0, boost::none);
+	append({{"test"}}, "VDelegate4", params1, boost::none);
+	append({{"test"}}, "VDelegate5", params2, boost::none);
+	append({},         "ADelegate0", params0, cwcc::untemplated_type{"::cwc::int"});
+	append({},         "ADelegate1", params1, cwcc::untemplated_type{"::cwc::int"});
+	append({},         "ADelegate2", params2, cwcc::untemplated_type{"::cwc::int"});
+	append({{"test"}}, "ADelegate3", params0, cwcc::untemplated_type{"::cwc::int"});
+	append({{"test"}}, "ADelegate4", params1, cwcc::untemplated_type{"::cwc::int"});
+	append({{"test"}}, "ADelegate5", params2, cwcc::untemplated_type{"::cwc::int"});
 
 	BOOST_TEST((b == reference));
 }

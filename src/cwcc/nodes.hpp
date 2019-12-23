@@ -269,10 +269,11 @@ namespace cwcc {
 	struct delegate final {
 		std::vector<documentation> lines;
 		std::string name;
-		std::vector<param> params;
+		std::vector<param> in;
+		boost::optional<templated_type> out;
 
 		friend
-		auto operator==(const delegate & lhs, const delegate & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.params == rhs.params); }
+		auto operator==(const delegate & lhs, const delegate & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.in == rhs.in) && (lhs.out == rhs.out); }
 	};
 
 	struct bundle final {
@@ -284,26 +285,3 @@ namespace cwcc {
 		auto operator==(const bundle & lhs, const bundle & rhs) -> bool { return (lhs.lines == rhs.lines) && (lhs.name == rhs.name) && (lhs.members == rhs.members); }
 	};
 }
-
-BOOST_FUSION_ADAPT_STRUCT(cwcc::untemplated_type, name)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::array, type, size)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::array_ref, mutable_, type)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::bitset, size)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::optional, type)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::tuple, types)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::variant, types)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::intrusive_ptr, mutable_, type)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::documentation, line)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member, lines, type, fields)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_, lines, name, members)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::component::constructor, lines, params)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::enum_::member, lines, name)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::enum_, lines, name, members)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::typedef_, lines, name, type)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::component, lines, name, interfaces, members)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::param, mutable_, type, name)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::interface::method, lines, name, in, mutable_, out)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::enumerator, lines, name, type)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::delegate, lines, name, params)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::interface, lines, name, methods)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::bundle, lines, name, members)

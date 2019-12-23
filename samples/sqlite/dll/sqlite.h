@@ -9,14 +9,21 @@
 #include "../cwc.sample.sqlite.cwch"
 
 namespace sample {
-	using cwc::sample::sqlite::handler;
 	using cwc::sample::sqlite::entry;
+	using cwc::sample::sqlite::handler;
+	using cwc::sample::sqlite::control_handler;
 
 	struct sqlite3 {
 		sqlite3(cwc::string_ref path);
 		~sqlite3() noexcept;
 
-		void execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const;
+		void execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const {
+			execute(sql, args, control_handler{[&](auto params) {
+				callback(params);
+				return true;
+			}});
+		}
+		void execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const control_handler & callback) const;
 	private:
 		::sqlite3 * db{nullptr};
 	};

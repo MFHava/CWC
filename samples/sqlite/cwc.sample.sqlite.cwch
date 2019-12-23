@@ -10,14 +10,22 @@ namespace cwc::sample::sqlite {
 	using entry = ::cwc::variant<::cwc::float64, ::cwc::int64, ::cwc::string_ref, ::cwc::sample::sqlite::blob_ref>;
 	static_assert(std::is_standard_layout_v<::cwc::variant<::cwc::float64, ::cwc::int64, ::cwc::string_ref, ::cwc::sample::sqlite::blob_ref>>);
 
-	using handler = ::cwc::delegate<const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> /*result_set*/>;
+	using handler = ::cwc::delegate<void(const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> /*result_set*/)>;
+
+	//! @returns true iff retrieval of results shall continue
+	using control_handler = ::cwc::delegate<::cwc::boolean(const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> /*result_set*/)>;
 
 	class database : public ::cwc::component {
 		virtual
 		auto CWC_CALL cwc$sample$sqlite$database$execute$0(const ::cwc::string_ref * sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> * args, const ::cwc::sample::sqlite::handler * callback) const noexcept -> const ::cwc::internal::error * =0;
+		virtual
+		auto CWC_CALL cwc$sample$sqlite$database$execute$1(const ::cwc::string_ref * sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> * args, const ::cwc::sample::sqlite::control_handler * callback) const noexcept -> const ::cwc::internal::error * =0;
 	public:
 		void execute(const ::cwc::string_ref & sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> & args, const ::cwc::sample::sqlite::handler & callback) const {
 			::cwc::internal::call(*this, &database::cwc$sample$sqlite$database$execute$0, sql, args, callback);
+		}
+		void execute(const ::cwc::string_ref & sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> & args, const ::cwc::sample::sqlite::control_handler & callback) const {
+			::cwc::internal::call(*this, &database::cwc$sample$sqlite$database$execute$1, sql, args, callback);
 		}
 	};
 
@@ -48,6 +56,7 @@ namespace cwc::internal {
 	template<typename Implementation, typename TypeList>
 	class vtable_implementation<cwc::sample::sqlite::database, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
 		auto CWC_CALL cwc$sample$sqlite$database$execute$0(const ::cwc::string_ref * sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> * args, const ::cwc::sample::sqlite::handler * callback) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { static_cast<const Implementation &>(*this).execute(*sql, *args, *callback); }); }
+		auto CWC_CALL cwc$sample$sqlite$database$execute$1(const ::cwc::string_ref * sql, const ::cwc::array_ref<const ::cwc::sample::sqlite::entry> * args, const ::cwc::sample::sqlite::control_handler * callback) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { static_cast<const Implementation &>(*this).execute(*sql, *args, *callback); }); }
 		//detect missing methods:
 		void execute();
 	};

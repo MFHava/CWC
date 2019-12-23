@@ -10,10 +10,14 @@ bundle cwc::sample::sqlite {
 		blob_ref
 	>;
 
-	delegate handler(array_ref<entry> result_set);
+	delegate void handler(array_ref<entry> result_set);
+
+	//! @returns true iff retrieval of results shall continue
+	delegate auto control_handler(array_ref<entry> result_set) -> ::cwc::boolean;
 
 	interface database {
 		void execute(::cwc::string_ref sql, array_ref<entry> args, handler callback);
+		void execute(::cwc::string_ref sql, array_ref<entry> args, control_handler callback);
 	};
 
 	component file : database {

@@ -23,7 +23,7 @@ namespace sample {
 		sqlite3_close(db);
 	}
 
-	void sqlite3::execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const handler & callback) const {
+	void sqlite3::execute(cwc::string_ref sql, cwc::array_ref<const entry> args, const control_handler & callback) const {
 		const struct prepared_stmt {
 			prepared_stmt(::sqlite3 * db, cwc::string_ref sql) {
 				if(sqlite3_prepare(db, sql.data(), static_cast<int>(sql.size()), &ptr, nullptr)) {
@@ -77,7 +77,7 @@ namespace sample {
 				assert(size >= 0);
 				entries.resize(size);
 				for(int index{0}; index < size; ++index) entries[index] = stmt.get(index);
-				callback(entries);//TODO: try-catch
+				if(!callback(entries)) break;//TODO: try-catch
 			}
 		}
 	}

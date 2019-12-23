@@ -23,7 +23,7 @@ int main() try {
 			first_name TEXT NOT NULL,
 			last_name TEXT NOT NULL
 		);
-	)", {}, [](auto) { std::cerr << "this should never have been called!\n"; });
+	)", {}, handler{[](auto) { std::cerr << "this should never have been called!\n"; }});
 
 	constexpr char insert[]{R"(
 		INSERT INTO persons (first_name, last_name)
@@ -41,6 +41,7 @@ int main() try {
 		FROM persons
 	)", {}, [](auto result) {
 		std::cout << cwc::get<cwc::string_ref>(result[1])  << ", " << cwc::get<cwc::string_ref>(result[0]) << std::endl;
+		return true;
 	});
 } catch(const std::exception & exc) {
 	std::cerr << "ERROR: " << exc.what() << "\n";

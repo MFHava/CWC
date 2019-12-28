@@ -56,9 +56,15 @@
 	#endif
 	#include <Windows.h>
 	namespace {
-		auto GetExecutableFileName(std::vector<char> & result) -> std::size_t {
-			assert(result.size() <= std::numeric_limits<DWORD>::max());
-			return GetModuleFileName(nullptr, result.data(), static_cast<DWORD>(result.size()));
+		auto GetExecutableFileName() -> std::string {
+			static_assert(sizeof(DWORD) == 4);
+			for(std::string result(MAX_PATH, '\0');; result.resize(result.size() * 2)) {
+				assert(result.size() <= std::numeric_limits<DWORD>::max());
+				if(const auto size{GetModuleFileName(nullptr, result.data(), static_cast<DWORD>(result.size()))}; size < result.size()) {
+					result.resize(size);
+					return result;
+				}
+			}
 		}
 	}
 	#define DLL_PREFIX ""
@@ -67,16 +73,20 @@
 #elif CWC_OS_LINUX
 	#include <dlfcn.h>
 	#include <unistd.h>
-	#define HMODULE void *
-	#define MAX_PATH PATH_MAX
 	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
 	#define GetProcAddress(dll, function) dlsym(dll, function)
 	#define FreeLibrary(dll) dlclose(dll)
 	namespace {
-		auto GetExecutableFileName(std::vector<char> & result) -> std::size_t {
-			const auto tmp{readlink("/proc/self/exe", result.data(), result.size())};
-			assert(tmp != -1);
-			return static_cast<std::size_t>(tmp);
+		using HMODULE = void *;
+
+		auto GetExecutableFileName() -> std::string {
+			for(std::string result(PATH_MAX, '\0');; result.resize(result.size() * 2)) {
+				if(const auto size{readlink("/proc/self/exe", result.data(), result.size())}; size < static_cast<ssize_t>(result.size())) {
+					assert(size != -1);
+					result.resize(size);
+					return result;
+				}
+			}
 		}
 	}
 	#define DLL_PREFIX "lib"
@@ -134,12 +144,7 @@ namespace {
 		auto make_name(std::string file) -> std::string {
 			static const std::string prefix{DLL_PREFIX}, suffix{DLL_SUFFIX};
 			static const auto base{[] {
-				auto exe{[] {
-					for(std::vector<char> result(10);; result.resize(result.size() * 2)) {
-						const auto size{GetExecutableFileName(result)};
-						if(size < result.size()) return std::string{std::begin(result), std::begin(result) + size};
-					}
-				}()};
+				auto exe{GetExecutableFileName()};
 				if(const auto it{std::find(std::rbegin(exe), std::rend(exe), PATH_SEPARATOR)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
 				return exe;
 			}()};

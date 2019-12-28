@@ -92,6 +92,32 @@
 	#define DLL_PREFIX "lib"
 	#define DLL_SUFFIX ".so"
 	#define PATH_SEPARATOR '/'
+#elif CWC_OS_HAIKU
+	#include <image.h>
+	#define LoadLibrary(file) load_add_on(file)
+	#define FreeLibrary(dll) unload_add_on(dll)
+	namespace {
+		using HMODULE = image_id;
+
+		auto GetProcAddress(HMODULE dll, const char* function) -> void* {
+			void* result{nullptr};
+			get_image_symbol(dll, function, B_SYMBOL_TYPE_TEXT, &result);
+			return result;
+		}
+
+		auto GetExecutableFileName() -> std::string {
+			image_info info;
+			int32 cookie{0};
+			while(get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK) {
+				if(info.type == B_APP_IMAGE)
+					return info.name;
+			}
+			return "";
+		}
+	}
+	#define DLL_PREFIX "lib"
+	#define DLL_SUFFIX ".so"
+	#define PATH_SEPARATOR '/'
 #else
 	#error unknown operating system
 #endif

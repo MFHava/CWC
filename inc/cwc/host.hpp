@@ -123,7 +123,7 @@ namespace {
 
 	auto make_path(std::string file) -> std::string {
 		using namespace std::string_literals;
-		static const std::string local{"."s + PATH_SEPARATOR};
+		static const auto local{"."s + PATH_SEPARATOR};
 		if(std::find(std::begin(file), std::end(file), PATH_SEPARATOR) == std::end(file)) file.insert(std::begin(file), std::begin(local), std::end(local));
 		return file;
 	}
@@ -188,8 +188,8 @@ namespace {
 				while(std::getline(is, line)) {
 					std::smatch matched;
 					if(std::regex_match(line, matched, comment_or_whitespace)) {} //nothing to do here
-					else if(std::regex_match(line, matched, key_value_pair)) result[current_section][std::move(matched[1])] = std::move(matched[2]);
-					else if(std::regex_match(line, matched, section)) current_section = std::move(matched[1]);
+					else if(std::regex_match(line, matched, key_value_pair)) result[current_section][matched[1]] = matched[2];
+					else if(std::regex_match(line, matched, section)) current_section = matched[1];
 					else throw std::logic_error{"invalid configuration file"};
 				}
 			}

@@ -94,10 +94,10 @@
 	#define PATH_SEPARATOR '/'
 #elif CWC_OS_HAIKU
 	#include <image.h>
-	#define LoadLibrary(file) load_add_on(file)
+	#define LoadLibrary(file) std::max(load_add_on(file), image_id{0})
 	#define FreeLibrary(dll) unload_add_on(dll)
 	namespace {
-		using HMODULE = image_id;
+		using HMODULE = image_id;//image_id == int32 (not a pointer!)
 
 		auto GetProcAddress(HMODULE dll, const char * function) -> void * {
 			void * result{nullptr};

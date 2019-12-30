@@ -99,20 +99,17 @@
 	namespace {
 		using HMODULE = image_id;
 
-		auto GetProcAddress(HMODULE dll, const char* function) -> void* {
-			void* result{nullptr};
+		auto GetProcAddress(HMODULE dll, const char * function) -> void * {
+			void * result{nullptr};
 			get_image_symbol(dll, function, B_SYMBOL_TYPE_TEXT, &result);
 			return result;
 		}
 
 		auto GetExecutableFileName() -> std::string {
 			image_info info;
-			int32 cookie{0};
-			while(get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK) {
-				if(info.type == B_APP_IMAGE)
-					return info.name;
-			}
-			return "";
+			info.name[0] = '\0';
+			for(int32 cookie{0}; get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK && info.type != B_APP_IMAGE;);
+			return info.name;
 		}
 	}
 	#define DLL_PREFIX "lib"

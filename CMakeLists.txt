@@ -41,7 +41,7 @@ add_executable(cwcc ${CWCC})
 target_link_libraries(cwcc cwc Boost::program_options)
 set_target_properties(cwcc PROPERTIES FOLDER "C++ with Components")
 
-find_package(Doxygen)
+find_package(Doxygen 1.8.2) #Doxygen 1.8.2 is the first version to support C++11
 if(Doxygen_FOUND)
 	set(DOXYGEN_PROJECT_NAME "C++ with Components (${CWC_VERSION})")
 	set(DOXYGEN_PROJECT_BRIEF "A portable extension of C++ to support component oriented software enginnering.")

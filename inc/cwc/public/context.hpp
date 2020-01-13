@@ -16,7 +16,9 @@ namespace cwc {
 		virtual
 		auto CWC_CALL cwc$context$exception$0(const internal::error * err) const noexcept -> const internal::error * =0;
 		virtual
-		auto CWC_CALL cwc$context$factory$1(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept -> const internal::error * =0;
+		auto CWC_CALL cwc$context$factory$1(const string_ref * fqn, intrusive_ptr<component> * cwc_ret) const noexcept -> const internal::error * =0;
+		virtual
+		auto CWC_CALL cwc$context$factory$2(const string_ref * fqn, const string_ref * id, intrusive_ptr<component> * cwc_ret) const noexcept -> const internal::error * =0;
 
 		friend
 		void internal::validate(const internal::error * err);
@@ -28,13 +30,24 @@ namespace cwc {
 	public:
 		//! @brief create factory for component type
 		//! @tparam Component component type to create factory for
-		//! @param[in] id optional id of the plugin
 		//! @returns factory for requested type
 		template<typename Component>
-		auto factory(const optional<const string_ref> & id = std::nullopt) const -> intrusive_ptr<typename Component::cwc_factory> {
+		auto factory() const -> intrusive_ptr<typename Component::cwc_factory> {
 			intrusive_ptr<component> cwc_ret;
 			const auto & fqn = Component::cwc_fqn();
-			internal::call(*this, &context::cwc$context$factory$1, fqn, id, cwc_ret);
+			internal::call(*this, &context::cwc$context$factory$1, fqn, cwc_ret);
+			return cwc_ret;
+		}
+
+		//! @brief create factory for component type
+		//! @tparam Component component type to create factory for
+		//! @param[in] id id of the plugin
+		//! @returns factory for requested type
+		template<typename Component>
+		auto factory(const string_ref & id) const -> intrusive_ptr<typename Component::cwc_factory> {
+			intrusive_ptr<component> cwc_ret;
+			const auto & fqn = Component::cwc_fqn();
+			internal::call(*this, &context::cwc$context$factory$2, fqn, id, cwc_ret);
 			return cwc_ret;
 		}
 

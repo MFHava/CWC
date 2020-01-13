@@ -220,7 +220,8 @@ namespace {
 		}
 
 		auto CWC_CALL cwc$context$exception$0(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * final { return this->exception(err); }
-		auto CWC_CALL cwc$context$factory$1(const cwc::string_ref * fqn, const cwc::optional<const cwc::string_ref> * id, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn, *id); }); }
+		auto CWC_CALL cwc$context$factory$1(const cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn); }); }
+		auto CWC_CALL cwc$context$factory$2(const cwc::string_ref * fqn, const cwc::string_ref * id, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn, *id); }); }
 	public:
 		context_impl(std::istream & is) : configuration{parse_ini(is)} {
 			key_value_map components;
@@ -256,9 +257,14 @@ namespace {
 			return &last_error;
 		}
 
-		auto factory(const cwc::string_ref & fqn, const cwc::optional<const cwc::string_ref> & id) const -> cwc::intrusive_ptr<cwc::component> {
+		auto factory(cwc::string_ref fqn) const -> cwc::intrusive_ptr<cwc::component> {
 			const std::string key{fqn};//TODO: this copies the string, which should not be necessary with C++20s generic find
-			return id ? plugin_factories.at(key).at(std::string{*id}) : component_factories.at(key);
+			return component_factories.at(key);
+		}
+
+		auto factory(cwc::string_ref fqn, cwc::string_ref id) const -> cwc::intrusive_ptr<cwc::component> {
+			const std::string key{fqn};//TODO: this copies the string, which should not be necessary with C++20s generic find
+			return plugin_factories.at(key).at(std::string{id});
 		}
 	};
 

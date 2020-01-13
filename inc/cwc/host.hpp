@@ -157,7 +157,6 @@ namespace {
 
 		factory_map component_factories;
 		std::unordered_map<std::string, factory_map> plugin_factories;
-		const config_map configuration;
 
 		static
 		auto make_name(std::string file) -> std::string {
@@ -196,9 +195,9 @@ namespace {
 		}
 
 		static
-		auto parse_ini(std::istream & is) -> config_map {
+		auto parse_ini() -> config_map {
 			config_map result;
-			if(is) {
+			if(std::stringstream is{CWC_CONTEXT_INIT_STRING}; is) {
 				const std::regex comment_or_whitespace{R"(\s*(?:[;#].*)?)"},
 				                 section{R"(\s*\[([^\s;#]+)\]\s*(?:[;#].*)?)"},
 				                 key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*(?:[;#].*)?)"};
@@ -218,7 +217,9 @@ namespace {
 		auto CWC_CALL cwc$context$factory$1(const cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn); }); }
 		auto CWC_CALL cwc$context$factory$2(const cwc::string_ref * fqn, const cwc::string_ref * id, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn, *id); }); }
 	public:
-		context_impl(std::istream & is) : configuration{parse_ini(is)} {
+		context_impl() {
+			const auto configuration{parse_ini()};
+
 			key_value_map components;
 			config_map plugins;
 
@@ -263,10 +264,7 @@ namespace {
 		}
 	};
 
-	const auto instance{[] {
-		std::istringstream is{CWC_CONTEXT_INIT_STRING};
-		return context_impl{is};
-	}()};
+	const context_impl instance;
 }
 
 auto ::cwc::this_context() -> const context & { return instance; }

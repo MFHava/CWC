@@ -22,8 +22,7 @@
 	Several aspects of the context initialization are configurable:
 	| Flag | Description | Default |
 	| --- | --- | --- |
-	| @c CWC_CONTEXT_INIT_STRING | source of the context initialization | @c "cwc.ini" <br/> (iff @c CWC_CONTEXT_INIT_IS_NOT_FILE is not defined) |
-	| @c CWC_CONTEXT_INIT_IS_NOT_FILE | controls how @c CWC_CONTEXT_INIT_STRING is interpreted <br/> if not defined: @c CWC_CONTEXT_INIT_STRING is name of an INI-file <br/> if defined: @c CWC_CONTEXT_INIT_STRING is string with complete configuration in INI-format | not defined |
+	| @c CWC_CONTEXT_INIT_STRING | source of the context initialization | not defined |
 	| @c CWC_CONTEXT_INIT_PREFIX_DLL_PATH | override OS specific dll-path behavior and load DLLs only relative to host executable | @c true |
 	| @c CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH | maximum length of exceptions messages - longer exception messages will be truncated when transfered by CWC | @c 256 |
 
@@ -36,10 +35,6 @@
 
 #if !defined(CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH)
 	#define CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH 256
-#endif
-
-#if !defined(CWC_CONTEXT_INIT_IS_NOT_FILE) && !defined(CWC_CONTEXT_INIT_STRING)
-	#define CWC_CONTEXT_INIT_STRING "cwc.ini"
 #endif
 
 #if !defined(CWC_CONTEXT_INIT_STRING)
@@ -269,12 +264,7 @@ namespace {
 	};
 
 	const auto instance{[] {
-#ifdef CWC_CONTEXT_INIT_IS_NOT_FILE
 		std::istringstream is{CWC_CONTEXT_INIT_STRING};
-#else
-		std::ifstream is{CWC_CONTEXT_INIT_STRING};
-		if(!is) throw std::invalid_argument{"could not open file \"" + std::string{CWC_CONTEXT_INIT_STRING} +"\" for context initialization"};
-#endif
 		return context_impl{is};
 	}()};
 }

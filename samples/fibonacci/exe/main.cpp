@@ -8,7 +8,6 @@
 #include <iostream>
 #include "../cwc.sample.fibonacci.cwch"
 
-#define CWC_CONTEXT_INIT_IS_NOT_FILE
 #define CWC_CONTEXT_INIT_STRING\
 	"[cwc.mapping]\n"\
 	"cwc::sample::fibonacci::generator = sample-fibonacci"

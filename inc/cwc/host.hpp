@@ -152,7 +152,6 @@ namespace {
 
 		using factory_map = std::unordered_map<std::string, cwc::intrusive_ptr<cwc::component>>;
 		using key_value_map = std::unordered_map<std::string, std::string>;
-		using config_map = std::unordered_map<std::string, key_value_map>;
 		using dll_map = std::unordered_map<HMODULE, factory_export_type>;
 
 		factory_map component_factories;
@@ -195,18 +194,15 @@ namespace {
 		}
 
 		static
-		auto parse_ini() -> config_map {
-			config_map result;
+		auto parse_ini() -> key_value_map {
+			key_value_map result;
 			if(std::stringstream is{CWC_CONTEXT_INIT_STRING}; is) {
 				const std::regex comment_or_whitespace{R"(\s*(?:[;#].*)?)"},
-				                 section{R"(\s*\[([^\s;#]+)\]\s*(?:[;#].*)?)"},
-				                 key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*(?:[;#].*)?)"};
-				std::string line, current_section;
-				while(std::getline(is, line)) {
+				                 key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*)"};
+				for(std::string line; std::getline(is, line);) {
 					std::smatch matched;
 					if(std::regex_match(line, matched, comment_or_whitespace)) {} //nothing to do here
-					else if(std::regex_match(line, matched, key_value_pair)) result[current_section][matched[1]] = matched[2];
-					else if(std::regex_match(line, matched, section)) current_section = matched[1];
+					else if(std::regex_match(line, matched, key_value_pair)) result[matched[1]] = matched[2];
 					else throw std::logic_error{"invalid configuration file"};
 				}
 			}
@@ -215,34 +211,17 @@ namespace {
 
 		auto CWC_CALL cwc$context$exception$0(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * final { return this->exception(err); }
 		auto CWC_CALL cwc$context$factory$1(const cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn); }); }
-		auto CWC_CALL cwc$context$factory$2(const cwc::string_ref * fqn, const cwc::string_ref * id, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn, *id); }); }
 	public:
 		context_impl() {
 			const auto configuration{parse_ini()};
 
 			key_value_map components;
-			config_map plugins;
-
-			if(const auto cit{configuration.find("cwc.mapping")}; cit != std::end(configuration)) {
-				for(const auto & mapping : cit->second)
-					if(mapping.second.front() != '[') components[mapping.first] = mapping.second;
-					else {//key maps to section
-						if(mapping.second.back() != ']') throw std::invalid_argument{"malformed configuration"};
-						if(const auto section{configuration.find(mapping.second.substr(1, mapping.second.size() - 2))}; section != std::end(configuration))
-							for(const auto & entry: section->second)
-								plugins[mapping.first].insert(entry);
-					}
-			}
+			for(const auto & mapping : configuration) components[mapping.first] = mapping.second;
 
 			dll_map map;//ensure that cwc_init is only called once
 			for(const auto & [fqn, file] : components)
 				if(const auto library{load_dll(map, file)}) component_factories.emplace(fqn, create_factory(map.at(library), file, fqn));
 				else throw std::logic_error{"could not load bundle \"" + file + '"'};
-
-			for(const auto & [fqn, mapping] : plugins)
-				for(const auto & m : mapping)
-					if(const auto library{load_dll(map, m.second)})
-						plugin_factories[fqn].emplace(m.first, create_factory(map.at(library), m.second, fqn));
 		}
 
 		auto exception(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * {
@@ -256,11 +235,6 @@ namespace {
 		auto factory(cwc::string_ref fqn) const -> cwc::intrusive_ptr<cwc::component> {
 			const std::string key{fqn};//TODO: this copies the string, which should not be necessary with C++20s generic find
 			return component_factories.at(key);
-		}
-
-		auto factory(cwc::string_ref fqn, cwc::string_ref id) const -> cwc::intrusive_ptr<cwc::component> {
-			const std::string key{fqn};//TODO: this copies the string, which should not be necessary with C++20s generic find
-			return plugin_factories.at(key).at(std::string{id});
 		}
 	};
 

@@ -9,7 +9,6 @@
 #include "../cwc.sample.fibonacci.cwch"
 
 #define CWC_CONTEXT_INIT_STRING\
-	"[cwc.mapping]\n"\
 	"cwc::sample::fibonacci::generator = sample-fibonacci"
 #include "cwc/host.hpp"
 

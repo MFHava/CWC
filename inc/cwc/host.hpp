@@ -61,10 +61,10 @@
 				}
 			}
 		}
+
+		constexpr char path_separator{'\\'};
+		constexpr std::string_view dll_prefix{""}, dll_suffix{".dll"};
 	}
-	#define DLL_PREFIX ""
-	#define DLL_SUFFIX ".dll"
-	#define PATH_SEPARATOR '\\'
 #elif CWC_OS_LINUX
 	#include <dlfcn.h>
 	#include <unistd.h>
@@ -83,10 +83,10 @@
 				}
 			}
 		}
+
+		constexpr char path_separator{'/'};
+		constexpr std::string_view dll_prefix{"lib"}, dll_suffix{".so"};
 	}
-	#define DLL_PREFIX "lib"
-	#define DLL_SUFFIX ".so"
-	#define PATH_SEPARATOR '/'
 #elif CWC_OS_HAIKU
 	#include <image.h>
 	#define LoadLibrary(file) std::max(load_add_on(file), image_id{0})
@@ -106,10 +106,10 @@
 			for(int32 cookie{0}; get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK && info.type != B_APP_IMAGE;);
 			return info.name;
 		}
+
+		constexpr char path_separator{'/'};
+		constexpr std::string_view dll_prefix{"lib"}, dll_suffix{".so"};
 	}
-	#define DLL_PREFIX "lib"
-	#define DLL_SUFFIX ".so"
-	#define PATH_SEPARATOR '/'
 #else
 	#error unknown operating system
 #endif
@@ -140,9 +140,10 @@ namespace {
 	cwc::internal::error last_error{{}, last_message};
 
 	auto make_path(std::string file) -> std::string {
-		using namespace std::string_literals;
-		static const auto local{"."s + PATH_SEPARATOR};
-		if(std::find(std::begin(file), std::end(file), PATH_SEPARATOR) == std::end(file)) file.insert(std::begin(file), std::begin(local), std::end(local));
+		if(std::find(std::begin(file), std::end(file), path_separator) == std::end(file)) {
+			file.insert(std::begin(file), '.');
+			file.insert(std::begin(file), path_separator);
+		}
 		return file;
 	}
 
@@ -160,15 +161,14 @@ namespace {
 
 		static
 		auto make_name(std::string file) -> std::string {
-			static const std::string prefix{DLL_PREFIX}, suffix{DLL_SUFFIX};
 			static const auto base{[] {
 				auto exe{GetExecutableFileName()};
-				if(const auto it{std::find(std::rbegin(exe), std::rend(exe), PATH_SEPARATOR)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
+				if(const auto it{std::find(std::rbegin(exe), std::rend(exe), path_separator)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
 				return exe;
 			}()};
 			if constexpr(CWC_CONTEXT_INIT_PREFIX_DLL_PATH) file.insert(std::begin(file), std::begin(base), std::end(base));
-			file.insert(std::find(std::rbegin(file), std::rend(file), PATH_SEPARATOR).base(), std::begin(prefix), std::end(prefix));
-			file.insert(std::end(file), std::begin(suffix), std::end(suffix));
+			file.insert(std::find(std::rbegin(file), std::rend(file), path_separator).base(), std::begin(dll_prefix), std::end(dll_prefix));
+			file.insert(std::end(file), std::begin(dll_suffix), std::end(dll_suffix));
 			return file;
 		}
 

@@ -129,51 +129,6 @@ namespace cwc::internal::TL {
 		>;
 	};
 
-	template<typename TypeList, typename Type, template<typename, typename> typename BinaryPredicate>
-	struct find_if;
-
-	template<typename TypeList, typename Type, template<typename, typename> typename BinaryPredicate>
-	inline
-	constexpr
-	auto find_if_v{find_if<TypeList, Type, BinaryPredicate>::value};
-
-	template<typename Type, template<typename, typename> typename BinaryPredicate>
-	struct find_if<empty_type_list, Type, BinaryPredicate> : std::integral_constant<int, -1> {};
-
-	template<typename Head, typename Tail, typename Type, template<typename, typename> typename BinaryPredicate>
-	struct find_if<type_list<Head, Tail>, Type, BinaryPredicate> {
-	private:
-		enum {
-			match = BinaryPredicate<
-				Head,
-				Type
-			>::value
-		};
-		enum {
-			tmp = find_if_v<
-				Tail,
-				Type,
-				BinaryPredicate
-			>
-		};
-	public:
-		enum {
-			value = match
-				? 0
-				: tmp == -1
-					? -1
-					: 1 + tmp
-		};
-	};
-
-	template<typename TypeList, typename Type>
-	using find = find_if<TypeList, Type, std::is_same>;
-
-	template<typename TypeList, typename Type>
-	inline
-	constexpr
-	auto find_v{find<TypeList, Type>::value};
-
 	template<typename TypeList, int Index>
 	struct at;
 
@@ -192,18 +147,4 @@ namespace cwc::internal::TL {
 			Index - 1
 		>;
 	};
-
-	template<typename TypeList>
-	struct size;
-
-	template<typename TypeList>
-	inline
-	constexpr
-	auto size_v{size<TypeList>::value};
-
-	template<>
-	struct size<empty_type_list> : std::integral_constant<int, 0> {};
-
-	template<typename Head, typename Tail>
-	struct size<type_list<Head, Tail>> : std::integral_constant<int, 1 + size_v<Tail>> {};
 }

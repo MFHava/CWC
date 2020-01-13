@@ -12,7 +12,7 @@
 
 namespace cwc {
 	//! @brief interface of the global context
-	class context : public component {
+	class context {
 		virtual
 		auto CWC_CALL cwc$context$exception$0(const internal::error * err) const noexcept -> const internal::error * =0;
 		virtual
@@ -61,22 +61,6 @@ namespace cwc {
 		}
 	};
 
-	namespace internal {
-		template<>
-		struct interface_id<context> final : uuid_constant<0xEA, 0x2E, 0xA7, 0x81, 0x7F, 0xF8, 0x5D, 0xB8, 0xBE, 0xC1, 0xC1, 0x2, 0x4A, 0x74, 0x4E, 0xC8> {};
-
-		template<typename Implementation, typename TypeList>
-		class vtable_implementation<context, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {
-			auto CWC_CALL cwc$context$exception$0(const error * err) const noexcept -> const error * final { return static_cast<const Implementation &>(*this).exception(err); }
-			auto CWC_CALL cwc$context$config$1(intrusive_ptr<config_sections_enumerator> * cwc_ret) const noexcept -> const error * final { return call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).config(); }); }
-			auto CWC_CALL cwc$context$factory$2(const string_ref * fqn, const optional<const string_ref> * id, intrusive_ptr<component> * cwc_ret) const noexcept -> const error * final { return call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).factory(*fqn, *id); }); }
-			//detect missing methods:
-			void error();
-			void config();
-			void factory();
-		};
-	}
-
 	//! @brief retrieve global context
-	auto this_context() -> intrusive_ptr<context>;
+	auto this_context() -> const context &;
 }

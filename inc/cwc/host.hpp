@@ -151,7 +151,7 @@ namespace {
 		return file;
 	}
 
-	class context_impl final : public cwc::interface_implementation<context_impl, cwc::context> {
+	class context_impl final : public cwc::context {
 		using factory_export_type = const cwc::internal::error *(CWC_CALL *)(const cwc::string_ref *, cwc::intrusive_ptr<cwc::component> *);
 
 		using factory_map = std::unordered_map<std::string, cwc::intrusive_ptr<cwc::component>>;
@@ -181,9 +181,9 @@ namespace {
 			const auto handle{LoadLibrary(make_path(make_name(file)).c_str())};
 			if(handle) {
 				if(map.count(handle)) FreeLibrary(handle);
-				else if(const auto init{reinterpret_cast<void (CWC_CALL *)(cwc::intrusive_ptr<context>)>(GetProcAddress(handle, "cwc_init"))}) {
+				else if(const auto init{reinterpret_cast<void (CWC_CALL *)(const cwc::context *)>(GetProcAddress(handle, "cwc_init"))}) {
 					if(const auto factory{reinterpret_cast<factory_export_type>(GetProcAddress(handle, "cwc_factory"))}) {
-						init(intrusive_from_this<context>());
+						init(this);
 						map[handle] = factory;
 					} else throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + file + '"'};
 				} else throw std::logic_error{"could not find entry point 'cwc_init' in bundle \"" + file + '"'};
@@ -255,6 +255,9 @@ namespace {
 			}
 		};
 
+		auto CWC_CALL cwc$context$exception$0(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * final { return this->exception(err); }
+		auto CWC_CALL cwc$context$config$1(cwc::intrusive_ptr<cwc::config_sections_enumerator> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->config(); }); }
+		auto CWC_CALL cwc$context$factory$2(const cwc::string_ref * fqn, const cwc::optional<const cwc::string_ref> * id, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn, *id); }); }
 	public:
 		context_impl(std::istream & is) : configuration{parse_ini(is)} {
 			key_value_map components;
@@ -298,15 +301,15 @@ namespace {
 		}
 	};
 
-	const cwc::intrusive_ptr<cwc::context> instance = [] {
+	const auto instance{[] {
 #ifdef CWC_CONTEXT_INIT_IS_NOT_FILE
 		std::istringstream is{CWC_CONTEXT_INIT_STRING};
 #else
 		std::ifstream is{CWC_CONTEXT_INIT_STRING};
 		if(!is) throw std::invalid_argument{"could not open file \"" + std::string{CWC_CONTEXT_INIT_STRING} +"\" for context initialization"};
 #endif
-		return cwc::make_intrusive<context_impl>(is);
-	}();
+		return context_impl{is};
+	}()};
 }
 
-auto ::cwc::this_context() -> intrusive_ptr<context> { return instance; }
+auto ::cwc::this_context() -> const context & { return instance; }

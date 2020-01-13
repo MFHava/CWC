@@ -8,8 +8,9 @@
 #include "../bundle.hpp"
 #include "error_handling.hpp"
 
-static
-::cwc::intrusive_ptr<::cwc::context> cwc_context;
+namespace {
+	const ::cwc::context * cwc_context{nullptr};
+}
 
 namespace cwc {
 	namespace internal {
@@ -24,10 +25,13 @@ namespace cwc {
 		factories_initializer::~factories_initializer() { if(!--nifty_counter) factories.~factory_map(); }
 	}
 
-	auto this_context() -> intrusive_ptr<context> { return cwc_context; }
+	auto this_context() -> const context & {
+		assert(cwc_context);
+		return *cwc_context;
+	}
 }
 
-extern "C" CWC_EXPORT void CWC_CALL cwc_init(::cwc::intrusive_ptr<::cwc::context> context) {
+extern "C" CWC_EXPORT void CWC_CALL cwc_init(const ::cwc::context * context) {
 	assert(context);
 	assert(!cwc_context);
 	cwc_context = context;

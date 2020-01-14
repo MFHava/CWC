@@ -5,41 +5,10 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#include <regex>
 #include <limits>
 #include <climits>
-#include <fstream>
-#include <sstream>
 #include <unordered_map>
 #include "cwc.hpp"
-#include "internal/error_handling.hpp"
-
-/*!
-	@page context_init Context Initialization
-	In order to use CWC-based components the CWC host (in most cases an executable that uses components) must initialize the CWC context.
-	The context is statically initialized by including <cwc/host.hpp>. Note that this header may only be included once by the CWC host and may never be included by a CWC component.
-
-	Several aspects of the context initialization are configurable:
-	| Flag | Description | Default |
-	| --- | --- | --- |
-	| @c CWC_CONTEXT_INIT_STRING | source of the context initialization | not defined |
-	| @c CWC_CONTEXT_INIT_PREFIX_DLL_PATH | override OS specific dll-path behavior and load DLLs only relative to host executable | @c true |
-	| @c CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH | maximum length of exceptions messages - longer exception messages will be truncated when transfered by CWC | @c 256 |
-
-	@attention No static object may depend on the CWC context as this may lead to Static-Initialization-Order-Fiasco!
-*/
-
-#if !defined(CWC_CONTEXT_INIT_PREFIX_DLL_PATH)
-	#define CWC_CONTEXT_INIT_PREFIX_DLL_PATH true
-#endif
-
-#if !defined(CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH)
-	#define CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH 256
-#endif
-
-#if !defined(CWC_CONTEXT_INIT_STRING)
-	#error CWC_CONTEXT_INIT_STRING must be set!
-#endif
 
 #if CWC_OS_WINDOWS
 	#define WIN32_LEAN_AND_MEAN
@@ -129,15 +98,9 @@ namespace {
 	constexpr
 	auto validate_floating_point_v{validate_floating_point<FloatingPoint, ExpectedSize>::value};
 
-	static_assert(CHAR_BIT == 8, "unsupported character type (not 8 bits)");
-	static_assert(validate_floating_point_v<cwc::float32, 4>, "unsupported single precision floating point");
-	static_assert(validate_floating_point_v<cwc::float64, 8>, "unsupported double precision floating point");
-
-	thread_local
-	cwc::utf8 last_message[CWC_CONTEXT_MAX_EXCEPTION_MESSAGE_LENGTH]{0};
-
-	thread_local
-	cwc::internal::error last_error{{}, last_message};
+	static_assert(CHAR_BIT == 8);
+	static_assert(validate_floating_point_v<cwc::float32, 4>);
+	static_assert(validate_floating_point_v<cwc::float64, 8>);
 
 	auto make_path(std::string file) -> std::string {
 		if(std::find(std::begin(file), std::end(file), path_separator) == std::end(file)) {
@@ -146,99 +109,72 @@ namespace {
 		}
 		return file;
 	}
+}
 
-	class context_impl final : public cwc::context {
-		using factory_export_type = const cwc::internal::error *(CWC_CALL *)(const cwc::string_ref *, cwc::intrusive_ptr<cwc::component> *);
+namespace cwc {
+	struct context::pimpl final {
+		pimpl(bool force_local) noexcept : force_local{force_local} {}
 
-		using factory_map = std::unordered_map<std::string, cwc::intrusive_ptr<cwc::component>>;
-		using key_value_map = std::unordered_map<std::string, std::string>;
-		using dll_map = std::unordered_map<HMODULE, factory_export_type>;
+		~pimpl() noexcept {
+			factories.clear();//clear all factories before unloading respective dlls
+			for(const auto & [handle, factory] : dlls) FreeLibrary(handle);
+		}
 
-		factory_map component_factories;
-		std::unordered_map<std::string, factory_map> plugin_factories;
+		auto factory(error_handle & cwc_error, const std::type_info * type, std::string fqn, std::string_view dll) const -> intrusive_ptr<component> {
+			if(const auto it{factories.find(type)}; it != std::end(factories)) return it->second;
+			else {
+				const std::string str{dll};
+				const auto module{load_dll(str)};
+				assert(module);
+				const auto [it2, flag]{factories.emplace(type, create_factory(cwc_error, dlls.at(module), str, fqn))};
+				assert(flag);
+				return it2->second;
+			}
+		}
+	private:
+		using entry_point = void(CWC_CALL *)(error_handle *, const string_ref *, intrusive_ptr<component> *);
 
-		static
-		auto make_name(std::string file) -> std::string {
+		const bool force_local;
+		//TODO: needs locking or giving up on constness
+		mutable std::unordered_map<const std::type_info *, intrusive_ptr<component>> factories;
+		mutable std::unordered_map<HMODULE, entry_point> dlls;
+
+		auto make_name(std::string file) const -> std::string {
 			static const auto base{[] {
 				auto exe{GetExecutableFileName()};
 				if(const auto it{std::find(std::rbegin(exe), std::rend(exe), path_separator)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
 				return exe;
 			}()};
-			if constexpr(CWC_CONTEXT_INIT_PREFIX_DLL_PATH) file.insert(std::begin(file), std::begin(base), std::end(base));
+			if(force_local) file.insert(std::begin(file), std::begin(base), std::end(base));
 			file.insert(std::find(std::rbegin(file), std::rend(file), path_separator).base(), std::begin(dll_prefix), std::end(dll_prefix));
 			file.insert(std::end(file), std::begin(dll_suffix), std::end(dll_suffix));
 			return file;
 		}
 
-		auto load_dll(dll_map & map, const std::string & file) -> HMODULE {
-			const auto handle{LoadLibrary(make_path(make_name(file)).c_str())};
-			if(handle) {
-				if(map.count(handle)) FreeLibrary(handle);
-				else if(const auto init{reinterpret_cast<void (CWC_CALL *)(const cwc::context *)>(GetProcAddress(handle, "cwc_init"))}) {
-					if(const auto factory{reinterpret_cast<factory_export_type>(GetProcAddress(handle, "cwc_factory"))}) {
-						init(this);
-						map[handle] = factory;
-					} else throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + file + '"'};
-				} else throw std::logic_error{"could not find entry point 'cwc_init' in bundle \"" + file + '"'};
-			}
-			return handle;
-		}
 
-		static
-		auto create_factory(factory_export_type factory, const std::string & file, const std::string & fqn) -> cwc::intrusive_ptr<cwc::component> {
+		auto create_factory(error_handle & cwc_error, entry_point factory, std::string_view file, const std::string & fqn) const -> cwc::intrusive_ptr<cwc::component> {
 			cwc::intrusive_ptr<cwc::component> ptr;
 			const cwc::string_ref tmp{fqn.c_str()};
-			if(factory(&tmp, &ptr) != nullptr) throw std::logic_error{"could not retrieve factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
-			if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + file + '"'};
+			factory(&cwc_error, &tmp, &ptr);
+			cwc_error.rethrow_if_necessary();
+			if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + std::string{file} + '"'};
 			return ptr;
 		}
 
-		static
-		auto parse_ini() -> key_value_map {
-			key_value_map result;
-			if(std::stringstream is{CWC_CONTEXT_INIT_STRING}; is) {
-				const std::regex comment_or_whitespace{R"(\s*(?:[;#].*)?)"},
-				                 key_value_pair{R"(\s*([^\s;#]+)\s*=\s*([^\s;#]+)\s*)"};
-				for(std::string line; std::getline(is, line);) {
-					std::smatch matched;
-					if(std::regex_match(line, matched, comment_or_whitespace)) {} //nothing to do here
-					else if(std::regex_match(line, matched, key_value_pair)) result[matched[1]] = matched[2];
-					else throw std::logic_error{"invalid configuration file"};
-				}
+		auto load_dll(std::string file) const -> HMODULE {
+			const auto handle{LoadLibrary(make_path(make_name(file)).c_str())};
+			if(handle) {
+				if(dlls.count(handle)) FreeLibrary(handle);
+				else if(const auto factory{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_factory"))}) dlls[handle] = factory;
+				else throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + file + '"'};
 			}
-			return result;
-		}
-
-		auto CWC_CALL cwc$context$exception$0(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * final { return this->exception(err); }
-		auto CWC_CALL cwc$context$factory$1(const cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * cwc_ret) const noexcept -> const cwc::internal::error * final { return cwc::internal::call_and_return_error([&] { *cwc_ret = this->factory(*fqn); }); }
-	public:
-		context_impl() {
-			const auto configuration{parse_ini()};
-
-			key_value_map components;
-			for(const auto & mapping : configuration) components[mapping.first] = mapping.second;
-
-			dll_map map;//ensure that cwc_init is only called once
-			for(const auto & [fqn, file] : components)
-				if(const auto library{load_dll(map, file)}) component_factories.emplace(fqn, create_factory(map.at(library), file, fqn));
-				else throw std::logic_error{"could not load bundle \"" + file + '"'};
-		}
-
-		auto exception(const cwc::internal::error * err) const noexcept -> const cwc::internal::error * {
-			assert(err);
-			last_error.code = err->code;
-			last_message[0] = '\0';
-			std::strncat(last_message, err->message, std::min(sizeof(last_message) - 1, std::strlen(err->message)));
-			return &last_error;
-		}
-
-		auto factory(cwc::string_ref fqn) const -> cwc::intrusive_ptr<cwc::component> {
-			const std::string key{fqn};//TODO: this copies the string, which should not be necessary with C++20s generic find
-			return component_factories.at(key);
+			return handle;
 		}
 	};
 
-	const context_impl instance;
-}
+	auto context::factory(error_handle & cwc_error, const std::type_info * type, std::string fqn, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, fqn, dll); }
 
-auto ::cwc::this_context() -> const context & { return instance; }
+	context::context(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
+
+	context::~context() noexcept =default;
+}

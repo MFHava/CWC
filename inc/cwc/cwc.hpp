@@ -42,12 +42,11 @@ namespace cwc {
 
 #include "internal/traits.hpp"
 #include "internal/type_list.hpp"
-#include "internal/error_code.hpp"
+#include "internal/error_handle.hpp"
 
 #include "public/intrusive_ptr.hpp"
 
 #include "internal/make_base_list.hpp"
-#include "internal/call.hpp"
 #include "internal/default_implementation_chaining.hpp"
 #include "internal/cast_to_interface.hpp"
 

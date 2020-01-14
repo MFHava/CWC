@@ -30,24 +30,28 @@ namespace cwc {
 		intrusive_ptr(intrusive_ptr && other) noexcept { swap(other); }
 
 		template<typename OtherType>
-		intrusive_ptr(const intrusive_ptr<OtherType> & other) {
+		intrusive_ptr(const intrusive_ptr<OtherType> & other) {//TODO: add error_handle version
 			static_assert(!std::is_const_v<OtherType> || (std::is_const_v<OtherType> && std::is_const_v<Type>), "constness violation detected");
 			if(!other) return;
 			using TargetType = std::remove_const_t<Type>;
 			const uuid & id{internal::interface_id<TargetType>::get()};
 			TargetType * tmp;
-			internal::validate(other.ptr->cwc$component$dynamic_cast$2(&id, reinterpret_cast<void **>(&tmp)));
+			default_error_handle error;
+			other.ptr->cwc$component$dynamic_cast$2(&error, &id, reinterpret_cast<void **>(&tmp));
+			error.rethrow_if_necessary();
 			ptr = tmp;
 		}
 
 		template<typename OtherType>
-		intrusive_ptr(intrusive_ptr<OtherType> && other) {
+		intrusive_ptr(intrusive_ptr<OtherType> && other) {//TODO: add error_handle version
 			static_assert(!std::is_const_v<OtherType> || (std::is_const_v<OtherType> && std::is_const_v<Type>), "constness violation detected");
 			if(!other) return;
 			using TargetType = std::remove_const_t<Type>;
 			const uuid & id{internal::interface_id<TargetType>::get()};
 			TargetType * tmp;
-			internal::validate(other.ptr->cwc$component$dynamic_cast_fast$3(&id, reinterpret_cast<void **>(&tmp)));
+			default_error_handle error;
+			other.ptr->cwc$component$dynamic_cast_fast$3(&error, &id, reinterpret_cast<void **>(&tmp));
+			error.rethrow_if_necessary();
 			ptr = tmp;
 			other.ptr = nullptr;
 		}

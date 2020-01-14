@@ -6,11 +6,6 @@
 
 #pragma once
 #include "../bundle.hpp"
-#include "error_handling.hpp"
-
-namespace {
-	const ::cwc::context * cwc_context{nullptr};
-}
 
 namespace cwc {
 	namespace internal {
@@ -24,24 +19,13 @@ namespace cwc {
 		factories_initializer::factories_initializer() { if(nifty_counter++ == 0) new(&buffer) factory_map; }
 		factories_initializer::~factories_initializer() { if(!--nifty_counter) factories.~factory_map(); }
 	}
-
-	auto this_context() -> const context & {
-		assert(cwc_context);
-		return *cwc_context;
-	}
 }
 
-extern "C" CWC_EXPORT void CWC_CALL cwc_init(const ::cwc::context * context) {
-	assert(context);
-	assert(!cwc_context);
-	cwc_context = context;
-}
-
-extern "C" CWC_EXPORT auto CWC_CALL cwc_factory(const ::cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * result) -> const ::cwc::internal::error * {
+extern "C" CWC_EXPORT void CWC_CALL cwc_factory(::cwc::error_handle * cwc_error, const ::cwc::string_ref * fqn, cwc::intrusive_ptr<cwc::component> * result) {
+	assert(cwc_error);
 	assert(fqn);
 	assert(result);
-	assert(cwc_context);
-	return ::cwc::internal::call_and_return_error([&] { *result = cwc::internal::factories.at(*fqn); });
+	cwc_error->call_and_store([&] { *result = cwc::internal::factories.at(*fqn); });
 }
 
 extern "C" CWC_EXPORT void CWC_CALL cwc_reflect(::cwc::string_ref * definition) {

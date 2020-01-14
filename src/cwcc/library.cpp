@@ -4,8 +4,6 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#define CWC_CONTEXT_INIT_STRING ""
-#define CWC_CONTEXT_INIT_IS_NOT_FILE
 #include <cwc/host.hpp>
 #include <sstream>
 #include "library.hpp"
@@ -21,10 +19,7 @@ namespace cwcc {
 
 			~guard() { FreeLibrary(handle); }
 		} guard{name};
-		const auto init{reinterpret_cast<void(CWC_CALL *)(const cwc::context *)>(GetProcAddress(guard.handle, "cwc_init"))};
-		if(!init) throw std::logic_error{"could not find entry point 'cwc_init' in bundle \"" + name + '"'};
-		init(&cwc::this_context());
-		
+
 		const auto definitionPtr{reinterpret_cast<void(CWC_CALL *)(cwc::string_ref *)>(GetProcAddress(guard.handle, "cwc_reflect"))};
 		if(!definitionPtr) throw std::logic_error{"could not find entry point 'cwc_reflect' in bundle \"" + name + '"'};
 

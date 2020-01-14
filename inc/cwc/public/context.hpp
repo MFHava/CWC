@@ -9,47 +9,46 @@
 #endif
 
 #pragma once
+#include <memory>
 
 namespace cwc {
-	//! @brief interface of the global context
-	class context {
-		virtual
-		auto CWC_CALL cwc$context$exception$0(const internal::error * err) const noexcept -> const internal::error * =0;
-		virtual
-		auto CWC_CALL cwc$context$factory$1(const string_ref * fqn, intrusive_ptr<component> * cwc_ret) const noexcept -> const internal::error * =0;
+	class context final {
+		struct pimpl;
 
-		friend
-		void internal::validate(const internal::error * err);
+		std::unique_ptr<pimpl> self;
 
-		friend
-		auto internal::store_exception(std::exception_ptr eptr) noexcept -> const internal::error *;
-
-		auto exception(const internal::error & err) const -> const internal::error * { return cwc$context$exception$0(&err); }
+		auto factory(error_handle & cwc_error, const std::type_info * type, std::string fqn, std::string_view dll) const -> intrusive_ptr<component>;
 	public:
-		//! @brief create factory for component type
-		//! @tparam Component component type to create factory for
-		//! @returns factory for requested type
-		template<typename Component>
-		auto factory() const -> intrusive_ptr<typename Component::cwc_factory> {
-			intrusive_ptr<component> cwc_ret;
-			const auto & fqn = Component::cwc_fqn();
-			internal::call(*this, &context::cwc$context$factory$1, fqn, cwc_ret);
-			return cwc_ret;
+		//! @param[in] force_local override OS specific dll-path behavior and load DLLs only relative to host executable
+		context(bool force_local = true);
+		~context() noexcept;
+
+		context(const context &) =delete;
+		context(context &&) noexcept =delete;
+		auto operator=(const context &) -> context & =delete;
+		auto operator=(context &&) noexcept -> context & =delete;
+
+		template<typename Configuration>
+		auto factory() const {
+			default_error_handle cwc_error;
+			return factory<Configuration>(cwc_error);
+		}
+		template<typename Configuration>
+		auto factory(error_handle & cwc_error) const {
+			using Component = typename Configuration::component;
+			using Factory = typename Component::cwc_factory;
+			const std::string_view view{Component::cwc_fqn()};
+			const std::string fqn{view};
+			auto tmp{factory(cwc_error, &typeid(Configuration), fqn, Configuration::dll)};
+			return intrusive_ptr<Factory>(tmp);
 		}
 
-		//! @brief test if plugin-component is available
-		//! @tparam Component component implemented by the plugin
-		//! @param[in] id identifier qualifying the tested implementation
-		//! @returns true iff implementation is available
-		template<typename Component>
-		auto plugin_available(const string_ref & id) const -> bool try {
-			factory<Component>(id);
-			return true;
-		} catch(...) {
-			return false;
+		template<typename Configuration, typename... Args, typename = std::enable_if_t<(std::is_base_of_v<error_handle, Args> || ...)>>
+		auto create(Args &&... args) const -> intrusive_ptr<typename Configuration::interface> {
+			default_error_handle cwc_error;
+			return create(cwc_error, std::forward<Args>(args)...);
 		}
+		template<typename Configuration, typename... Args>
+		auto create(Args &&... args) const -> intrusive_ptr<typename Configuration::interface> { return factory<Configuration>()->create(std::forward<Args>(args)...); }
 	};
-
-	//! @brief retrieve global context
-	auto this_context() -> const context &;
 }

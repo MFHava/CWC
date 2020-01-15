@@ -5,6 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
+#include <map>
 #include <atomic>
 #include <cassert>
 #include <typeinfo>
@@ -42,8 +43,8 @@ namespace cwc {
 
 #include "internal/traits.hpp"
 #include "internal/type_list.hpp"
-#include "internal/error_handle.hpp"
 
+#include "public/error_handle.hpp"
 #include "public/intrusive_ptr.hpp"
 
 #include "internal/make_base_list.hpp"
@@ -54,3 +55,5 @@ namespace cwc {
 #include "public/component.hpp"
 #include "public/context.hpp"
 #include "public/default_implementations.hpp"
+
+#include "public/bundle.hpp"

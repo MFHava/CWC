@@ -4,8 +4,8 @@
 //    (See accompanying file ../../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+#include <cwc/cwc.hpp>
 #include "fibonacci.h"
-#include <cwc/bundle.hpp>
 
 namespace sample {
 	auto fibonacci::calculate(::cwc::uint8 no) const -> ::cwc::uint64 {

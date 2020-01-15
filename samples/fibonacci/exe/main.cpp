@@ -17,8 +17,6 @@ struct fibonacci_generator final {
 	std::string_view dll{"sample-fibonacci"};
 };
 
-#include "cwc/host.hpp"
-
 int main() {
 	cwc::sized_error_handle<64> error;
 	cwc::context context;

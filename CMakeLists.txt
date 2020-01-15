@@ -31,22 +31,30 @@ endif()
 
 find_package(Threads REQUIRED)
 
-add_library(cwc INTERFACE)
-target_include_directories(cwc INTERFACE "inc")
-target_link_libraries(cwc INTERFACE cwc_flags ptl ${CMAKE_DL_LIBS} Threads::Threads)
+file(GLOB_RECURSE CWC_INC "inc/*")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CWC_INC})
+file(GLOB_RECURSE CWC "src/cwc/*")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CWC})
+add_library(cwc STATIC ${CWC_INC} ${CWC})
+target_include_directories(cwc PUBLIC "inc")
+target_link_libraries(cwc cwc_flags ptl ${CMAKE_DL_LIBS} Threads::Threads)
+set_target_properties(cwc PROPERTIES
+	POSITION_INDEPENDENT_CODE ON #enforce position independent code as lib will end up inside a dynamic object
+	FOLDER "C++ with Components"
+)
 
 find_package(Boost 1.59 REQUIRED program_options)
 
 file(GLOB_RECURSE CWCC "src/cwcc/*")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src/cwcc FILES ${CWCC})
 add_executable(cwcc ${CWCC})
-target_link_libraries(cwcc cwc Boost::program_options)
+target_link_libraries(cwcc Boost::program_options)
 set_target_properties(cwcc PROPERTIES FOLDER "C++ with Components")
 
 find_package(Doxygen 1.8.2) #Doxygen 1.8.2 is the first version to support C++11
 if(Doxygen_FOUND)
 	set(DOXYGEN_PROJECT_NAME "C++ with Components (${CWC_VERSION})")
-	set(DOXYGEN_PROJECT_BRIEF "A portable extension of C++ to support component oriented software enginnering.")
+	set(DOXYGEN_PROJECT_BRIEF "A portable extension of C++ to support component oriented software engineering.")
 	set(DOXYGEN_OUTPUT_DIRECTORY "docs")
 	set(DOXYGEN_BUILTIN_STL_SUPPORT YES)
 	set(DOXYGEN_SHOW_USED_FILES NO)
@@ -64,19 +72,17 @@ endif()
 
 if(CWC_BUILD_TESTS)
 	find_package(Boost 1.59 REQUIRED unit_test_framework)
-	file(GLOB_RECURSE CWC "inc/*")
-	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/inc FILES ${CWC})
 	file(GLOB_RECURSE CWC_TEST "test/cwc/*")
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/test/cwc FILES ${CWC_TEST})
-	add_executable(test-cwc ${CWC} ${CWC_TEST}) #including CWC sources here to have them included in IDEs
+	add_executable(test-cwc ${CWC_TEST}) #including CWC sources here to have them included in IDEs
 	target_link_libraries(test-cwc cwc Boost::unit_test_framework)
-	set_target_properties(test-cwc PROPERTIES FOLDER "C++ with Components")
+	set_target_properties(test-cwc PROPERTIES FOLDER "C++ with Components/Tests")
 
 	file(GLOB_RECURSE CWCC_TEST "test/cwcc/*")
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/test/cwcc FILES ${CWCC_TEST})
 	add_executable(test-cwcc ${CWCC_TEST})
 	target_link_libraries(test-cwcc cwc Boost::unit_test_framework)
-	set_target_properties(test-cwcc PROPERTIES FOLDER "C++ with Components")
+	set_target_properties(test-cwcc PROPERTIES FOLDER "C++ with Components/Tests")
 endif()
 
 if(CWC_BUILD_SAMPLES)

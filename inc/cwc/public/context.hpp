@@ -17,7 +17,7 @@ namespace cwc {
 
 		std::unique_ptr<pimpl> self;
 
-		auto factory(error_handle & cwc_error, const std::type_info * type, std::string fqn, std::string_view dll) const -> intrusive_ptr<component>;
+		auto factory(error_handle & cwc_error, const std::type_info * type, std::string_view fqn, std::string_view dll) const -> intrusive_ptr<component>;
 	public:
 		//! @param[in] force_local override OS specific dll-path behavior and load DLLs only relative to host executable
 		context(bool force_local = true);
@@ -36,11 +36,9 @@ namespace cwc {
 		template<typename Configuration>
 		auto factory(error_handle & cwc_error) const {
 			using Component = typename Configuration::component;
+			auto tmp{factory(cwc_error, &typeid(Configuration), Component::cwc_fqn(), Configuration::dll)};
 			using Factory = typename Component::cwc_factory;
-			const std::string_view view{Component::cwc_fqn()};
-			const std::string fqn{view};
-			auto tmp{factory(cwc_error, &typeid(Configuration), fqn, Configuration::dll)};
-			return intrusive_ptr<Factory>(tmp);
+			return intrusive_ptr<Factory>(std::move(tmp));
 		}
 
 		template<typename Configuration, typename... Args, typename = std::enable_if_t<(std::is_base_of_v<error_handle, Args> || ...)>>

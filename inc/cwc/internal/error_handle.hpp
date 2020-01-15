@@ -35,11 +35,11 @@ namespace cwc {
 		}
 
 		void clear() noexcept {
-			type = error_code::no_error;
+			code.reset();
 		}
 
 		void rethrow_if_necessary() const {
-			if(type == error_code::no_error) return;
+			if(!code) return;
 
 			struct unknown_error : std::exception {
 				unknown_error() {}
@@ -47,10 +47,10 @@ namespace cwc {
 			};
 
 			using UI = std::underlying_type_t<error_code>;
-	
-			auto code{type};
+
+			auto error{*code};
 			for(auto mask : {UI{0}, UI{255}, UI{255} << 8, UI{255} << 16, UI{255} << 24, UI{255} << 32, UI{255} << 40, UI{255} <<    48, UI{255} << 56})
-				switch(code = static_cast<error_code>(~mask & static_cast<UI>(code))) {//slice inheritance level
+				switch(error = static_cast<error_code>(~mask & static_cast<UI>(error))) {//slice inheritance level
 					case error_code::std98_exception: throw std::exception{};
 					case error_code::std98_logic_error: throw std::logic_error{msg.data()};
 					case error_code::std98_invalid_argument: throw std::invalid_argument{msg.data()};
@@ -116,7 +116,6 @@ namespace cwc {
 				std11_bad_function_call = error_code_v<8>,
 				std17_bad_variant_access = error_code_v<9>,
 				std17_bad_optional_access = error_code_v<10>,
-			no_error = error_code_v<255> //TODO: 0 should most probably be no_error
 		};
 
 		void store(std::exception_ptr eptr) noexcept {
@@ -149,13 +148,13 @@ namespace cwc {
 			catch(...) { store(error_code::std98_exception, ""); }
 		}
 
-		void store(error_code code, string_ref message) noexcept {
-			type = code;
+		void store(error_code type, string_ref message) noexcept {
+			code = type;
 			msg[0] = '\0';
 			std::strncat(msg.data(), message.data(), std::min(msg.size() - 1, message.size()));
 		}
 
-		error_code type{error_code::no_error};
+		optional<error_code> code;
 		array_ref<char> msg;
 	};
 	CWC_PACK_END

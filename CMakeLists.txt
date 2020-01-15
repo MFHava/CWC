@@ -29,9 +29,11 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	target_compile_definitions(cwc_flags INTERFACE _CRT_SECURE_NO_WARNINGS)
 endif()
 
+find_package(Threads REQUIRED)
+
 add_library(cwc INTERFACE)
 target_include_directories(cwc INTERFACE "inc")
-target_link_libraries(cwc INTERFACE cwc_flags ptl ${CMAKE_DL_LIBS})
+target_link_libraries(cwc INTERFACE cwc_flags ptl ${CMAKE_DL_LIBS} Threads::Threads)
 
 find_package(Boost 1.59 REQUIRED program_options)
 

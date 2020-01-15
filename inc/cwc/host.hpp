@@ -7,6 +7,7 @@
 #pragma once
 #include <limits>
 #include <climits>
+#include <shared_mutex>
 #include <unordered_map>
 #include "cwc.hpp"
 
@@ -117,25 +118,26 @@ namespace cwc {
 
 		~pimpl() noexcept {
 			factories.clear();//clear all factories before unloading respective dlls
-			for(const auto & [handle, factory] : dlls) FreeLibrary(handle);
+			for(const auto & [handle, factory] : dlls) {
+				(void)factory;
+				FreeLibrary(handle);
+			}
 		}
 
-		auto factory(error_handle & cwc_error, const std::type_info * type, std::string fqn, std::string_view dll) const -> intrusive_ptr<component> {
-			if(const auto it{factories.find(type)}; it != std::end(factories)) return it->second;
-			else {
-				const std::string str{dll};
-				const auto module{load_dll(str)};
-				assert(module);
-				const auto [it2, flag]{factories.emplace(type, create_factory(cwc_error, dlls.at(module), str, fqn))};
-				assert(flag);
-				return it2->second;
+		auto factory(error_handle & cwc_error, const std::type_info * type, std::string_view fqn, std::string_view dll) const -> intrusive_ptr<component> {
+retry:
+			{
+				const std::shared_lock lock{mutex};
+				if(const auto it{factories.find(type)}; it != std::end(factories)) return it->second;
 			}
+			load_factory(cwc_error, type, std::string{fqn}, std::string{dll});
+			goto retry;
 		}
 	private:
 		using entry_point = void(CWC_CALL *)(error_handle *, const string_ref *, intrusive_ptr<component> *);
 
 		const bool force_local;
-		//TODO: needs locking or giving up on constness
+		mutable std::shared_mutex mutex;
 		mutable std::unordered_map<const std::type_info *, intrusive_ptr<component>> factories;
 		mutable std::unordered_map<HMODULE, entry_point> dlls;
 
@@ -151,28 +153,38 @@ namespace cwc {
 			return file;
 		}
 
+		void load_factory(error_handle & cwc_error, const std::type_info * type, std::string fqn, std::string dll) const {
+			const std::lock_guard lock{mutex};
 
-		auto create_factory(error_handle & cwc_error, entry_point factory, std::string_view file, const std::string & fqn) const -> cwc::intrusive_ptr<cwc::component> {
+			const auto handle{LoadLibrary(make_path(make_name(dll)).c_str())};
+			if(!handle) throw std::runtime_error{"could not load bundle \"" + dll + '"'};
+			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per context
+
+			using entry_point = void(CWC_CALL *)(error_handle *, const string_ref *, intrusive_ptr<component> *);
+			const auto factory{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_factory"))};
+			if(!factory) {
+				FreeLibrary(handle);
+				throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + dll + '"'};
+			}
+
 			cwc::intrusive_ptr<cwc::component> ptr;
 			const cwc::string_ref tmp{fqn.c_str()};
 			factory(&cwc_error, &tmp, &ptr);
-			cwc_error.rethrow_if_necessary();
-			if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + std::string{file} + '"'};
-			return ptr;
-		}
-
-		auto load_dll(std::string file) const -> HMODULE {
-			const auto handle{LoadLibrary(make_path(make_name(file)).c_str())};
-			if(handle) {
-				if(dlls.count(handle)) FreeLibrary(handle);
-				else if(const auto factory{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_factory"))}) dlls[handle] = factory;
-				else throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + file + '"'};
+			try {
+				if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + dll + '"'};
+				cwc_error.rethrow_if_necessary();
+			} catch(...) {
+				FreeLibrary(handle);
+				throw;
 			}
-			return handle;
+
+			//TODO: this can throw an exception... (bad_alloc)
+			dlls[handle] = factory;
+			factories[type] = std::move(ptr);
 		}
 	};
 
-	auto context::factory(error_handle & cwc_error, const std::type_info * type, std::string fqn, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, fqn, dll); }
+	auto context::factory(error_handle & cwc_error, const std::type_info * type, std::string_view fqn, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, fqn, dll); }
 
 	context::context(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
 

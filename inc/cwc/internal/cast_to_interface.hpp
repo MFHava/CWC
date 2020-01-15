@@ -37,7 +37,7 @@ namespace cwc::internal {
 		void cast(Self *, const uuid &, void **) { throw std::bad_cast(); }
 	};
 
-	template<bool IncRefCount = true, typename Self>
+	template<bool IncRefCount, typename Self>
 	void cast_to_interface(Self * self, const uuid & id, void ** result) {
 		auto ptr{const_cast<std::remove_const_t<Self> *>(static_cast<const Self *>(self))};
 		cast_to_interface_helper<std::remove_pointer_t<decltype(ptr)>, typename Self::cwc_interfaces, IncRefCount>::cast(ptr, id, result);

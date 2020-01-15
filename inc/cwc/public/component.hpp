@@ -38,10 +38,6 @@ namespace cwc {
 
 		template<typename Implementation, typename TypeList>
 		class vtable_implementation<component, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {
-			template<typename Type>
-			friend
-			struct intrusive_ptr;
-
 			mutable std::atomic<uint64> cwc_reference_counter{1};
 
 			vtable_implementation(const vtable_implementation &) =delete;
@@ -55,30 +51,8 @@ namespace cwc {
 			CWC_PRAGMA_WARNING_NON_VIRTUAL_DTOR
 			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
 			CWC_PRAGMA_WARNING_POP
-			void CWC_CALL cwc$component$dynamic_cast$2(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { internal::cast_to_interface<>(this, *id, result); }); }
+			void CWC_CALL cwc$component$dynamic_cast$2(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { internal::cast_to_interface<true>(this, *id, result); }); }
 			void CWC_CALL cwc$component$dynamic_cast_fast$3(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { internal::cast_to_interface<false>(this, *id, result); }); }
-		protected:
-			//! @brief retrieve intrusive_ptr for requested interface
-			//! @tparam TargetType type to cast new pointer to
-			//! @returns intrusive_ptr iff cast is valid
-			template<typename TargetType>
-			auto intrusive_from_this()       -> intrusive_ptr<      TargetType> {
-				static_assert(std::is_base_of_v<TargetType, Implementation>, "invalid cast");
-				std::remove_const_t<TargetType> * result;//remove constness of TargetType to allow conversion from 'mutable Type' to 'const TargetType'
-				internal::cast_to_interface<>(this, interface_id<TargetType>::get(), reinterpret_cast<void **>(&result));
-				return intrusive_ptr<      TargetType>{result};
-			}
-
-			//! @brief retrieve intrusive_ptr for requested interface
-			//! @tparam TargetType type to cast new pointer to
-			//! @returns intrusive_ptr iff cast is valid
-			template<typename TargetType>
-			auto intrusive_from_this() const -> intrusive_ptr<const TargetType> {
-				static_assert(std::is_base_of_v<TargetType, Implementation>, "invalid cast");
-				const TargetType * result;
-				internal::cast_to_interface<>(this, interface_id<TargetType>::get(), reinterpret_cast<void **>(&result));
-				return intrusive_ptr<const TargetType>{result};
-			}
 		public:
 			vtable_implementation() =default;
 			~vtable_implementation() =default;

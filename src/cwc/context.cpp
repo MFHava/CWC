@@ -5,6 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <limits>
+#include <cassert>
 #include <climits>
 #include <shared_mutex>
 #include <unordered_map>

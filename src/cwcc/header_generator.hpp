@@ -5,8 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#include <istream>
-#include <ostream>
+#include <iosfwd>
 
 namespace cwcc {
 	struct bundle;

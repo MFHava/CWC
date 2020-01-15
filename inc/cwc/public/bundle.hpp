@@ -9,6 +9,7 @@
 #endif
 
 #pragma once
+#include <map>
 
 namespace cwc::internal {
 	struct factory_map final {

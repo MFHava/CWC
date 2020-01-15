@@ -9,6 +9,7 @@
 #endif
 
 #pragma once
+#include <atomic>
 
 namespace cwc {
 	//! @brief base for all interfaces, every component can be cast to this interface

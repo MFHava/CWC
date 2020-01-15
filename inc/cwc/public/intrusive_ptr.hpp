@@ -78,8 +78,8 @@ namespace cwc {
 
 		auto get() const noexcept -> Type * { return ptr; }
 
-		auto operator*() const noexcept -> Type & { assert(ptr); return *ptr; }
-		auto operator->() const noexcept -> Type * { assert(ptr); return ptr; }
+		auto operator*() const noexcept -> Type & { return *ptr; }
+		auto operator->() const noexcept -> Type * { return ptr; }
 
 		explicit
 		operator bool() const noexcept { return ptr != nullptr; }

@@ -6,7 +6,7 @@
 
 #pragma once
 #include <ostream>
-#include "generators.hpp"
+#include "header_generator.hpp"
 
 namespace cwcc {
 	void program_disclaimer(std::ostream & os);

@@ -10,19 +10,15 @@
 #include "nodes.hpp"
 #include "utils.hpp"
 #include "parser.hpp"
-#include "library.hpp"
 #include "disclaimer.hpp"
-#include "generators.hpp"
+#include "header_generator.hpp"
 
 int main(int argc, char * argv[]) try {
 	namespace po = boost::program_options;
 	po::options_description desc{"supported options"};
 	desc.add_options()
 		("help", "produce help message")
-		("reflect,r", "extract the embedded BDL file from a bundle")
-		("exports,x", "extract exported components from a bundle")
 		("header,h", "generate header for BDL (needed to consume/implement bundle)")
-		("source,s", "generate source for BDL (needed to implement bundle)")
 	;
 
 	po::options_description hidden{"hidden options"};
@@ -46,36 +42,13 @@ int main(int argc, char * argv[]) try {
 	}
 	po::notify(vm);
 
-	if(vm.count("reflect") || vm.count("exports")) {//assume that file name is a DLL/SO
-		auto & file{vm.at("input-file").as<std::string>()};
-		const cwcc::library lib{file};
-		if(vm.count("exports")) {
-			std::cout << "EXPORTS\n";
-			for(const auto & tmp : lib.exports()) std::cout << '\t' << tmp << '\n';
-		}
-		if(vm.count("reflect")) {
-			file += ".bdl";//replace filename in case we want to generate header or source
-			std::ofstream os{file, std::ios::binary};
-			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
-			os << lib.definition();
-		}
-	}
-
-	if(vm.count("source") || vm.count("header")) {
+	if(vm.count("header")) {
 		std::ifstream is{vm["input-file"].as<std::string>()};
 		const auto bundle{cwcc::parse(is)};
 		const auto base_name{cwcc::base_file_name(bundle.name) + '.'};
-		if(vm.count("header")) {
-			std::ofstream os{base_name + "cwch", std::ios::binary};
-			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
-			cwcc::generate_header(os, bundle);
-		}
-		if(vm.count("source")) {
-			is.seekg(0).clear();
-			std::ofstream os{base_name + "cpp", std::ios::binary};
-			os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
-			cwcc::generate_source(is, os);
-		}
+		std::ofstream os{base_name + "cwch", std::ios::binary};
+		os.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
+		cwcc::generate_header(os, bundle);
 	}
 } catch(const std::exception & exc) {
 	std::cerr << "ERROR: " << exc.what() << std::endl;

@@ -12,7 +12,7 @@
 #include "utils.hpp"
 #include "indent.hpp"
 #include "disclaimer.hpp"
-#include "generators.hpp"
+#include "header_generator.hpp"
 
 namespace cwcc {
 	namespace {

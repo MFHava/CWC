@@ -17,7 +17,7 @@ namespace cwc::internal {
 
 	static const struct factories_initializer {
 		factories_initializer();
-		~factories_initializer();
+		~factories_initializer() noexcept;
 	} factories_init;
 }
 
@@ -30,11 +30,12 @@ namespace cwc::internal {
 #define CWC_EXPORT_COMPONENT(Component, Implementation)\
 	static\
 	const\
-	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){([] {\
+	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
 		static_assert(std::is_base_of_v<Component, Implementation>, "Implementation does not fulfill the requirements of exported Component");\
 		using Factory = Component::cwc_factory;\
 		const auto id{cwc::internal::interface_id<Factory>::get()};\
 		auto & tmp{cwc::internal::factories[id]};\
 		if(tmp) throw std::logic_error{"detected duplicated export of component"};\
 		tmp = cwc::make_intrusive<typename Implementation::cwc_component_factory>();\
-	}(), 0)}
+		return 0;\
+	}()}

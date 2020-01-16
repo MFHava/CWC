@@ -5,11 +5,47 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <cstring>
-#include <exception>
 #include <stdexcept>
 #include <cwc/cwc.hpp>
 
 namespace cwc {
+	namespace {
+		template<uint8 Level0 = 0, uint8 Level1 = 0, uint8 Level2 = 0, uint8 Level3 = 0, uint8 Level4 = 0, uint8 Level5 = 0, uint8 Level6 = 0, uint8 Level7 = 0>
+		inline
+		static
+		constexpr
+		auto error_code_v{(static_cast<uint64>(Level0) << 56) | (static_cast<uint64>(Level1) << 48) | (static_cast<uint64>(Level2) << 40) | (static_cast<uint64>(Level3) << 32) | (static_cast<uint64>(Level4) << 24) | (static_cast<uint64>(Level5) << 16) | (static_cast<uint64>(Level6) << 8) | static_cast<uint64>(Level7)};
+	}
+
+	//exceptions of the standard library: http://en.cppreference.com/w/cpp/error/exception
+	enum class error_handle::error_code : uint64 {
+		std98_exception = error_code_v<>,
+			std98_logic_error = error_code_v<1>,
+				std98_invalid_argument = error_code_v<1, 1>,
+				std98_domain_error = error_code_v<1, 2>,
+				std98_length_error = error_code_v<1, 3>,
+				std98_out_of_range = error_code_v<1, 4>,
+				std11_future_error = error_code_v<1, 5>,
+			std98_runtime_error = error_code_v<2>,
+				std98_range_error = error_code_v<2, 1>,
+				std98_overflow_error = error_code_v<2, 2>,
+				std98_underflow_error = error_code_v<2, 3>,
+				std11_regex_error = error_code_v<2, 4>,
+				std11_system_error = error_code_v<2, 5>,
+					std11_ios_base_failure = error_code_v<2, 5, 1>,
+					std17_filesystem_error = error_code_v<2, 5, 2>,
+			std98_bad_typeid = error_code_v<3>,
+			std98_bad_cast = error_code_v<4>,
+				std17_bad_any_cast = error_code_v<4, 1>,
+			std98_bad_alloc = error_code_v<5>,
+				std11_bad_array_new_length = error_code_v<5, 1>,
+			std98_bad_exception = error_code_v<6>,
+			std11_bad_weak_ptr = error_code_v<7>,
+			std11_bad_function_call = error_code_v<8>,
+			std17_bad_variant_access = error_code_v<9>,
+			std17_bad_optional_access = error_code_v<10>,
+	};
+
 	void error_handle::clear() noexcept { code.reset(); }
 
 	void error_handle::rethrow_if_necessary() const {
@@ -58,14 +94,14 @@ namespace cwc {
 
 	error_handle::~error_handle() noexcept =default;
 
-	void error_handle::store(std::exception_ptr eptr) noexcept {
+	void error_handle::store() noexcept { //lippincott function
 		auto record{[&](error_code type, string_ref message) noexcept {
 			code = type;
 			msg[0] = '\0';
 			std::strncat(msg.data(), message.data(), std::min(msg.size() - 1, message.size()));
 		}};
 
-		try { std::rethrow_exception(eptr); }
+		try { throw; }
 		catch(const std::bad_optional_access & exc) { record(error_code::std17_bad_optional_access, exc.what()); }
 		catch(const std::bad_variant_access & exc) { record(error_code::std17_bad_variant_access, exc.what()); }
 		catch(const std::bad_function_call & exc) { record(error_code::std11_bad_function_call, exc.what()); }

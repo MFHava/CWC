@@ -33,6 +33,7 @@
 
 		constexpr char path_separator{'\\'};
 		constexpr std::string_view dll_prefix{""}, dll_suffix{".dll"};
+		const std::string dll_name{"DLL"}; //TODO: C++20 will allow constexpr here
 	}
 #elif CWC_OS_LINUX
 	#include <dlfcn.h>
@@ -55,6 +56,7 @@
 
 		constexpr char path_separator{'/'};
 		constexpr std::string_view dll_prefix{"lib"}, dll_suffix{".so"};
+		const std::string dll_name{"SO"}; //TODO: C++20 will allow constexpr here
 	}
 #elif CWC_OS_HAIKU
 	#include <image.h>
@@ -78,6 +80,7 @@
 
 		constexpr char path_separator{'/'};
 		constexpr std::string_view dll_prefix{"lib"}, dll_suffix{".so"};
+		const std::string dll_name{"ADDON"}; //TODO: C++20 will allow constexpr here
 	}
 #else
 	#error unknown operating system
@@ -124,13 +127,11 @@ namespace cwc {
 		}
 
 		auto factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> {
-retry:
 			{
 				const std::shared_lock lock{mutex};
 				if(const auto it{factories.find(type)}; it != std::end(factories)) return it->second;
 			}
-			load_factory(cwc_error, type, id, std::string{dll});
-			goto retry;
+			return load_factory(cwc_error, type, id, std::string{dll});
 		}
 	private:
 		using entry_point = void(CWC_CALL *)(error_handle *, const uuid *, intrusive_ptr<component> *);
@@ -152,23 +153,23 @@ retry:
 			return file;
 		}
 
-		void load_factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string dll) const {
+		auto load_factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string dll) const -> intrusive_ptr<component> {
 			const std::lock_guard lock{mutex};
 
 			const auto handle{LoadLibrary(make_path(make_name(dll)).c_str())};
-			if(!handle) throw std::runtime_error{"could not load bundle \"" + dll + '"'};
+			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
 			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per context
 
-			const auto factory{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_factory"))};
-			if(!factory) {
+			const auto main{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_main"))};
+			if(!main) {
 				FreeLibrary(handle);
-				throw std::logic_error{"could not find entry point 'cwc_factory' in bundle \"" + dll + '"'};
+				throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + dll + '"'};
 			}
 
 			cwc::intrusive_ptr<cwc::component> ptr;
-			factory(&cwc_error, &id, &ptr);
+			main(&cwc_error, &id, &ptr);
 			try {
-				if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" /*+ id +*/ "\" from bundle \"" + dll + '"'};
+				if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + dll + '"'};
 				cwc_error.rethrow_if_necessary();
 			} catch(...) {
 				FreeLibrary(handle);
@@ -176,8 +177,9 @@ retry:
 			}
 
 			//TODO: this can throw an exception... (bad_alloc)
-			dlls[handle] = factory;
-			factories[type] = std::move(ptr);
+			dlls[handle] = main;
+			factories[type] = ptr;
+			return ptr;
 		}
 	};
 

@@ -18,7 +18,7 @@ namespace cwc::internal {
 	factories_initializer::~factories_initializer() { if(!--nifty_counter) factories.~factory_map(); }
 }
 
-extern "C" CWC_EXPORT void CWC_CALL cwc_factory(::cwc::error_handle * cwc_error, const ::cwc::uuid * id, cwc::intrusive_ptr<cwc::component> * result) {
+extern "C" CWC_EXPORT void CWC_CALL cwc_main(::cwc::error_handle * cwc_error, const ::cwc::uuid * id, cwc::intrusive_ptr<cwc::component> * result) {
 	assert(cwc_error);
 	assert(id);
 	assert(result);

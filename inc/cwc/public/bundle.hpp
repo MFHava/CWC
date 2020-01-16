@@ -11,7 +11,7 @@
 #pragma once
 
 namespace cwc::internal {
-	using factory_map = std::map<string_ref, intrusive_ptr<component>>;
+	using factory_map = std::map<uuid, intrusive_ptr<component>>;
 
 	extern factory_map & factories;
 
@@ -32,7 +32,9 @@ namespace cwc::internal {
 	const\
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){([] {\
 		static_assert(std::is_base_of_v<Component, Implementation>, "Implementation does not fulfill the requirements of exported Component");\
-		auto & tmp{cwc::internal::factories[Component::cwc_fqn()]};\
+		using Factory = Component::cwc_factory;\
+		const auto id{cwc::internal::interface_id<Factory>::get()};\
+		auto & tmp{cwc::internal::factories[id]};\
 		if(tmp) throw std::logic_error{"detected duplicated export of component"};\
 		tmp = cwc::make_intrusive<typename Implementation::cwc_component_factory>();\
 	}(), 0)}

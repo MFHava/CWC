@@ -131,10 +131,7 @@ namespace cwcc {
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				{
 					indent_scope scope{os};
-					os << " {\n"
-					   << indent <<"static\n"
-					   << indent <<"auto cwc_fqn() -> ::cwc::string_ref { return \"" << b.name << "\"; }\n"
-					   << indent <<"using cwc_interfaces = ::cwc::internal::make_base_list_t<" << self.interfaces[0];
+					os << " {\n" << indent <<"using cwc_interfaces = ::cwc::internal::make_base_list_t<" << self.interfaces[0];
 				}
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				os << ">;\n\n";

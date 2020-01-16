@@ -31,8 +31,6 @@ namespace cwc::sample::fibonacci {
 	};
 
 	struct generator : ::cwc::sample::fibonacci::sequence {
-		static
-		auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::fibonacci::generator"; }
 		using cwc_interfaces = ::cwc::internal::make_base_list_t<::cwc::sample::fibonacci::sequence>;
 
 		class cwc_factory : public ::cwc::component {

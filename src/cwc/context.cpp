@@ -123,17 +123,17 @@ namespace cwc {
 			}
 		}
 
-		auto factory(error_handle & cwc_error, const std::type_info * type, std::string_view fqn, std::string_view dll) const -> intrusive_ptr<component> {
+		auto factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> {
 retry:
 			{
 				const std::shared_lock lock{mutex};
 				if(const auto it{factories.find(type)}; it != std::end(factories)) return it->second;
 			}
-			load_factory(cwc_error, type, std::string{fqn}, std::string{dll});
+			load_factory(cwc_error, type, id, std::string{dll});
 			goto retry;
 		}
 	private:
-		using entry_point = void(CWC_CALL *)(error_handle *, const string_ref *, intrusive_ptr<component> *);
+		using entry_point = void(CWC_CALL *)(error_handle *, const uuid *, intrusive_ptr<component> *);
 
 		const bool force_local;
 		mutable std::shared_mutex mutex;
@@ -152,14 +152,13 @@ retry:
 			return file;
 		}
 
-		void load_factory(error_handle & cwc_error, const std::type_info * type, std::string fqn, std::string dll) const {
+		void load_factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string dll) const {
 			const std::lock_guard lock{mutex};
 
 			const auto handle{LoadLibrary(make_path(make_name(dll)).c_str())};
 			if(!handle) throw std::runtime_error{"could not load bundle \"" + dll + '"'};
 			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per context
 
-			using entry_point = void(CWC_CALL *)(error_handle *, const string_ref *, intrusive_ptr<component> *);
 			const auto factory{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_factory"))};
 			if(!factory) {
 				FreeLibrary(handle);
@@ -167,10 +166,9 @@ retry:
 			}
 
 			cwc::intrusive_ptr<cwc::component> ptr;
-			const cwc::string_ref tmp{fqn.c_str()};
-			factory(&cwc_error, &tmp, &ptr);
+			factory(&cwc_error, &id, &ptr);
 			try {
-				if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" + fqn + "\" from bundle \"" + dll + '"'};
+				if(!ptr) throw std::logic_error{"did not receive valid factory for component \"" /*+ id +*/ "\" from bundle \"" + dll + '"'};
 				cwc_error.rethrow_if_necessary();
 			} catch(...) {
 				FreeLibrary(handle);
@@ -183,7 +181,7 @@ retry:
 		}
 	};
 
-	auto context::factory(error_handle & cwc_error, const std::type_info * type, std::string_view fqn, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, fqn, dll); }
+	auto context::factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, id, dll); }
 
 	context::context(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
 

@@ -19,6 +19,7 @@
 #include <ptl/string_ref.hpp>
 #include <ptl/tuple.hpp>
 #include <ptl/variant.hpp>
+#include <ptl/type_list.hpp>
 
 #define CWC_HPP_HEADER_INCLUDED
 
@@ -42,12 +43,10 @@ namespace cwc {
 #include "public/types.hpp"
 
 #include "internal/traits.hpp"
-#include "internal/type_list.hpp"
 
 #include "public/error_handle.hpp"
 #include "public/intrusive_ptr.hpp"
 
-#include "internal/make_base_list.hpp"
 #include "internal/default_implementation_chaining.hpp"
 #include "internal/cast_to_interface.hpp"
 

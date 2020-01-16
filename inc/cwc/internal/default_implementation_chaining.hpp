@@ -14,29 +14,24 @@ namespace cwc::internal {
 	template<typename Implementation, typename TypeList>
 	struct default_implementation_chaining;
 
-	template<typename Implementation, typename Head, typename Tail>
-	struct default_implementation_chaining<Implementation, TL::type_list<Head, Tail>> : vtable_implementation<Head, Implementation, Tail> {};
+	template<typename Implementation, typename Head, typename... Tail>
+	struct default_implementation_chaining<Implementation, type_list<Head, Tail...>> : vtable_implementation<Head, Implementation, type_list<Tail...>> {};
 
 	template<typename Implementation, typename VTable>
-	struct default_implementation_chaining<Implementation, TL::type_list<VTable, TL::empty_type_list>> : VTable {};//last base has to be vtable to connect implementation to
+	struct default_implementation_chaining<Implementation, type_list<VTable>> : VTable {};//last base has to be vtable to connect implementation to
 
 
 	template<typename Implementation, typename AdHocComponent>
-	struct default_implementation : default_implementation_chaining<Implementation, TL::append_t<typename AdHocComponent::cwc_interfaces, AdHocComponent>> {};
+	struct default_implementation : default_implementation_chaining<Implementation, typename AdHocComponent::cwc_interfaces::template push_back<AdHocComponent>> {};
 
 
 	template<typename... Interfaces>
 	struct interface_implementation_base : Interfaces... {
-		using cwc_interfaces = make_base_list_t<Interfaces...>;
+		using cwc_interfaces = typename type_list<component, Interfaces...>::unique_all;
 	};
 
 	template<typename Component, typename... Interfaces>
 	struct component_implementation_base : Interfaces..., Component {
-		using cwc_interfaces = TL::unique_t<
-			TL::append_t<
-				typename Component::cwc_interfaces,
-				TL::make_type_list_t<Interfaces...>
-			>
-		>;
+		using cwc_interfaces = typename Component::cwc_interfaces::template push_back<type_list<Interfaces...>>::unique;
 	};
 }

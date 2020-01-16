@@ -17,9 +17,9 @@ namespace cwc {
 		friend
 		struct intrusive_ptr;
 
-		template<typename Self, typename TypeList, bool IncRefCount>
+		template<bool IncRefCount, typename TypeList>
 		friend
-		class internal::cast_to_interface_helper;
+		struct internal::cast_to_interface_helper;
 
 		virtual
 		void CWC_CALL cwc$component$new$0() const noexcept =0;

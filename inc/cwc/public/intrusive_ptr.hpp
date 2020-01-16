@@ -125,7 +125,7 @@ namespace cwc {
 
 	template<typename Implementation, typename... Args>
 	auto make_intrusive(Args &&... args) -> intrusive_ptr<component> {
-		using Interface = internal::TL::at_t<typename Implementation::cwc_interfaces, 1>;//does not work for classes that implement no additional interfaces...
+		using Interface = typename Implementation::cwc_interfaces::template at<1>;//does not work for classes that implement no additional interfaces...
 		static_assert(!std::is_same_v<Interface, component>);
 		//this indirection via an Interface ensures the identity relation for components
 		return intrusive_ptr<Interface>{new Implementation{std::forward<Args>(args)...}};

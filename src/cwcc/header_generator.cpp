@@ -136,10 +136,10 @@ namespace cwcc {
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				{
 					indent_scope scope{os};
-					os << " {\n" << indent <<"using cwc_interfaces = ::cwc::internal::make_base_list_t<" << self.interfaces[0];
+					os << " {\n" << indent <<"using cwc_interfaces = ::cwc::TL::unique_all<::cwc::type_list<component";
+					for(const auto & interface : self.interfaces) os << ", " << interface;
+					os << ">>;\n\n";
 				}
-				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
-				os << ">;\n\n";
 				{
 					header_visitor visitor{os, b};
 					indent_scope scope{os};//TODO: can be merged with loop in C++20

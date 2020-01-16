@@ -11,35 +11,29 @@
 #pragma once
 
 namespace cwc::internal {
-	template<typename Self, typename TypeList, bool IncRefCount>
-	class cast_to_interface_helper final {
-		using IdentityType = TL::at_t<
-			typename Self::cwc_interfaces,
-			1
-		>;//does not work for classes that implement no additional interfaces...
-		static_assert(!std::is_same_v<IdentityType, component>);
-	public:
+	template<bool IncRefCount, typename TypeList>
+	struct cast_to_interface_helper;
+
+	template<bool IncRefCount, typename Head, typename... Tail>
+	struct cast_to_interface_helper<IncRefCount, type_list<Head, Tail...>> final {
+		template<typename Self>
 		static
 		void cast(Self * self, const uuid & id, void ** result) {
-			using Type = typename TypeList::head;
-			if(id != interface_id_v<Type>) return cast_to_interface_helper<Self, typename TypeList::tail, IncRefCount>::cast(self, id, result);
-			using Cast = std::conditional_t<std::is_same_v<Type, component>, IdentityType, Type>;
-			auto ptr{static_cast<Cast *>(self)};
-			if constexpr(IncRefCount) ptr->cwc$component$new$0();
-			*result = ptr;
+			if(id == interface_id_v<Head>) {
+				using IdentityType = typename Self::cwc_interfaces::template at<1>; //does not work for classes that implement no additional interfaces...
+				static_assert(!std::is_same_v<IdentityType, component>);
+
+				using Cast = std::conditional_t<std::is_same_v<Head, component>, IdentityType, Head>;
+				auto ptr{static_cast<Cast *>(self)};
+				if constexpr(IncRefCount) ptr->cwc$component$new$0();
+				*result = ptr;
+			} else {
+				if constexpr(sizeof...(Tail)) return cast_to_interface_helper<IncRefCount, type_list<Tail...>>::cast(self, id, result);
+				else throw std::bad_cast{};
+			}
 		}
 	};
 
-	template<typename Self, bool IncRefCount>
-	class cast_to_interface_helper<Self, TL::empty_type_list, IncRefCount> final {
-	public:
-		static
-		void cast(Self *, const uuid &, void **) { throw std::bad_cast(); }
-	};
-
 	template<bool IncRefCount, typename Self>
-	void cast_to_interface(Self * self, const uuid & id, void ** result) {
-		auto ptr{const_cast<std::remove_const_t<Self> *>(static_cast<const Self *>(self))};
-		cast_to_interface_helper<std::remove_pointer_t<decltype(ptr)>, typename Self::cwc_interfaces, IncRefCount>::cast(ptr, id, result);
-	}
+	void cast_to_interface(Self * self, const uuid & id, void ** result) { cast_to_interface_helper<IncRefCount, typename Self::cwc_interfaces>::cast(const_cast<std::remove_const_t<Self> *>(static_cast<const Self *>(self)), id, result); }
 }

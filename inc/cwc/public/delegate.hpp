@@ -39,10 +39,12 @@ namespace cwc {
 
 			cwc_implementation(Functor && func) noexcept : cwc_functor{std::move(func)} {}
 
-			void CWC_CALL invoke(error_handle * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, [[maybe_unused]] result_type * result) const noexcept final {
+			void CWC_CALL invoke(error_handle * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept final {
 				cwc_error->call_and_store([&] {
-					if constexpr(std::is_same_v<void, Result>) cwc_functor(*args...);
-					else *result = cwc_functor(*args...);
+					if constexpr(std::is_same_v<void, Result>) {
+						(void)result;
+						cwc_functor(*args...);
+					} else *result = cwc_functor(*args...);
 				});
 			}
 			void CWC_CALL destroy() noexcept final { delete this; }

@@ -17,10 +17,6 @@ namespace cwc {
 		friend
 		struct intrusive_ptr;
 
-		template<bool IncRefCount, typename TypeList>
-		friend
-		struct internal::cast_to_interface_helper;
-
 		virtual
 		void CWC_CALL cwc$component$new$0() const noexcept =0;
 		virtual
@@ -51,8 +47,31 @@ namespace cwc {
 			CWC_PRAGMA_WARNING_NON_VIRTUAL_DTOR
 			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
 			CWC_PRAGMA_WARNING_POP
-			void CWC_CALL cwc$component$dynamic_cast$2(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { internal::cast_to_interface<true>(this, *id, result); }); }
-			void CWC_CALL cwc$component$dynamic_cast_fast$3(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { internal::cast_to_interface<false>(this, *id, result); }); }
+			void CWC_CALL cwc$component$dynamic_cast$2(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { cast_to_interface<true, typename Implementation::cwc_interfaces>(*id, result); }); }
+			void CWC_CALL cwc$component$dynamic_cast_fast$3(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { cast_to_interface<false, typename Implementation::cwc_interfaces>(*id, result); }); }
+
+			template<bool IncRefCount, typename TL>
+			void cast_to_interface(const uuid & id, void ** result) const {
+				if constexpr(TL::empty) {
+					(void)id;
+					(void)result;
+					throw std::bad_cast{};
+				} else {
+					using Head = typename TL::template at<0>;
+					if(id == interface_id_v<Head>) {
+						using IdentityType = typename Implementation::cwc_interfaces::template at<1>; //does not work for classes that implement no additional interfaces...
+						static_assert(!std::is_same_v<IdentityType, component>);
+
+						using Cast = std::conditional_t<std::is_same_v<Head, component>, IdentityType, Head>;
+						auto ptr{static_cast<Cast *>(const_cast<Implementation *>(static_cast<const Implementation *>(this)))};
+						if constexpr(IncRefCount) ++cwc_reference_counter;
+						*result = ptr;
+					} else {
+						using Tail = typename TL::template erase_at<0>;
+						cast_to_interface<IncRefCount, Tail>(id, result);
+					}
+				}
+			}
 		public:
 			vtable_implementation() =default;
 			~vtable_implementation() =default;

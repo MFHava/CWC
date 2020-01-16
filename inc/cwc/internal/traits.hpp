@@ -30,4 +30,7 @@ namespace cwc::internal {
 
 	template<typename Interface, typename Implementation, typename TypeList>
 	struct vtable_implementation;
+
+	template<typename Interface, typename Implementation>
+	struct vtable_implementation<Interface, Implementation, type_list<>> : Interface {};
 }

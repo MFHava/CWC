@@ -11,6 +11,29 @@
 #pragma once
 
 namespace cwc {
+	namespace internal {
+		template<typename Implementation, typename TypeList>
+		struct default_implementation_chaining;
+
+		template<typename Implementation, typename Head, typename... Tail>
+		struct default_implementation_chaining<Implementation, type_list<Head, Tail...>> : vtable_implementation<Head, Implementation, type_list<Tail...>> {};
+
+
+		template<typename Implementation, typename AdHocComponent>
+		struct default_implementation : default_implementation_chaining<Implementation, typename AdHocComponent::cwc_interfaces::template push_back<AdHocComponent>> {};
+
+
+		template<typename... Interfaces>
+		struct interface_implementation_base : Interfaces... {
+			using cwc_interfaces = typename type_list<component, Interfaces...>::unique_all;
+		};
+
+		template<typename Component, typename... Interfaces>
+		struct component_implementation_base : Interfaces..., Component {
+			using cwc_interfaces = typename Component::cwc_interfaces::template push_back<type_list<Interfaces...>>::unique;
+		};
+	}
+
 	//! @brief default implementation of basic operations for use with simple interface-implementations
 	//! @tparam Implementation name of the class that implements the interface
 	//! @tparam Interface interface to implement

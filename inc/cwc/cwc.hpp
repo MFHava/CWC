@@ -47,12 +47,10 @@ namespace cwc {
 #include "public/error_handle.hpp"
 #include "public/intrusive_ptr.hpp"
 
-#include "internal/default_implementation_chaining.hpp"
-#include "internal/cast_to_interface.hpp"
+#include "public/default_implementations.hpp"
 
 #include "public/delegate.hpp"
 #include "public/component.hpp"
 #include "public/context.hpp"
-#include "public/default_implementations.hpp"
 
 #include "public/bundle.hpp"

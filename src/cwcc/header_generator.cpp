@@ -43,17 +43,9 @@ namespace cwcc {
 			for(std::size_t i{0}; i < mangled.size(); ++i) {
 				const auto & method{self.methods[i]};
 				std::stringstream ss;
-				ss << "auto CWC_CALL " << mangled[i] << '(';
-				const auto & params{method.params()};
-				if(!params.empty()) {
-					auto print_param{[&](const param & p) { ss << p.mutable_ << p.type << " * " << p.name; }};
-					print_param(params[0]);
-					for(std::size_t j{1}; j < params.size(); ++j) {
-						ss << ", ";
-						print_param(params[j]);
-					}
-				}
-				ss << ") " << method.mutable_ << "noexcept -> const ::cwc::internal::error * ";
+				ss << "void CWC_CALL " << mangled[i] << "(::cwc::error_handle * cwc_error";
+				for(const auto & p: method.params()) ss << ", " << p.mutable_ << p.type << " * " << p.name;
+				ss << ") " << method.mutable_ << "noexcept ";
 				result.push_back(ss.str());
 			}
 			return result;
@@ -111,8 +103,21 @@ namespace cwcc {
 					os << "{\n";
 					{
 						indent_scope scope{os};
+						os << indent << "::cwc::default_error_handle cwc_error;\n"
+						   << indent << "return " << method.name << "(cwc_error";
+						for(const auto & p : method.in) os << ", " << p.name;
+						os << ");\n";
+					}
+					os << indent << "}\n"
+					   << indent << (method.out ? "auto" : "void") << " " << method.name << "(::cwc::error_handle & cwc_error";
+					for(const auto & p : method.in) os << ", " << p.mutable_ << p.type << " & " << p.name;
+					os << ") " << method.mutable_;
+					if(method.out) os << "-> " << *method.out << ' ';
+					os << "{\n";
+					{
+						indent_scope scope{os};
 						if(method.out) os << indent << *method.out << " cwc_ret;\n";
-						os << indent << "::cwc::internal::call(*this, &" << self.name << "::" << mangled[i];
+						os << indent << "cwc_error.call(*this, &" << self.name << "::" << mangled[i];
 						for(const auto & p : method.params()) os << ", " << p.name;
 						os << ");\n";
 						if(method.out) os << indent << "return cwc_ret;\n";
@@ -166,7 +171,7 @@ namespace cwcc {
 					indent_scope scope{os};
 					for(std::size_t i{0}; i < vtable.size(); ++i) {
 						const auto & method{self.methods[i]};
-						os << indent << vtable[i] << "final { return ::cwc::internal::call_and_return_error([&] { ";
+						os << indent << vtable[i] << "final { return cwc_error->call_and_store([&] { ";
 						if(method.out) os << "*cwc_ret = ";
 						os << "static_cast<" << method.mutable_ << "Implementation &>(*this)." << method.name << '(';
 						if(!method.in.empty()) {

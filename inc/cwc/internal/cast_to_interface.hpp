@@ -22,7 +22,7 @@ namespace cwc::internal {
 		static
 		void cast(Self * self, const uuid & id, void ** result) {
 			using Type = typename TypeList::head;
-			if(id != interface_id<Type>::get()) return cast_to_interface_helper<Self, typename TypeList::tail, IncRefCount>::cast(self, id, result);
+			if(id != interface_id_v<Type>) return cast_to_interface_helper<Self, typename TypeList::tail, IncRefCount>::cast(self, id, result);
 			using Cast = std::conditional_t<std::is_same_v<Type, component>, IdentityType, Type>;
 			auto ptr{static_cast<Cast *>(self)};
 			if constexpr(IncRefCount) ptr->cwc$component$new$0();

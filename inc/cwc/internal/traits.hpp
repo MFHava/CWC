@@ -11,15 +11,22 @@
 #pragma once
 
 namespace cwc::internal {
-	template<uint8 Byte0, uint8 Byte1, uint8 Byte2, uint8 Byte3, uint8 Byte4, uint8 Byte5, uint8 Byte6, uint8 Byte7, uint8 Byte8, uint8 Byte9, uint8 ByteA, uint8 ByteB, uint8 ByteC, uint8 ByteD, uint8 ByteE, uint8 ByteF>
+	template<uint8... Bytes>
 	struct uuid_constant {
+		static_assert(sizeof...(Bytes) == 16);
+
 		static
 		constexpr
-		auto get() noexcept -> uuid { return uuid{Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7, Byte8, Byte9, ByteA, ByteB, ByteC, ByteD, ByteE, ByteF}; }
+		uuid value{Bytes...};
 	};
 
 	template<typename Interface>
 	struct interface_id;
+
+	template<typename Interface>
+	inline
+	constexpr
+	auto interface_id_v{interface_id<Interface>::value};
 
 	template<typename Interface, typename Implementation, typename TypeList>
 	struct vtable_implementation;

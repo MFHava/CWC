@@ -34,10 +34,9 @@ namespace cwc {
 			static_assert(!std::is_const_v<OtherType> || (std::is_const_v<OtherType> && std::is_const_v<Type>), "constness violation detected");
 			if(!other) return;
 			using TargetType = std::remove_const_t<Type>;
-			const uuid & id{internal::interface_id<TargetType>::get()};
 			TargetType * tmp;
 			default_error_handle error;
-			other.ptr->cwc$component$dynamic_cast$2(&error, &id, reinterpret_cast<void **>(&tmp));
+			other.ptr->cwc$component$dynamic_cast$2(&error, &internal::interface_id_v<TargetType>, reinterpret_cast<void **>(&tmp));
 			error.rethrow_if_necessary();
 			ptr = tmp;
 		}
@@ -47,10 +46,9 @@ namespace cwc {
 			static_assert(!std::is_const_v<OtherType> || (std::is_const_v<OtherType> && std::is_const_v<Type>), "constness violation detected");
 			if(!other) return;
 			using TargetType = std::remove_const_t<Type>;
-			const uuid & id{internal::interface_id<TargetType>::get()};
 			TargetType * tmp;
 			default_error_handle error;
-			other.ptr->cwc$component$dynamic_cast_fast$3(&error, &id, reinterpret_cast<void **>(&tmp));
+			other.ptr->cwc$component$dynamic_cast_fast$3(&error, &internal::interface_id_v<TargetType>, reinterpret_cast<void **>(&tmp));
 			error.rethrow_if_necessary();
 			ptr = tmp;
 			other.ptr = nullptr;

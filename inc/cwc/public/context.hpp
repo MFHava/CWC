@@ -37,7 +37,7 @@ namespace cwc {
 		auto factory(error_handle & cwc_error) const {
 			using Component = typename Configuration::component;
 			using Factory = typename Component::cwc_factory;
-			auto tmp{factory(cwc_error, &typeid(Configuration), internal::interface_id<Factory>::get(), Configuration::dll)};
+			auto tmp{factory(cwc_error, &typeid(Configuration), internal::interface_id_v<Factory>, Configuration::dll)};
 			return intrusive_ptr<Factory>(std::move(tmp));
 		}
 

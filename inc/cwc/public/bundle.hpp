@@ -33,8 +33,7 @@ namespace cwc::internal {
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
 		static_assert(std::is_base_of_v<Component, Implementation>, "Implementation does not fulfill the requirements of exported Component");\
 		using Factory = Component::cwc_factory;\
-		const auto id{cwc::internal::interface_id<Factory>::get()};\
-		auto & tmp{cwc::internal::factories[id]};\
+		auto & tmp{cwc::internal::factories[cwc::internal::interface_id_v<Factory>]};\
 		if(tmp) throw std::logic_error{"detected duplicated export of component"};\
 		tmp = cwc::make_intrusive<typename Implementation::cwc_component_factory>();\
 		return 0;\

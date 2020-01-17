@@ -81,7 +81,7 @@ if(CWC_BUILD_SAMPLES)
 	foreach(sample fibonacci)
 		file(GLOB_RECURSE DLL "samples/${sample}/dll/*.*")
 		source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/samples/${sample}/dll FILES ${DLL})
-		add_library(sample-${sample}-dll SHARED ${DLL} "samples/${sample}/cwc.sample.${sample}.cwch")
+		add_library(sample-${sample}-dll MODULE ${DLL} "samples/${sample}/cwc.sample.${sample}.cwch")
 		target_link_libraries(sample-${sample}-dll cwc)
 		set_target_properties(sample-${sample}-dll PROPERTIES OUTPUT_NAME sample-${sample} FOLDER "C++ with Components/Samples")
 

@@ -119,15 +119,10 @@ namespace cwc {
 		mutable std::unordered_map<const std::type_info *, intrusive_ptr<component>> factories;
 		mutable std::unordered_map<HMODULE, entry_point> dlls;
 
-		auto make_name(std::string file) const -> std::string {
+		auto make_dll(std::string file) const -> std::string {
 			if(force_local) file.insert(std::begin(file), std::begin(executable_path), std::end(executable_path));
 			file.insert(std::find(std::rbegin(file), std::rend(file), path_separator).base(), std::begin(dll_prefix), std::end(dll_prefix));
 			file.insert(std::end(file), std::begin(dll_suffix), std::end(dll_suffix));
-			return file;
-		}
-
-		static
-		auto make_path(std::string file) -> std::string {
 			if(std::find(std::begin(file), std::end(file), path_separator) == std::end(file)) {
 				file.insert(std::begin(file), '.');
 				file.insert(std::begin(file), path_separator);
@@ -137,8 +132,7 @@ namespace cwc {
 
 		auto load_factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string dll) const -> intrusive_ptr<component> {
 			const std::lock_guard lock{mutex};
-
-			const auto handle{LoadLibrary(make_path(make_name(dll)).c_str())};
+			const auto handle{LoadLibrary(make_dll(dll).c_str())};
 			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
 			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per context
 

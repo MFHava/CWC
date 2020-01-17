@@ -164,7 +164,7 @@ namespace cwcc {
 				   << indent << "struct interface_id<::" << this_bundle.name << "::" << self.name << "> final : uuid_constant<" << name_to_uuid(this_bundle, self.name) << "> {};\n"
 				                "\n"
 				   << indent << "template<typename Implementation, typename TypeList>\n"
-				   << indent << "class vtable_implementation<" << this_bundle.name << "::" << self.name << ", Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {\n";
+				   << indent << "class vtable_wrapper<" << this_bundle.name << "::" << self.name << ", Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {\n";
 				const auto mangled{mangled_names(this_bundle, self)};
 				const auto vtable{vtable_entries(self, mangled)};
 				{

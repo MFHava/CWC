@@ -34,14 +34,14 @@ namespace cwc {
 		struct interface_id<component> final : uuid_constant<0x45, 0x91, 0x4, 0xE, 0xEF, 0xBF, 0x5E, 0x84, 0xA1, 0x58, 0x53, 0x3E, 0xD4, 0xAC, 0xFF, 0x93> {};
 
 		template<typename Implementation, typename TypeList>
-		class vtable_implementation<component, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {
+		class vtable_wrapper<component, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {
 			mutable std::atomic<uint64> cwc_reference_counter{1};
 
-			vtable_implementation(const vtable_implementation &) =delete;
-			vtable_implementation(vtable_implementation &&) =delete;
+			vtable_wrapper(const vtable_wrapper &) =delete;
+			vtable_wrapper(vtable_wrapper &&) =delete;
 
-			auto operator=(const vtable_implementation &) -> vtable_implementation & =delete;
-			auto operator=(vtable_implementation &&) -> vtable_implementation & =delete;
+			auto operator=(const vtable_wrapper &) -> vtable_wrapper & =delete;
+			auto operator=(vtable_wrapper &&) -> vtable_wrapper & =delete;
 
 			void CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
 			CWC_PRAGMA_WARNING_PUSH
@@ -74,8 +74,8 @@ namespace cwc {
 				}
 			}
 		public:
-			vtable_implementation() =default;
-			~vtable_implementation() =default;
+			vtable_wrapper() =default;
+			~vtable_wrapper() =default;
 		};
 	}
 }

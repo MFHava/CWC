@@ -57,7 +57,7 @@ namespace cwc::internal {
 	struct interface_id<::cwc::sample::fibonacci::sequence> final : uuid_constant<0x55, 0x9, 0x67, 0x3D, 0x71, 0x7, 0x51, 0xC5, 0x97, 0xAA, 0x1F, 0xE8, 0xA8, 0x2A, 0x1A, 0x6> {};
 
 	template<typename Implementation, typename TypeList>
-	class vtable_implementation<cwc::sample::fibonacci::sequence, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
+	class vtable_wrapper<cwc::sample::fibonacci::sequence, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
 		void CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(::cwc::error_handle * cwc_error, const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept final { return cwc_error->call_and_store([&] { *cwc_ret = static_cast<const Implementation &>(*this).calculate(*no); }); }
 		void CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(::cwc::error_handle * cwc_error, const ::cwc::uint8 * first, const ::cwc::uint8 * last, const ::cwc::sample::fibonacci::handler * callback) const noexcept final { return cwc_error->call_and_store([&] { static_cast<const Implementation &>(*this).calculate(*first, *last, *callback); }); }
 		//detect missing methods:
@@ -68,7 +68,7 @@ namespace cwc::internal {
 	struct interface_id<::cwc::sample::fibonacci::generator::cwc_factory> final : uuid_constant<0x12, 0xEC, 0x4A, 0x37, 0x93, 0xBB, 0x54, 0x62, 0x81, 0x3E, 0xFA, 0xF0, 0x48, 0xD3, 0x64, 0x59> {};
 
 	template<typename Implementation, typename TypeList>
-	class vtable_implementation<cwc::sample::fibonacci::generator::cwc_factory, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
+	class vtable_wrapper<cwc::sample::fibonacci::generator::cwc_factory, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
 		void CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::error_handle * cwc_error, ::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept final { return cwc_error->call_and_store([&] { *cwc_ret = static_cast<const Implementation &>(*this).create(); }); }
 		//detect missing methods:
 		void create();

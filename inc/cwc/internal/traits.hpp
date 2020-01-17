@@ -29,8 +29,8 @@ namespace cwc::internal {
 	auto interface_id_v{interface_id<Interface>::value};
 
 	template<typename Interface, typename Implementation, typename TypeList>
-	struct vtable_implementation;
+	struct vtable_wrapper;
 
 	template<typename Interface, typename Implementation>
-	struct vtable_implementation<Interface, Implementation, ptl::type_list<>> : Interface {};
+	struct vtable_wrapper<Interface, Implementation, ptl::type_list<>> : Interface {};
 }

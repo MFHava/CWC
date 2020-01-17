@@ -13,11 +13,7 @@
 namespace cwc {
 	namespace internal {
 		template<typename Implementation, typename TypeList>
-		struct default_implementation_chaining;
-
-		template<typename Implementation, typename Head, typename... Tail>
-		struct default_implementation_chaining<Implementation, ptl::type_list<Head, Tail...>> : vtable_implementation<Head, Implementation, ptl::type_list<Tail...>> {};
-
+		struct default_implementation_chaining : vtable_wrapper<typename TypeList::template at<0>, Implementation, typename TypeList::template erase_at<0>> {};
 
 		template<typename Implementation, typename AdHocComponent>
 		struct default_implementation : default_implementation_chaining<Implementation, typename AdHocComponent::cwc_interfaces::template push_back<AdHocComponent>> {};

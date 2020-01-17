@@ -23,7 +23,7 @@ namespace cwc {
 	using uint64  = std::uint64_t;//!< @brief unsigned 64bit integer
 	using float32 = float;//!< @brief single precision (32bit) floating point
 	using float64 = double;//!< @brief double precision (64bit) floating point
-	using boolean = std::conditional_t<sizeof(bool) == 1, bool, uint8>;//!< @brief portable boolean (as bool lacks size guarantee)
+	using boolean = bool;
 	//! @}
 
 	using uuid = array<uint8, 16>;//!< @brief universally unique identifier

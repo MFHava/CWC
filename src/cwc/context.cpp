@@ -4,9 +4,7 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include <limits>
 #include <cassert>
-#include <climits>
 #include <shared_mutex>
 #include <unordered_map>
 #include <cwc/cwc.hpp>
@@ -37,6 +35,7 @@
 		const std::string dll_name{"DLL"}; //TODO: C++20 will allow constexpr here
 	}
 #elif CWC_OS_LINUX
+	#include <climits>
 	#include <dlfcn.h>
 	#include <unistd.h>
 	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
@@ -87,34 +86,6 @@
 	#error unknown operating system
 #endif
 
-namespace {
-	//validate that platform conforms to basic CWC ABI requirements
-	template<typename FloatingPoint, std::size_t ExpectedSize>
-	struct validate_floating_point final : std::bool_constant<
-		sizeof(FloatingPoint) == ExpectedSize &&
-		std::numeric_limits<FloatingPoint>::is_specialized &&
-		std::numeric_limits<FloatingPoint>::is_iec559 &&
-		std::is_floating_point_v<FloatingPoint>
-	> {};
-
-	template<typename FloatingPoint, std::size_t ExpectedSize>
-	inline
-	constexpr
-	auto validate_floating_point_v{validate_floating_point<FloatingPoint, ExpectedSize>::value};
-
-	static_assert(CHAR_BIT == 8);
-	static_assert(validate_floating_point_v<cwc::float32, 4>);
-	static_assert(validate_floating_point_v<cwc::float64, 8>);
-
-	auto make_path(std::string file) -> std::string {
-		if(std::find(std::begin(file), std::end(file), path_separator) == std::end(file)) {
-			file.insert(std::begin(file), '.');
-			file.insert(std::begin(file), path_separator);
-		}
-		return file;
-	}
-}
-
 namespace cwc {
 	struct context::pimpl final {
 		pimpl(bool force_local) noexcept : force_local{force_local} {}
@@ -152,6 +123,15 @@ namespace cwc {
 			if(force_local) file.insert(std::begin(file), std::begin(executable_path), std::end(executable_path));
 			file.insert(std::find(std::rbegin(file), std::rend(file), path_separator).base(), std::begin(dll_prefix), std::end(dll_prefix));
 			file.insert(std::end(file), std::begin(dll_suffix), std::end(dll_suffix));
+			return file;
+		}
+
+		static
+		auto make_path(std::string file) -> std::string {
+			if(std::find(std::begin(file), std::end(file), path_separator) == std::end(file)) {
+				file.insert(std::begin(file), '.');
+				file.insert(std::begin(file), path_separator);
+			}
 			return file;
 		}
 

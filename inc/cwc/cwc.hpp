@@ -23,12 +23,9 @@
 namespace cwc {
 	using namespace ptl;
 
-	//! @brief user defined literals
-	namespace literals { using namespace ptl::literals; }
-
 	//! @brief internal implementation details
 	//! @attention no member of this namespace is part of the public CWC API
-	namespace internal { using namespace ptl::internal; }
+	namespace internal {}
 }
 
 #include "internal/detection.hpp"

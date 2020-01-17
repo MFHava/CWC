@@ -62,7 +62,7 @@ namespace cwcc {
 		friend
 		auto operator==(const array & lhs, const array & rhs) -> bool { return (lhs.type == rhs.type) && (lhs.size == rhs.size); }
 		friend
-		auto operator<<(std::ostream & os, const array & self) -> std::ostream & { return os << "::cwc::array<" << self.type << ", " << self.size << '>'; }
+		auto operator<<(std::ostream & os, const array & self) -> std::ostream & { return os << "::ptl::array<" << self.type << ", " << self.size << '>'; }
 	};
 
 	struct array_ref final {
@@ -72,7 +72,7 @@ namespace cwcc {
 		friend
 		auto operator==(const array_ref & lhs, const array_ref & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
 		friend
-		auto operator<<(std::ostream & os, const array_ref & self) -> std::ostream & { return os << "::cwc::array_ref<" << self.mutable_ << self.type << '>'; }
+		auto operator<<(std::ostream & os, const array_ref & self) -> std::ostream & { return os << "::ptl::array_ref<" << self.mutable_ << self.type << '>'; }
 	};
 
 	struct bitset final {
@@ -81,7 +81,7 @@ namespace cwcc {
 		friend
 		auto operator==(const bitset & lhs, const bitset & rhs) -> bool { return lhs.size == rhs.size; }
 		friend
-		auto operator<<(std::ostream & os, const bitset & self) -> std::ostream & { return os << "::cwc::bitset<" << self.size << '>'; }
+		auto operator<<(std::ostream & os, const bitset & self) -> std::ostream & { return os << "::ptl::bitset<" << self.size << '>'; }
 	};
 
 	struct optional final {
@@ -90,7 +90,7 @@ namespace cwcc {
 		friend
 		auto operator==(const optional & lhs, const optional & rhs) -> bool { return lhs.type == rhs.type; }
 		friend
-		auto operator<<(std::ostream & os, const optional & self) -> std::ostream & { return os << "::cwc::optional<" << self.type << '>'; }
+		auto operator<<(std::ostream & os, const optional & self) -> std::ostream & { return os << "::ptl::optional<" << self.type << '>'; }
 	};
 
 	struct tuple final {
@@ -101,7 +101,7 @@ namespace cwcc {
 		friend
 		auto operator<<(std::ostream & os, const tuple & self) -> std::ostream & {
 			assert(!self.types.empty());
-			os << "::cwc::tuple<" << self.types[0];
+			os << "::ptl::tuple<" << self.types[0];
 			for(std::size_t i{1}; i < self.types.size(); ++i) os << ", " << self.types[i];
 			os << '>';
 			return os;
@@ -116,7 +116,7 @@ namespace cwcc {
 		friend
 		auto operator<<(std::ostream & os, const variant & self) -> std::ostream & {
 			assert(!self.types.empty());
-			os << "::cwc::variant<" << self.types[0];
+			os << "::ptl::variant<" << self.types[0];
 			for(std::size_t i{1}; i < self.types.size(); ++i) os << ", " << self.types[i];
 			os << '>';
 			return os;

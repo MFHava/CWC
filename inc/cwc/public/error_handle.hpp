@@ -35,15 +35,15 @@ namespace cwc {
 		void rethrow_if_necessary() const;
 	protected:
 		//! @throws iff msg.empty()
-		error_handle(array_ref<char> msg);
+		error_handle(ptl::array_ref<char> msg);
 		~error_handle() noexcept;
 	private:
 		void store() noexcept;
 
 		enum class error_code : uint64;
 
-		optional<error_code> code;
-		array_ref<char> msg;
+		ptl::optional<error_code> code;
+		ptl::array_ref<char> msg;
 	};
 	CWC_PACK_END
 

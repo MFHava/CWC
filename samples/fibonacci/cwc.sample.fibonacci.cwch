@@ -31,7 +31,7 @@ namespace cwc::sample::fibonacci {
 	};
 
 	struct generator : ::cwc::sample::fibonacci::sequence {
-		using cwc_interfaces = ::cwc::type_list<component, ::cwc::sample::fibonacci::sequence>::unique_all;
+		using cwc_interfaces = ::ptl::type_list<component, ::cwc::sample::fibonacci::sequence>::unique_all;
 
 		class cwc_factory : public ::cwc::component {
 			virtual

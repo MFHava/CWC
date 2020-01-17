@@ -21,8 +21,6 @@
 
 //! @brief public API of C++ with Components
 namespace cwc {
-	using namespace ptl;
-
 	//! @brief internal implementation details
 	//! @attention no member of this namespace is part of the public CWC API
 	namespace internal {}

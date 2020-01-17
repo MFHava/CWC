@@ -16,7 +16,7 @@ namespace cwc {
 		struct default_implementation_chaining;
 
 		template<typename Implementation, typename Head, typename... Tail>
-		struct default_implementation_chaining<Implementation, type_list<Head, Tail...>> : vtable_implementation<Head, Implementation, type_list<Tail...>> {};
+		struct default_implementation_chaining<Implementation, ptl::type_list<Head, Tail...>> : vtable_implementation<Head, Implementation, ptl::type_list<Tail...>> {};
 
 
 		template<typename Implementation, typename AdHocComponent>
@@ -25,12 +25,12 @@ namespace cwc {
 
 		template<typename... Interfaces>
 		struct interface_implementation_base : Interfaces... {
-			using cwc_interfaces = typename type_list<component, Interfaces...>::unique_all;
+			using cwc_interfaces = typename ptl::type_list<component, Interfaces...>::unique;
 		};
 
 		template<typename Component, typename... Interfaces>
 		struct component_implementation_base : Interfaces..., Component {
-			using cwc_interfaces = typename Component::cwc_interfaces::template push_back<type_list<Interfaces...>>::unique;
+			using cwc_interfaces = typename Component::cwc_interfaces::template merge<ptl::type_list<Interfaces...>>::unique;
 		};
 	}
 

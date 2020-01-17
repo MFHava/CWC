@@ -90,12 +90,12 @@ namespace cwc {
 		throw unknown_error{};
 	}
 
-	error_handle::error_handle(array_ref<char> msg) : msg{msg} { if(msg.empty()) throw std::invalid_argument{"message buffer must at least be able to store 1 char"}; }
+	error_handle::error_handle(ptl::array_ref<char> msg) : msg{msg} { if(msg.empty()) throw std::invalid_argument{"message buffer must at least be able to store 1 char"}; }
 
 	error_handle::~error_handle() noexcept =default;
 
 	void error_handle::store() noexcept { //lippincott function
-		auto record{[&](error_code type, string_ref message) noexcept {
+		auto record{[&](error_code type, ptl::string_ref message) noexcept {
 			code = type;
 			msg[0] = '\0';
 			std::strncat(msg.data(), message.data(), std::min(msg.size() - 1, message.size()));

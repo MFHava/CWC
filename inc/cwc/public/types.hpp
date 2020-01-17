@@ -26,5 +26,5 @@ namespace cwc {
 	using boolean = bool;
 	//! @}
 
-	using uuid = array<uint8, 16>;//!< @brief universally unique identifier
+	using uuid = ptl::array<uint8, 16>;//!< @brief universally unique identifier
 }

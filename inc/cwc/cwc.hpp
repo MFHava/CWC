@@ -39,6 +39,6 @@ namespace cwc {
 
 #include "public/delegate.hpp"
 #include "public/component.hpp"
-#include "public/context.hpp"
+#include "public/loader.hpp"
 
 #include "public/export.hpp"

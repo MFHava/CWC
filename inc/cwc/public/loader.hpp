@@ -12,7 +12,7 @@
 #include <memory>
 
 namespace cwc {
-	class context final {
+	class loader final {
 		struct pimpl;
 
 		std::unique_ptr<pimpl> self;
@@ -20,13 +20,13 @@ namespace cwc {
 		auto factory(error_context & cwc_error, const std::type_info * type, const uuid & id , std::string_view dll) const -> intrusive_ptr<component>;
 	public:
 		//! @param[in] force_local override OS specific dll-path behavior and load DLLs only relative to host executable
-		context(bool force_local = true);
-		~context() noexcept;
+		loader(bool force_local = true);
+		~loader() noexcept;
 
-		context(const context &) =delete;
-		context(context &&) noexcept =delete;
-		auto operator=(const context &) -> context & =delete;
-		auto operator=(context &&) noexcept -> context & =delete;
+		loader(const loader &) =delete;
+		loader(loader &&) noexcept =delete;
+		auto operator=(const loader &) -> loader & =delete;
+		auto operator=(loader &&) noexcept -> loader & =delete;
 
 		template<typename Configuration>
 		auto factory() const {

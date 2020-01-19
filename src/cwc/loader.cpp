@@ -87,7 +87,7 @@
 #endif
 
 namespace cwc {
-	struct context::pimpl final {
+	struct loader::pimpl final {
 		pimpl(bool force_local) noexcept : force_local{force_local} {}
 
 		~pimpl() noexcept {
@@ -134,7 +134,7 @@ namespace cwc {
 			const std::lock_guard lock{mutex};
 			const auto handle{LoadLibrary(make_dll(dll).c_str())};
 			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
-			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per context
+			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per loader
 
 			const auto main{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_main"))};
 			if(!main) {
@@ -159,9 +159,9 @@ namespace cwc {
 		}
 	};
 
-	auto context::factory(error_context & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, id, dll); }
+	auto loader::factory(error_context & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, id, dll); }
 
-	context::context(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
+	loader::loader(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
 
-	context::~context() noexcept =default;
+	loader::~loader() noexcept =default;
 }

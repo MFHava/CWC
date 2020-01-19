@@ -19,8 +19,8 @@ struct fibonacci_generator final {
 
 int main() {
 	cwc::sized_error_context<64> error;
-	cwc::context context;
-	const auto generator{context.create<fibonacci_generator>(error)};
+	cwc::loader loader;
+	const auto generator{loader.create<fibonacci_generator>(error)};
 
 
 	try {

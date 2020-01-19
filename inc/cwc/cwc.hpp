@@ -41,4 +41,4 @@ namespace cwc {
 #include "public/component.hpp"
 #include "public/context.hpp"
 
-#include "public/bundle.hpp"
+#include "public/export.hpp"

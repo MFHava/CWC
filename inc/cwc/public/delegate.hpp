@@ -29,7 +29,7 @@ namespace cwc {
 
 		struct cwc_interface {
 			virtual
-			void CWC_CALL invoke(error_handle * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept =0;
+			void CWC_CALL invoke(error_context * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept =0;
 			virtual
 			void CWC_CALL destroy() noexcept =0;
 		};
@@ -39,7 +39,7 @@ namespace cwc {
 
 			cwc_implementation(Functor && func) noexcept : cwc_functor{std::move(func)} {}
 
-			void CWC_CALL invoke(error_handle * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept final {
+			void CWC_CALL invoke(error_context * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept final {
 				cwc_error->call_and_store([&] {
 					if constexpr(std::is_same_v<void, Result>) {
 						(void)result;
@@ -57,7 +57,7 @@ namespace cwc {
 		auto operator&()       noexcept ->       delegate * { return this; }
 
 		friend
-		struct error_handle;
+		struct error_context;
 	public:
 		template<typename Functor>
 		delegate(Functor func) : cwc_func{new cwc_implementation<Functor>{std::move(func)}} {}
@@ -70,10 +70,10 @@ namespace cwc {
 		~delegate() noexcept { cwc_func->destroy(); }
 
 		auto operator()(Params...  args) const -> Result {
-			default_error_handle cwc_error;
+			default_error_context cwc_error;
 			return (*this)(cwc_error, args...);
 		}
-		auto operator()(error_handle & cwc_error, Params... args) const -> Result {
+		auto operator()(error_context & cwc_error, Params... args) const -> Result {
 			result_type result;
 			cwc_error.call(*cwc_func, &cwc_interface::invoke, args..., result);
 			return (Result)result; //cast to void if necessary, otherwise should result in nop

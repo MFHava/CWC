@@ -43,7 +43,7 @@ namespace cwcc {
 			for(std::size_t i{0}; i < mangled.size(); ++i) {
 				const auto & method{self.methods[i]};
 				std::stringstream ss;
-				ss << "void CWC_CALL " << mangled[i] << "(::cwc::error_handle * cwc_error";
+				ss << "void CWC_CALL " << mangled[i] << "(::cwc::error_context * cwc_error";
 				for(const auto & p: method.params()) ss << ", " << p.mutable_ << p.type << " * " << p.name;
 				ss << ") " << method.mutable_ << "noexcept ";
 				result.push_back(ss.str());
@@ -103,13 +103,13 @@ namespace cwcc {
 					os << "{\n";
 					{
 						indent_scope scope{os};
-						os << indent << "::cwc::default_error_handle cwc_error;\n"
+						os << indent << "::cwc::default_error_context cwc_error;\n"
 						   << indent << "return " << method.name << "(cwc_error";
 						for(const auto & p : method.in) os << ", " << p.name;
 						os << ");\n";
 					}
 					os << indent << "}\n"
-					   << indent << (method.out ? "auto" : "void") << " " << method.name << "(::cwc::error_handle & cwc_error";
+					   << indent << (method.out ? "auto" : "void") << " " << method.name << "(::cwc::error_context & cwc_error";
 					for(const auto & p : method.in) os << ", " << p.mutable_ << p.type << " & " << p.name;
 					os << ") " << method.mutable_;
 					if(method.out) os << "-> " << *method.out << ' ';

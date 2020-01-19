@@ -32,7 +32,7 @@ namespace cwc {
 
 #include "internal/traits.hpp"
 
-#include "public/error_handle.hpp"
+#include "public/error_context.hpp"
 #include "public/intrusive_ptr.hpp"
 
 #include "public/default_implementations.hpp"

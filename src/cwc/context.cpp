@@ -98,7 +98,7 @@ namespace cwc {
 			}
 		}
 
-		auto factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> {
+		auto factory(error_context & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> {
 			{
 				const std::shared_lock lock{mutex};
 				if(const auto it{factories.find(type)}; it != std::end(factories)) return it->second;
@@ -106,7 +106,7 @@ namespace cwc {
 			return load_factory(cwc_error, type, id, std::string{dll});
 		}
 	private:
-		using entry_point = void(CWC_CALL *)(error_handle *, const uuid *, intrusive_ptr<component> *);
+		using entry_point = void(CWC_CALL *)(error_context *, const uuid *, intrusive_ptr<component> *);
 
 		const bool force_local;
 		const std::string executable_path{[] {
@@ -130,7 +130,7 @@ namespace cwc {
 			return file;
 		}
 
-		auto load_factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string dll) const -> intrusive_ptr<component> {
+		auto load_factory(error_context & cwc_error, const std::type_info * type, const uuid & id, std::string dll) const -> intrusive_ptr<component> {
 			const std::lock_guard lock{mutex};
 			const auto handle{LoadLibrary(make_dll(dll).c_str())};
 			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
@@ -159,7 +159,7 @@ namespace cwc {
 		}
 	};
 
-	auto context::factory(error_handle & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, id, dll); }
+	auto context::factory(error_context & cwc_error, const std::type_info * type, const uuid & id, std::string_view dll) const -> intrusive_ptr<component> { return self->factory(cwc_error, type, id, dll); }
 
 	context::context(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
 

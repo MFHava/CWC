@@ -12,11 +12,11 @@
 
 namespace cwc {
 	CWC_PACK_BEGIN
-	struct error_handle {
-		error_handle(error_handle &) =delete;
-		error_handle(error_handle &&) noexcept =delete;
-		auto operator=(error_handle &) -> error_handle & =delete;
-		auto operator=(error_handle &&) noexcept -> error_handle & =delete;
+	struct error_context {
+		error_context(error_context &) =delete;
+		error_context(error_context &&) noexcept =delete;
+		auto operator=(error_context &) -> error_context & =delete;
+		auto operator=(error_context &&) noexcept -> error_context & =delete;
 
 		template<typename Func>
 		void call_and_store(Func func) noexcept {
@@ -35,8 +35,8 @@ namespace cwc {
 		void rethrow_if_necessary() const;
 	protected:
 		//! @throws iff msg.empty()
-		error_handle(ptl::array_ref<char> msg);
-		~error_handle() noexcept;
+		error_context(ptl::array_ref<char> msg);
+		~error_context() noexcept;
 	private:
 		void store() noexcept;
 
@@ -48,11 +48,11 @@ namespace cwc {
 	CWC_PACK_END
 
 	template<std::size_t Size>
-	struct sized_error_handle final : error_handle {
-		sized_error_handle() : error_handle{buffer} {}
+	struct sized_error_context final : error_context {
+		sized_error_context() : error_context{buffer} {}
 	private:
 		char buffer[Size];
 	};
 
-	using default_error_handle = sized_error_handle<256>;
+	using default_error_context = sized_error_context<256>;
 }

@@ -18,7 +18,7 @@ namespace cwc {
 	}
 
 	//exceptions of the standard library: http://en.cppreference.com/w/cpp/error/exception
-	enum class error_handle::error_code : uint64 {
+	enum class error_context::error_code : uint64 {
 		std98_exception = error_code_v<>,
 			std98_logic_error = error_code_v<1>,
 				std98_invalid_argument = error_code_v<1, 1>,
@@ -46,9 +46,9 @@ namespace cwc {
 			std17_bad_optional_access = error_code_v<10>,
 	};
 
-	void error_handle::clear() noexcept { code.reset(); }
+	void error_context::clear() noexcept { code.reset(); }
 
-	void error_handle::rethrow_if_necessary() const {
+	void error_context::rethrow_if_necessary() const {
 		if(!code) return;
 
 		struct unknown_error : std::exception {
@@ -90,11 +90,11 @@ namespace cwc {
 		throw unknown_error{};
 	}
 
-	error_handle::error_handle(ptl::array_ref<char> msg) : msg{msg} { if(msg.empty()) throw std::invalid_argument{"message buffer must at least be able to store 1 char"}; }
+	error_context::error_context(ptl::array_ref<char> msg) : msg{msg} { if(msg.empty()) throw std::invalid_argument{"message buffer must at least be able to store 1 char"}; }
 
-	error_handle::~error_handle() noexcept =default;
+	error_context::~error_context() noexcept =default;
 
-	void error_handle::store() noexcept { //lippincott function
+	void error_context::store() noexcept { //lippincott function
 		auto record{[&](error_code type, ptl::string_ref message) noexcept {
 			code = type;
 			msg[0] = '\0';

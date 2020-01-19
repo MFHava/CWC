@@ -35,7 +35,7 @@ namespace cwc {
 			if(!other) return;
 			using TargetType = std::remove_const_t<Type>;
 			TargetType * tmp;
-			default_error_handle error;
+			default_error_context error;
 			other.ptr->cwc$component$dynamic_cast$2(&error, &internal::interface_id_v<TargetType>, reinterpret_cast<void **>(&tmp));
 			error.rethrow_if_necessary();
 			ptr = tmp;
@@ -47,7 +47,7 @@ namespace cwc {
 			if(!other) return;
 			using TargetType = std::remove_const_t<Type>;
 			TargetType * tmp;
-			default_error_handle error;
+			default_error_context error;
 			other.ptr->cwc$component$dynamic_cast_fast$3(&error, &internal::interface_id_v<TargetType>, reinterpret_cast<void **>(&tmp));
 			error.rethrow_if_necessary();
 			ptr = tmp;

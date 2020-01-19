@@ -23,9 +23,9 @@ namespace cwc {
 		virtual
 		void CWC_CALL cwc$component$delete$1() const noexcept =0;
 		virtual
-		void CWC_CALL cwc$component$dynamic_cast$2(error_handle * cwc_error, const uuid * id, void ** result) const noexcept =0;
+		void CWC_CALL cwc$component$dynamic_cast$2(error_context * cwc_error, const uuid * id, void ** result) const noexcept =0;
 		virtual
-		void CWC_CALL cwc$component$dynamic_cast_fast$3(error_handle * cwc_error, const uuid * id, void ** result) const noexcept =0;
+		void CWC_CALL cwc$component$dynamic_cast_fast$3(error_context * cwc_error, const uuid * id, void ** result) const noexcept =0;
 	public:
 	};
 
@@ -48,8 +48,8 @@ namespace cwc {
 			CWC_PRAGMA_WARNING_NON_VIRTUAL_DTOR
 			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
 			CWC_PRAGMA_WARNING_POP
-			void CWC_CALL cwc$component$dynamic_cast$2(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { cast_to_interface<true, typename Implementation::cwc_interfaces>(*id, result); }); }
-			void CWC_CALL cwc$component$dynamic_cast_fast$3(error_handle * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { cast_to_interface<false, typename Implementation::cwc_interfaces>(*id, result); }); }
+			void CWC_CALL cwc$component$dynamic_cast$2(error_context * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { cast_to_interface<true, typename Implementation::cwc_interfaces>(*id, result); }); }
+			void CWC_CALL cwc$component$dynamic_cast_fast$3(error_context * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { cast_to_interface<false, typename Implementation::cwc_interfaces>(*id, result); }); }
 
 			template<bool IncRefCount, typename TL>
 			void cast_to_interface(const uuid & id, void ** result) const {

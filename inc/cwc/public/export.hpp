@@ -27,6 +27,12 @@ namespace cwc::internal {
 		factories_initializer();
 		~factories_initializer() noexcept;
 	} factories_init;
+
+	template<typename Implementation, typename Component>
+	struct factory_implementation final : interface_implementation<factory_implementation<Implementation, Component>, typename Component::cwc_factory> {
+		template<typename... Params>
+		auto create(Params &&... params) const -> intrusive_ptr<component> { return make_intrusive<Implementation>(std::forward<Params>(params)...); }
+	};
 }
 
 #define CWC_INTERNAL_CAT(lhs, rhs) CWC_INTERNAL_CAT_(lhs, rhs)
@@ -40,6 +46,7 @@ namespace cwc::internal {
 	const\
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
 		static_assert(std::is_base_of_v<Component, Implementation>);\
-		cwc::internal::factories.add(cwc::internal::interface_id_v<Component::cwc_factory>, &cwc::make_intrusive<typename Implementation::cwc_component_factory>);\
+		using Factory = cwc::internal::factory_implementation<Implementation, Component>;\
+		cwc::internal::factories.add(cwc::internal::interface_id_v<Component::cwc_factory>, &cwc::make_intrusive<Factory>);\
 		return 0;\
 	}()}

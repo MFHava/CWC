@@ -58,10 +58,5 @@ namespace cwc {
 				AdditionalInterfaces...
 			>
 		> {
-
-		struct cwc_component_factory : interface_implementation<cwc_component_factory, typename Component::cwc_factory> {
-			template<typename... Params>
-			auto create(Params &&... params) const -> intrusive_ptr<component> { return make_intrusive<Implementation>(std::forward<Params>(params)...); }
-		};
 	};
 }

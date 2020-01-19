@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <cwc/cwc.hpp>
 
-#if CWC_OS_WINDOWS
+#if defined(_WIN32)
 	#define WIN32_LEAN_AND_MEAN
 	#define NOSERVICE
 	#define NOMCX
@@ -34,7 +34,7 @@
 		constexpr std::string_view dll_prefix{""}, dll_suffix{".dll"};
 		const std::string dll_name{"DLL"}; //TODO: C++20 will allow constexpr here
 	}
-#elif CWC_OS_LINUX
+#elif defined(__linux__)
 	#include <climits>
 	#include <dlfcn.h>
 	#include <unistd.h>
@@ -58,7 +58,7 @@
 		constexpr std::string_view dll_prefix{"lib"}, dll_suffix{".so"};
 		const std::string dll_name{"SO"}; //TODO: C++20 will allow constexpr here
 	}
-#elif CWC_OS_HAIKU
+#elif defined(__HAIKU__)
 	#include <image.h>
 	#define LoadLibrary(file) std::max(load_add_on(file), image_id{0})
 	#define FreeLibrary(dll) unload_add_on(dll)

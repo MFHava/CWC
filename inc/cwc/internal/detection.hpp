@@ -5,23 +5,6 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#define CWC_OS_WINDOWS 0
-#define CWC_OS_LINUX   0
-#define CWC_OS_HAIKU   0
-
-#ifdef _WIN32
-	#undef  CWC_OS_WINDOWS
-	#define CWC_OS_WINDOWS 1
-#elif __linux__
-	#undef  CWC_OS_LINUX
-	#define CWC_OS_LINUX 1
-#elif defined(__HAIKU__)
-	#undef  CWC_OS_HAIKU
-	#define CWC_OS_HAIKU 1
-#else
-	#error unknown operating system
-#endif
-
 #define CWC_COMPIELR_GNU   0
 #define CWC_COMPILER_MSVC  0
 

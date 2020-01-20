@@ -84,6 +84,11 @@ namespace cwcc {
 						os << indent << "virtual\n"
 						   << indent << v << "=0;\n";
 				}
+				os << indent << "protected:\n";
+				{
+					indent_scope scope{os};
+					os << indent << "~" << self.name << "() noexcept =default;\n";
+				}
 				os << indent << "public:\n";
 				for(std::size_t i{0}; i < vtable.size(); ++i) {
 					indent_scope scope{os};//TODO: why is this nested and not in the outer scope?!
@@ -136,14 +141,19 @@ namespace cwcc {
 				for(std::size_t i{1}; i < self.interfaces.size(); ++i) os << ", " << self.interfaces[i];
 				{
 					indent_scope scope{os};
-					os << " {\n" << indent <<"using cwc_interfaces = ::cwc::TL::unique_all<::cwc::type_list<component";
+					os << " {\n" << indent <<"using cwc_interfaces = ::ptl::type_list<component";
 					for(const auto & interface : self.interfaces) os << ", " << interface;
-					os << ">>;\n\n";
+					os << ">::unique;\n\n";
 				}
 				{
 					header_visitor visitor{os, b};
 					indent_scope scope{os};//TODO: can be merged with loop in C++20
 					for(const auto & m : b.members) m.apply_visitor(visitor);
+				}
+				os << indent << "protected:\n";
+				{
+					indent_scope scope{os};
+					os << indent << "~" << self.name << "() noexcept =default;\n";
 				}
 				os << indent << "};\n";
 			}

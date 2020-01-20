@@ -26,6 +26,8 @@ namespace cwc {
 		void CWC_CALL cwc$component$dynamic_cast$2(error_context * cwc_error, const uuid * id, void ** result) const noexcept =0;
 		virtual
 		void CWC_CALL cwc$component$dynamic_cast_fast$3(error_context * cwc_error, const uuid * id, void ** result) const noexcept =0;
+	protected:
+		~component() noexcept =default;
 	public:
 	};
 

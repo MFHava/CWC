@@ -11,6 +11,8 @@ namespace cwc::sample::fibonacci {
 		void CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(::cwc::error_context * cwc_error, const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept =0;
 		virtual
 		void CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(::cwc::error_context * cwc_error, const ::cwc::uint8 * first, const ::cwc::uint8 * last, const ::cwc::sample::fibonacci::handler * callback) const noexcept =0;
+	protected:
+		~sequence() noexcept =default;
 	public:
 		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 {
 			::cwc::default_error_context cwc_error;
@@ -31,11 +33,13 @@ namespace cwc::sample::fibonacci {
 	};
 
 	struct generator : ::cwc::sample::fibonacci::sequence {
-		using cwc_interfaces = ::ptl::type_list<component, ::cwc::sample::fibonacci::sequence>::unique_all;
+		using cwc_interfaces = ::ptl::type_list<component, ::cwc::sample::fibonacci::sequence>::unique;
 
 		class cwc_factory : public ::cwc::component {
 			virtual
 			void CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::error_context * cwc_error, ::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept =0;
+		protected:
+			~cwc_factory() noexcept =default;
 		public:
 			auto create() const -> ::cwc::intrusive_ptr<::cwc::component> {
 				::cwc::default_error_context cwc_error;
@@ -47,6 +51,8 @@ namespace cwc::sample::fibonacci {
 				return cwc_ret;
 			}
 		};
+	protected:
+		~generator() noexcept =default;
 	};
 }
 

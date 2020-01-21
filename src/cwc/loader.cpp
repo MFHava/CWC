@@ -88,7 +88,13 @@
 
 namespace cwc {
 	struct loader::pimpl final {
-		pimpl(bool force_local) noexcept : force_local{force_local} {}
+		pimpl(bool force_local) : executable_path{[&] {
+			using namespace std::string_literals;
+			if(!force_local) return ""s;
+			auto exe{GetExecutableFileName()};
+			if(const auto it{std::find(std::rbegin(exe), std::rend(exe), path_separator)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
+			return exe;
+		}()} {}
 
 		~pimpl() noexcept {
 			factories.clear();//clear all factories before unloading respective dlls
@@ -108,19 +114,13 @@ namespace cwc {
 	private:
 		using entry_point = void(CWC_CALL *)(error_context *, const uuid *, intrusive_ptr<component> *);
 
-		const bool force_local;
-		const std::string executable_path{[] {
-			auto exe{GetExecutableFileName()};
-			if(const auto it{std::find(std::rbegin(exe), std::rend(exe), path_separator)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
-			return exe;
-		}()};
-
+		const std::string executable_path;
 		mutable std::shared_mutex mutex;
 		mutable std::unordered_map<const std::type_info *, intrusive_ptr<component>> factories;
 		mutable std::unordered_map<HMODULE, entry_point> dlls;
 
 		auto make_dll(std::string file) const -> std::string {
-			if(force_local) file.insert(std::begin(file), std::begin(executable_path), std::end(executable_path));
+			file.insert(std::begin(file), std::begin(executable_path), std::end(executable_path));
 			file.insert(std::find(std::rbegin(file), std::rend(file), path_separator).base(), std::begin(dll_prefix), std::end(dll_prefix));
 			file.insert(std::end(file), std::begin(dll_suffix), std::end(dll_suffix));
 			if(std::find(std::begin(file), std::end(file), path_separator) == std::end(file)) {

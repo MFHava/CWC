@@ -22,7 +22,6 @@ int main() {
 	cwc::loader loader;
 	const auto generator{loader.create<fibonacci_generator>(error)};
 
-
 	try {
 		for(cwc::uint8 i{0}; i < 99; ++i) std::cout << "fibonacci(" << std::setw(2) << static_cast<int>(i) << ") = " << std::right << std::setw(20) << generator->calculate(error, i) << '\n';
 	} catch(const std::exception & exc) {

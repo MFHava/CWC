@@ -18,7 +18,7 @@ namespace cwc {
 	//! @tparam Type type of the managed object
 	template<typename Type>
 	struct intrusive_ptr final {
-		static_assert(std::is_base_of_v<component, Type>, "intrusive_ptr only supports components");
+		static_assert(std::is_base_of_v<component, Type>);
 
 		intrusive_ptr() noexcept =default;
 		intrusive_ptr(std::nullptr_t) noexcept {}
@@ -29,52 +29,37 @@ namespace cwc {
 		intrusive_ptr(const intrusive_ptr & other) noexcept : ptr{other.ptr} { if(ptr) ptr->cwc$component$new$0(); }
 		intrusive_ptr(intrusive_ptr && other) noexcept { swap(other); }
 
-		template<typename OtherType>
-		intrusive_ptr(const intrusive_ptr<OtherType> & other) {//TODO: add error_handle version
-			static_assert(!std::is_const_v<OtherType> || (std::is_const_v<OtherType> && std::is_const_v<Type>), "constness violation detected");
-			if(!other) return;
-			using TargetType = std::remove_const_t<Type>;
-			TargetType * tmp;
-			default_error_context error;
-			other.ptr->cwc$component$dynamic_cast$2(&error, &internal::interface_id_v<TargetType>, reinterpret_cast<void **>(&tmp));
-			error.rethrow_if_necessary();
-			ptr = tmp;
-		}
-
-		template<typename OtherType>
-		intrusive_ptr(intrusive_ptr<OtherType> && other) {//TODO: add error_handle version
-			static_assert(!std::is_const_v<OtherType> || (std::is_const_v<OtherType> && std::is_const_v<Type>), "constness violation detected");
-			if(!other) return;
-			using TargetType = std::remove_const_t<Type>;
-			TargetType * tmp;
-			default_error_context error;
-			other.ptr->cwc$component$dynamic_cast_fast$3(&error, &internal::interface_id_v<TargetType>, reinterpret_cast<void **>(&tmp));
-			error.rethrow_if_necessary();
-			ptr = tmp;
-			other.ptr = nullptr;
-		}
-
-		auto operator=(const intrusive_ptr & other) -> intrusive_ptr & {
-			intrusive_ptr{other}.swap(*this);
-			return *this;
-		}
-		auto operator=(intrusive_ptr && other) noexcept -> intrusive_ptr & {
+		auto operator=(intrusive_ptr other) -> intrusive_ptr & {
 			swap(other);
 			return *this;
 		}
 
-		template<typename OtherType>
-		auto operator=(const intrusive_ptr<OtherType> & other) -> intrusive_ptr & {
-			intrusive_ptr{other}.swap(*this);
-			return *this;
-		}
-		template<typename OtherType>
-		auto operator=(intrusive_ptr<OtherType> && other) -> intrusive_ptr & {
-			intrusive_ptr{std::move(other)}.swap(*this);
-			return *this;
+		~intrusive_ptr() noexcept { if(ptr) ptr->cwc$component$delete$1(); }
+
+		template<typename OtherType, typename = std::enable_if_t<!std::is_const_v<Type> || (std::is_const_v<Type> && std::is_const_v<OtherType>)>>
+		operator intrusive_ptr<OtherType>() const & {
+			if(ptr) {
+				OtherType * result;
+				default_error_context error;
+				ptr->cwc$component$dynamic_cast$2(&error, &internal::interface_id_v<OtherType>, (void **)(&result));
+				error.rethrow_if_necessary();
+				return intrusive_ptr<OtherType>{result};
+			}
+			return {};
 		}
 
-		~intrusive_ptr() noexcept { if(ptr) ptr->cwc$component$delete$1(); }
+		template<typename OtherType, typename = std::enable_if_t<!std::is_const_v<Type> || (std::is_const_v<Type> && std::is_const_v<OtherType>)>>
+		operator intrusive_ptr<OtherType>() && {
+			if(ptr) {
+				OtherType * result;
+				default_error_context error;
+				ptr->cwc$component$dynamic_cast_fast$3(&error, &internal::interface_id_v<OtherType>, (void **)(&result));
+				error.rethrow_if_necessary();
+				ptr = nullptr;
+				return intrusive_ptr<OtherType>{result};
+			}
+			return {};
+		}
 
 		auto get() const noexcept -> Type * { return ptr; }
 
@@ -97,10 +82,6 @@ namespace cwc {
 		friend
 		auto operator<<(std::ostream & os, const intrusive_ptr & self) -> std::ostream & { return os << self.ptr;  }
 	private:
-		template<typename OtherType>
-		friend
-		struct intrusive_ptr;
-
 		Type * ptr{nullptr};
 	};
 	CWC_PACK_END

@@ -24,6 +24,9 @@ namespace cwc::internal {
 	struct interface_id;
 
 	template<typename Interface>
+	struct interface_id<const Interface> : interface_id<Interface> {};
+
+	template<typename Interface>
 	inline
 	constexpr
 	auto interface_id_v{interface_id<Interface>::value};

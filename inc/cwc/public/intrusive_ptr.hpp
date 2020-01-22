@@ -95,7 +95,7 @@ namespace cwc {
 		void swap(intrusive_ptr & lhs, intrusive_ptr & rhs) noexcept { lhs.swap(rhs); }
 
 		friend
-		auto operator<<(std::basic_ostream<utf8> & os, const intrusive_ptr & self) -> std::basic_ostream<utf8> & { return os << self.get();  }
+		auto operator<<(std::ostream & os, const intrusive_ptr & self) -> std::ostream & { return os << self.ptr;  }
 	private:
 		template<typename OtherType>
 		friend

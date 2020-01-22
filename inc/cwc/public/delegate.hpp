@@ -12,10 +12,10 @@
 
 namespace cwc {
 	CWC_PACK_BEGIN
-	//! @brief generic helper class to pass functors to components
+	//! @brief helper class to pass functors to components
 	//! @tparam Func function type
 	//! @note delegates are by design neither copyable nor movable to ensure lifetime guarantees
-	//! @attention delegates are not components!
+	//! @attention Delegates are designed to be sink-parameters, so they will dangle if they outlive the passed functor!
 	template<typename Func>
 	class delegate;
 
@@ -35,9 +35,9 @@ namespace cwc {
 		};
 		template<typename Functor>
 		struct cwc_implementation final : cwc_interface {
-			Functor cwc_functor;
+			const Functor & cwc_functor;
 
-			cwc_implementation(Functor && func) noexcept : cwc_functor{std::move(func)} {}
+			cwc_implementation(const Functor & func) noexcept : cwc_functor{func} {}
 
 			void CWC_CALL invoke(error_context * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept final {
 				cwc_error->call_and_store([&] {
@@ -60,7 +60,7 @@ namespace cwc {
 		struct error_context;
 	public:
 		template<typename Functor>
-		delegate(Functor func) : cwc_func{new cwc_implementation<Functor>{std::move(func)}} {}
+		delegate(const Functor & func) : cwc_func{new cwc_implementation<Functor>{func}} {}
 
 		delegate(const delegate &) =delete;
 		delegate(delegate &&) noexcept =delete;

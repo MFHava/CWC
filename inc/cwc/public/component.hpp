@@ -23,9 +23,9 @@ namespace cwc {
 		virtual
 		void CWC_CALL cwc$component$delete$1() const noexcept =0;
 		virtual
-		void CWC_CALL cwc$component$dynamic_cast$2(error_context * cwc_error, const uuid * id, void ** result) const noexcept =0;
+		void CWC_CALL cwc$component$dynamic_cast$2(error_context * error, const uuid * id, void ** result) const noexcept =0;
 		virtual
-		void CWC_CALL cwc$component$dynamic_cast_fast$3(error_context * cwc_error, const uuid * id, void ** result) const noexcept =0;
+		void CWC_CALL cwc$component$dynamic_cast_fast$3(error_context * error, const uuid * id, void ** result) const noexcept =0;
 	protected:
 		~component() noexcept =default;
 	public:
@@ -37,7 +37,7 @@ namespace cwc {
 
 		template<typename Implementation, typename TypeList>
 		class vtable_wrapper<component, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {
-			mutable std::atomic<uint64> cwc_reference_counter{1};
+			mutable std::atomic<uint64> ref_count{1};
 
 			vtable_wrapper(const vtable_wrapper &) =delete;
 			vtable_wrapper(vtable_wrapper &&) =delete;
@@ -45,13 +45,13 @@ namespace cwc {
 			auto operator=(const vtable_wrapper &) -> vtable_wrapper & =delete;
 			auto operator=(vtable_wrapper &&) -> vtable_wrapper & =delete;
 
-			void CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
+			void CWC_CALL cwc$component$new$0() const noexcept final { ++ref_count; }
 			CWC_PRAGMA_WARNING_PUSH
 			CWC_PRAGMA_WARNING_NON_VIRTUAL_DTOR
-			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
+			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--ref_count) delete static_cast<const Implementation *>(this); }
 			CWC_PRAGMA_WARNING_POP
-			void CWC_CALL cwc$component$dynamic_cast$2(error_context * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { cast_to_interface<true, typename Implementation::cwc_interfaces>(*id, result); }); }
-			void CWC_CALL cwc$component$dynamic_cast_fast$3(error_context * cwc_error, const uuid * id, void ** result) const noexcept final { return cwc_error->call_and_store([&] { cast_to_interface<false, typename Implementation::cwc_interfaces>(*id, result); }); }
+			void CWC_CALL cwc$component$dynamic_cast$2(error_context * error, const uuid * id, void ** result) const noexcept final { return error->call_and_store([&] { cast_to_interface<true, typename Implementation::cwc_interfaces>(*id, result); }); }
+			void CWC_CALL cwc$component$dynamic_cast_fast$3(error_context * error, const uuid * id, void ** result) const noexcept final { return error->call_and_store([&] { cast_to_interface<false, typename Implementation::cwc_interfaces>(*id, result); }); }
 
 			template<bool IncRefCount, typename TL>
 			void cast_to_interface(const uuid & id, void ** result) const {
@@ -67,7 +67,7 @@ namespace cwc {
 
 						using Cast = std::conditional_t<std::is_same_v<Head, component>, IdentityType, Head>;
 						auto ptr{static_cast<Cast *>(const_cast<Implementation *>(static_cast<const Implementation *>(this)))};
-						if constexpr(IncRefCount) ++cwc_reference_counter;
+						if constexpr(IncRefCount) ++ref_count;
 						*result = ptr;
 					} else {
 						using Tail = typename TL::template erase_at<0>;

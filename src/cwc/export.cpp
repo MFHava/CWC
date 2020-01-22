@@ -27,9 +27,9 @@ namespace cwc::internal {
 	auto factory_map::get(const uuid & id) const -> function_pointer { return mapping.at(id); }
 }
 
-extern "C" CWC_EXPORT void CWC_CALL cwc_main(::cwc::error_context * cwc_error, const ::cwc::uuid * id, cwc::intrusive_ptr<cwc::component> * result) noexcept {
-	assert(cwc_error);
+extern "C" CWC_EXPORT void CWC_CALL cwc_main(::cwc::error_context * error, const ::cwc::uuid * id, cwc::intrusive_ptr<cwc::component> * result) noexcept {
+	assert(error);
 	assert(id);
 	assert(result);
-	cwc_error->call_and_store([&] { *result = cwc::internal::factories.get(*id)(); });
+	error->call_and_store([&] { *result = cwc::internal::factories.get(*id)(); });
 }

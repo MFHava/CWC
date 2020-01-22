@@ -27,30 +27,30 @@ namespace cwc {
 		static_assert(sizeof(empty) == 1);
 		using result_type = std::conditional_t<std::is_same_v<void, Result>, empty, Result>;
 
-		struct cwc_interface {
+		struct interface {
 			virtual
-			void CWC_CALL invoke(error_context * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept =0;
+			void CWC_CALL invoke(error_context * error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept =0;
 			virtual
 			void CWC_CALL destroy() noexcept =0;
 		};
 		template<typename Functor>
-		struct cwc_implementation final : cwc_interface {
-			const Functor & cwc_functor;
+		struct implementation final : interface {
+			const Functor & functor;
 
-			cwc_implementation(const Functor & func) noexcept : cwc_functor{func} {}
+			implementation(const Functor & func) noexcept : functor{func} {}
 
-			void CWC_CALL invoke(error_context * cwc_error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept final {
-				cwc_error->call_and_store([&] {
+			void CWC_CALL invoke(error_context * error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept final {
+				error->call_and_store([&] {
 					if constexpr(std::is_same_v<void, Result>) {
 						(void)result;
-						cwc_functor(*args...);
-					} else *result = cwc_functor(*args...);
+						functor(*args...);
+					} else *result = functor(*args...);
 				});
 			}
 			void CWC_CALL destroy() noexcept final { delete this; }
 		};
 
-		cwc_interface * const cwc_func;
+		interface * const func;
 
 		//only argument passing logic may take the address of a delegate
 		auto operator&() const noexcept -> const delegate * { return this; }
@@ -60,22 +60,22 @@ namespace cwc {
 		struct error_context;
 	public:
 		template<typename Functor>
-		delegate(const Functor & func) : cwc_func{new cwc_implementation<Functor>{func}} {}
+		delegate(const Functor & func) : func{new implementation<Functor>{func}} {}
 
 		delegate(const delegate &) =delete;
 		delegate(delegate &&) noexcept =delete;
 		auto operator=(const delegate &) -> delegate & =delete;
 		auto operator=(delegate &&) noexcept -> delegate & =delete;
 
-		~delegate() noexcept { cwc_func->destroy(); }
+		~delegate() noexcept { func->destroy(); }
 
 		auto operator()(Params...  args) const -> Result {
-			default_error_context cwc_error;
-			return (*this)(cwc_error, args...);
+			default_error_context error;
+			return (*this)(error, args...);
 		}
-		auto operator()(error_context & cwc_error, Params... args) const -> Result {
+		auto operator()(error_context & error, Params... args) const -> Result {
 			result_type result;
-			cwc_error.call(*cwc_func, &cwc_interface::invoke, args..., result);
+			error.call(*func, &interface::invoke, args..., result);
 			return (Result)result; //cast to void if necessary, otherwise should result in nop
 		}
 	};

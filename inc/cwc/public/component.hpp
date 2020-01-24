@@ -51,10 +51,7 @@ namespace cwc {
 			auto operator=(vtable_implementation &&) -> vtable_implementation & =delete;
 
 			void CWC_CALL cwc$component$new$0() const noexcept final { ++cwc_reference_counter; }
-			CWC_PRAGMA_WARNING_PUSH
-			CWC_PRAGMA_WARNING_NON_VIRTUAL_DTOR
 			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--cwc_reference_counter) delete static_cast<const Implementation *>(this); }
-			CWC_PRAGMA_WARNING_POP
 			auto CWC_CALL cwc$component$dynamic_cast$2(const uuid * id, void ** result) const noexcept -> const internal::error * final { return call_and_return_error([&] { internal::cast_to_interface<>(this, *id, result); }); }
 			auto CWC_CALL cwc$component$dynamic_cast_fast$3(const uuid * id, void ** result) const noexcept -> const internal::error * final { return call_and_return_error([&] { internal::cast_to_interface<false>(this, *id, result); }); }
 		protected:

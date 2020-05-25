@@ -36,9 +36,8 @@ namespace cwc {
 		operator handle<OtherType>() const & {
 			if(!ptr) return {};
 			OtherType * result;
-			default_error_context error;
-			ptr->cwc$component$dynamic_cast$2(&error, &internal::interface_id_v<OtherType>, (void **)(&result));
-			error.rethrow_if_necessary();
+			ptr->cwc$component$dynamic_cast$2(&internal::interface_id_v<OtherType>, (void **)(&result));
+			if(!result) throw std::bad_cast{};
 			return result;
 		}
 
@@ -46,9 +45,8 @@ namespace cwc {
 		operator handle<OtherType>() && {
 			if(!ptr) return {};
 			OtherType * result;
-			default_error_context error;
-			ptr->cwc$component$dynamic_cast_fast$3(&error, &internal::interface_id_v<OtherType>, (void **)(&result));
-			error.rethrow_if_necessary();
+			ptr->cwc$component$dynamic_cast_fast$3(&internal::interface_id_v<OtherType>, (void **)(&result));
+			if(!result) throw std::bad_cast{};
 			ptr = nullptr;
 			return result;
 		}

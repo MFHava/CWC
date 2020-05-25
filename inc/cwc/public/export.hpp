@@ -13,7 +13,7 @@
 
 namespace cwc::internal {
 	struct factory_map final {
-		using function_pointer = intrusive_ptr<component>(*)();
+		using function_pointer = handle<component>(*)();
 
 		void add(const uuid & id, function_pointer func);
 		auto get(const uuid & id) const -> function_pointer;
@@ -31,7 +31,7 @@ namespace cwc::internal {
 	template<typename Implementation, typename Component>
 	struct factory_implementation final : interface_implementation<factory_implementation<Implementation, Component>, typename Component::cwc_factory> {
 		template<typename... Params>
-		auto create(Params &&... params) const -> intrusive_ptr<component> { return make_intrusive<Implementation>(std::forward<Params>(params)...); }
+		auto create(Params &&... params) const -> handle<component> { return make_handle<Implementation>(std::forward<Params>(params)...); }
 	};
 }
 
@@ -47,6 +47,6 @@ namespace cwc::internal {
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
 		static_assert(std::is_base_of_v<Component, Implementation>);\
 		using Factory = cwc::internal::factory_implementation<Implementation, Component>;\
-		cwc::internal::factories.add(cwc::internal::interface_id_v<Component::cwc_factory>, &cwc::make_intrusive<Factory>);\
+		cwc::internal::factories.add(cwc::internal::interface_id_v<Component::cwc_factory>, &cwc::make_handle<Factory>);\
 		return 0;\
 	}()}

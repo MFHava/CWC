@@ -231,7 +231,7 @@ namespace cwcc {
 			void operator()(const optional & self) { self.type.apply_visitor(*this); }
 			void operator()(const tuple & self) { for(const auto & t : self.types) t.apply_visitor(*this); }
 			void operator()(const variant & self) { for(const auto & t : self.types) t.apply_visitor(*this); }
-			void operator()(const intrusive_ptr & self) { self.type.apply_visitor(*this); }
+			void operator()(const handle & self) { self.type.apply_visitor(*this); }
 			void operator()(const param & self) { self.type.apply_visitor(*this); }
 			void operator()(const struct_ & self) { for(const auto & m : self.members) (*this)(m); }
 			void operator()(const struct_::member & self) { self.type.apply_visitor(*this); }

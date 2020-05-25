@@ -17,7 +17,7 @@ namespace cwc {
 
 		std::unique_ptr<pimpl> self;
 
-		auto factory(error_context & error, const std::type_info * type, const uuid & id , std::string_view dll) const -> intrusive_ptr<component>;
+		auto factory(error_context & error, const std::type_info * type, const uuid & id , std::string_view dll) const -> handle<component>;
 	public:
 		//! @param[in] force_local override OS specific dll-path behavior and load DLLs only relative to host executable
 		loader(bool force_local = true);
@@ -38,15 +38,15 @@ namespace cwc {
 			using Component = typename Configuration::component;
 			using Factory = typename Component::cwc_factory;
 			auto tmp{factory(error, &typeid(Configuration), internal::interface_id_v<Factory>, Configuration::dll)};
-			return intrusive_ptr<Factory>(std::move(tmp));
+			return handle<Factory>(std::move(tmp));
 		}
 
 		template<typename Configuration, typename... Args, typename = std::enable_if_t<(std::is_base_of_v<error_context, Args> || ...)>>
-		auto create(Args &&... args) const -> intrusive_ptr<typename Configuration::interface> {
+		auto create(Args &&... args) const -> handle<typename Configuration::interface> {
 			default_error_context error;
 			return create(error, std::forward<Args>(args)...);
 		}
 		template<typename Configuration, typename... Args>
-		auto create(Args &&... args) const -> intrusive_ptr<typename Configuration::interface> { return factory<Configuration>()->create(std::forward<Args>(args)...); }
+		auto create(Args &&... args) const -> handle<typename Configuration::interface> { return factory<Configuration>()->create(std::forward<Args>(args)...); }
 	};
 }

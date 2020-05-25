@@ -42,7 +42,7 @@ namespace cwcc {
 	struct optional;
 	struct tuple;
 	struct variant;
-	struct intrusive_ptr;
+	struct handle;
 
 	using templated_type = boost::variant<
 		untemplated_type,
@@ -52,7 +52,7 @@ namespace cwcc {
 		boost::recursive_wrapper<optional>,
 		boost::recursive_wrapper<tuple>,
 		boost::recursive_wrapper<variant>,
-		boost::recursive_wrapper<intrusive_ptr>
+		boost::recursive_wrapper<handle>
 	>;
 
 	struct array final {
@@ -123,14 +123,14 @@ namespace cwcc {
 		}
 	};
 
-	struct intrusive_ptr final {
+	struct handle final {
 		mutability mutable_;
 		templated_type type;
 
 		friend
-		auto operator==(const intrusive_ptr & lhs, const intrusive_ptr & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
+		auto operator==(const handle & lhs, const handle & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
 		friend
-		auto operator<<(std::ostream & os, const intrusive_ptr & self) -> std::ostream & { return os << "::cwc::intrusive_ptr<" << self.mutable_ << self.type << '>'; }
+		auto operator<<(std::ostream & os, const handle & self) -> std::ostream & { return os << "::cwc::handle<" << self.mutable_ << self.type << '>'; }
 	};
 
 	struct documentation final {

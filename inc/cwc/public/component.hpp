@@ -16,7 +16,7 @@ namespace cwc {
 	class component {
 		template<typename Type>
 		friend
-		struct intrusive_ptr;
+		struct handle;
 
 		virtual
 		void CWC_CALL cwc$component$new$0() const noexcept =0;

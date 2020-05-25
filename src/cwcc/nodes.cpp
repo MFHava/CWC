@@ -69,7 +69,7 @@ namespace cwcc {
 	auto component::factory() const -> interface {
 		interface p;
 		p.name = "cwc_factory";
-		intrusive_ptr ret;
+		handle ret;
 		ret.mutable_ = true;
 		ret.type = untemplated_type{"::cwc::component"};
 

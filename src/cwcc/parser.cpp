@@ -22,7 +22,7 @@ BOOST_FUSION_ADAPT_STRUCT(cwcc::bitset, size)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::optional, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::tuple, types)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::variant, types)
-BOOST_FUSION_ADAPT_STRUCT(cwcc::intrusive_ptr, mutable_, type)
+BOOST_FUSION_ADAPT_STRUCT(cwcc::handle, mutable_, type)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::documentation, line)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_::member, lines, type, fields)
 BOOST_FUSION_ADAPT_STRUCT(cwcc::struct_, lines, name, members)
@@ -142,15 +142,15 @@ namespace {
 			new_type           %= local_identifier[phx::bind(&bundle_parser::add_new_type, this, _1)];
 			existing_type      %= local_identifier[phx::bind(&bundle_parser::make_global_type, this, _1)] | global_identifier[phx::bind(&bundle_parser::validate_global_type, this, _1)];
 
-			templated_type     %= array | array_ref | bitset | optional | tuple | variant | intrusive_ptr | untemplated_type;
+			templated_type     %= array | array_ref | bitset | optional | tuple | variant | handle | untemplated_type;
 			untemplated_type   %= existing_type;
-			array              %= keyword["array"]         > '<' >             templated_type > ',' > qi::uint_      > '>';
-			array_ref          %= keyword["array_ref"]     > '<' > mutable_ >> templated_type                        > '>';
-			bitset             %= keyword["bitset"]        > '<' >                                    qi::uint_      > '>';
-			optional           %= keyword["optional"]      > '<' >             templated_type                        > '>';
-			tuple              %= keyword["tuple"]         > '<' >             templated_type % ','                  > '>';
-			variant            %= keyword["variant"]       > '<' >             templated_type % ','                  > '>';
-			intrusive_ptr      %= keyword["intrusive_ptr"] > '<' > mutable_ >> templated_type                        > '>';
+			array              %= keyword["array"]     > '<' >             templated_type > ',' > qi::uint_      > '>';
+			array_ref          %= keyword["array_ref"] > '<' > mutable_ >> templated_type                        > '>';
+			bitset             %= keyword["bitset"]    > '<' >                                    qi::uint_      > '>';
+			optional           %= keyword["optional"]  > '<' >             templated_type                        > '>';
+			tuple              %= keyword["tuple"]     > '<' >             templated_type % ','                  > '>';
+			variant            %= keyword["variant"]   > '<' >             templated_type % ','                  > '>';
+			handle             %= keyword["handle"]    > '<' > mutable_ >> templated_type                        > '>';
 
 			struct_members     %= *documentation >> templated_type >> local_identifier % ',' > qi::lit(';');
 			struct_            %= *documentation >> keyword["struct"] > new_type > '{' > +struct_members > '}';
@@ -197,7 +197,7 @@ namespace {
 			BOOST_SPIRIT_DEBUG_NODE(optional);
 			BOOST_SPIRIT_DEBUG_NODE(tuple);
 			BOOST_SPIRIT_DEBUG_NODE(variant);
-			BOOST_SPIRIT_DEBUG_NODE(intrusive_ptr);
+			BOOST_SPIRIT_DEBUG_NODE(handle);
 			BOOST_SPIRIT_DEBUG_NODE(constructor);
 			BOOST_SPIRIT_DEBUG_NODE(mutable_);
 			BOOST_SPIRIT_DEBUG_NODE(interface);
@@ -280,7 +280,7 @@ namespace {
 		rule<cwcc::optional> optional;
 		rule<cwcc::tuple> tuple;
 		rule<cwcc::variant> variant;
-		rule<cwcc::intrusive_ptr> intrusive_ptr;
+		rule<cwcc::handle> handle;
 		rule<cwcc::component::constructor> constructor;
 		rule<cwcc::mutability> mutable_;
 		rule<cwcc::interface> interface;

@@ -59,7 +59,7 @@ namespace cwc {
 		using UI = std::underlying_type_t<error_code>;
 
 		auto error{*code};
-		for(auto mask : {UI{0}, UI{255}, UI{255} << 8, UI{255} << 16, UI{255} << 24, UI{255} << 32, UI{255} << 40, UI{255} <<    48, UI{255} << 56})
+		for(auto mask : {UI{0}, UI{255}, UI{255} << 8, UI{255} << 16, UI{255} << 24, UI{255} << 32, UI{255} << 40, UI{255} << 48, UI{255} << 56})
 			switch(error = static_cast<error_code>(~mask & static_cast<UI>(error))) {//slice inheritance level
 				case error_code::std98_exception: throw std::exception{};
 				case error_code::std98_logic_error: throw std::logic_error{msg.data()};

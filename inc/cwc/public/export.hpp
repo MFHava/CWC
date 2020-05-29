@@ -23,7 +23,9 @@ namespace cwc::internal {
 
 	extern factory_map & factories;
 
-	static const struct factories_initializer {
+	static
+	const
+	struct factories_initializer {
 		factories_initializer();
 		~factories_initializer() noexcept;
 	} factories_init;

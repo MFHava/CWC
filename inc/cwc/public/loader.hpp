@@ -29,24 +29,16 @@ namespace cwc {
 		auto operator=(loader &&) noexcept -> loader & =delete;
 
 		template<typename Configuration>
-		auto factory() const {
-			default_error_context error;
-			return factory<Configuration>(error);
-		}
-		template<typename Configuration>
-		auto factory(error_context & error) const {
+		auto factory(error_context & error) const -> handle<typename Configuration::component::cwc_factory> {
 			using Component = typename Configuration::component;
 			using Factory = typename Component::cwc_factory;
-			auto tmp{factory(error, &typeid(Configuration), internal::interface_id_v<Factory>, Configuration::dll)};
-			return handle<Factory>(std::move(tmp));
+			return factory(error, &typeid(Configuration), internal::interface_id_v<Factory>, Configuration::dll);
 		}
 
-		template<typename Configuration, typename... Args, typename = std::enable_if_t<(std::is_base_of_v<error_context, Args> || ...)>>
+		template<typename Configuration, typename... Args>
 		auto create(Args &&... args) const -> handle<typename Configuration::interface> {
 			default_error_context error;
-			return create(error, std::forward<Args>(args)...);
+			return factory<Configuration>(error)->create(error, std::forward<Args>(args)...);
 		}
-		template<typename Configuration, typename... Args>
-		auto create(Args &&... args) const -> handle<typename Configuration::interface> { return factory<Configuration>()->create(std::forward<Args>(args)...); }
 	};
 }

@@ -23,34 +23,14 @@ namespace cwc {
 	class delegate<Result(Params...)> final {
 		static_assert(!(std::is_pointer_v<Params> ||...));
 
-		struct empty {};
-		static_assert(sizeof(empty) == 1);
-		using result_type = std::conditional_t<std::is_same_v<void, Result>, empty, Result>;
+		template<typename T>
+		using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>; //emulating C++20 feature
 
-		struct interface {
-			virtual
-			void CWC_CALL invoke(error_context * error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept =0;
-			virtual
-			void CWC_CALL destroy() noexcept =0;
-		};
-		template<typename Functor>
-		struct implementation final : interface {
-			const Functor & functor;
+		template<typename T>
+		using param_t = std::add_pointer_t<std::remove_reference_t<T>>;
 
-			implementation(const Functor & func) noexcept : functor{func} {}
-
-			void CWC_CALL invoke(error_context * error, std::add_pointer_t<std::remove_reference_t<Params>>... args, result_type * result) const noexcept final {
-				error->call_and_store([&] {
-					if constexpr(std::is_same_v<void, Result>) {
-						(void)result;
-						functor(*args...);
-					} else *result = functor(*args...);
-				});
-			}
-			void CWC_CALL destroy() noexcept final { delete this; }
-		};
-
-		interface * const func;
+		std::conditional_t<std::is_same_v<void, Result>, void(void *, error_context *, param_t<Params>...) noexcept, void(void *, error_context *, param_t<Params>..., Result *) noexcept> * dispatch;
+		void * context;
 
 		//only argument passing logic may take the address of a delegate
 		auto operator&() const noexcept -> const delegate * { return this; }
@@ -60,28 +40,42 @@ namespace cwc {
 		struct error_context;
 	public:
 		template<typename Functor>
-		delegate(const Functor & func) : func{new implementation<Functor>{func}} {}
+		delegate(Functor && func) noexcept {
+			if constexpr(std::is_pointer_v<Functor>) assert(func);
+			if constexpr(std::is_same_v<void, Result>) dispatch = [](void * context, error_context * error, param_t<Params>... args) noexcept { error->call_and_store([&] { (*reinterpret_cast<remove_cvref_t<Functor> *>(context))(*args...); }); };
+			else                                       dispatch = [](void * context, error_context * error, param_t<Params>... args, Result * result) noexcept { error->call_and_store([&] { *result = (*reinterpret_cast<remove_cvref_t<Functor> *>(context))(*args...); }); };
+			context = reinterpret_cast<void *>(std::addressof(func));
+		}
 
 		delegate(const delegate &) =delete;
 		delegate(delegate &&) noexcept =delete;
 		auto operator=(const delegate &) -> delegate & =delete;
 		auto operator=(delegate &&) noexcept -> delegate & =delete;
 
-		~delegate() noexcept { func->destroy(); }
+		~delegate() noexcept =default;
 
-		auto operator()(Params...  args) const -> Result {
+		auto operator()(Params &&...  args) const -> Result {
 			default_error_context error;
-			return (*this)(error, args...);
+			return (*this)(error, std::forward<Params>(args)...);
 		}
-		auto operator()(error_context & error, Params... args) const -> Result {
-			result_type result;
-			error.call(*func, &interface::invoke, args..., result);
-			return (Result)result; //cast to void if necessary, otherwise should result in nop
+		auto operator()(error_context & error, Params &&... args) const -> Result {
+			if constexpr(std::is_same_v<void, Result>) {
+				dispatch(context, &error, &args...);
+				error.rethrow_if_necessary();
+			} else {
+				Result result;
+				dispatch(context, &error, &args..., &result);
+				error.rethrow_if_necessary();
+				return result; //cast to void if necessary, otherwise should result in nop
+			}
 		}
 	};
 
 	template<typename Result, typename... Args>
 	delegate(Result(*)(Args...)) -> delegate<Result(Args...)>;
+
+	template<typename Result, typename... Args>
+	delegate(Result(*)(Args...) noexcept) -> delegate<Result(Args...)>;
 
 	namespace internal {
 		template<typename Func>
@@ -93,30 +87,18 @@ namespace cwc {
 		using type = Result(Args...);\
 	}
 
-		CWC_DEDUCE_MEM_FUNC_PTR(              ,  ,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(              ,& ,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(              ,&&,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(const         ,  ,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(const         ,& ,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(const         ,&&,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(volatile      ,  ,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(volatile      ,& ,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(volatile      ,&&,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(const volatile,  ,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(const volatile,& ,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(const volatile,&&,        );
-		CWC_DEDUCE_MEM_FUNC_PTR(              ,  ,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(              ,& ,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(              ,&&,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(const         ,  ,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(const         ,& ,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(const         ,&&,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(volatile      ,  ,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(volatile      ,& ,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(volatile      ,&&,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(const volatile,  ,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(const volatile,& ,noexcept);
-		CWC_DEDUCE_MEM_FUNC_PTR(const volatile,&&,noexcept);
+		CWC_DEDUCE_MEM_FUNC_PTR(     ,  ,        );
+		CWC_DEDUCE_MEM_FUNC_PTR(     ,& ,        );
+		CWC_DEDUCE_MEM_FUNC_PTR(     ,&&,        );
+		CWC_DEDUCE_MEM_FUNC_PTR(const,  ,        );
+		CWC_DEDUCE_MEM_FUNC_PTR(const,& ,        );
+		CWC_DEDUCE_MEM_FUNC_PTR(const,&&,        );
+		CWC_DEDUCE_MEM_FUNC_PTR(     ,  ,noexcept);
+		CWC_DEDUCE_MEM_FUNC_PTR(     ,& ,noexcept);
+		CWC_DEDUCE_MEM_FUNC_PTR(     ,&&,noexcept);
+		CWC_DEDUCE_MEM_FUNC_PTR(const,  ,noexcept);
+		CWC_DEDUCE_MEM_FUNC_PTR(const,& ,noexcept);
+		CWC_DEDUCE_MEM_FUNC_PTR(const,&&,noexcept);
 
 #undef CWC_DEDUCE_MEM_FUNC_PTR
 

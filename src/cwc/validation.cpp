@@ -24,4 +24,5 @@ namespace {
 	static_assert(sizeof(bool) == 1);
 	static_assert(validate_floating_point<float,  4>());
 	static_assert(validate_floating_point<double, 8>());
+	static_assert(sizeof(void *) == sizeof(void(*)()));
 }

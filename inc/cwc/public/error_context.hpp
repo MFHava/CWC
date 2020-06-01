@@ -40,9 +40,7 @@ namespace cwc {
 	private:
 		void store() noexcept;
 
-		enum class error_code : uint64;
-
-		ptl::optional<error_code> code;
+		ptl::optional<ptl::bitset<64>> code;
 		ptl::array_ref<char> msg;
 	};
 	CWC_PACK_END

@@ -11,6 +11,8 @@
 #pragma once
 
 namespace cwc {
+	class component;
+
 	namespace internal {
 		template<typename Implementation, typename TypeList>
 		struct default_implementation_chaining : vtable_wrapper<typename TypeList::template at<0>, Implementation, typename TypeList::template erase_at<0>> {};

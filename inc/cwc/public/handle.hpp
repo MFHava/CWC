@@ -11,8 +11,6 @@
 #pragma once
 
 namespace cwc {
-	class component;
-
 	CWC_PACK_BEGIN
 	//! @brief a smart pointer managing objects with embedded reference counts
 	//! @tparam Type type of the managed object
@@ -60,19 +58,55 @@ namespace cwc {
 
 		void reset() noexcept { handle{}.swap(*this); }
 
-		void swap(handle & other) noexcept {
-			using std::swap;
-			swap(ptr, other.ptr);
-		}
+		void swap(handle & other) noexcept { std::swap(ptr, other.ptr); }
 		friend
 		void swap(handle & lhs, handle & rhs) noexcept { lhs.swap(rhs); }
 
+		template<typename OtherType>
+		friend
+		auto operator==(const handle & lhs, const handle<OtherType> & rhs) noexcept { return lhs.identity() == identity(rhs); }
+
+		template<typename OtherType>
+		friend
+		auto operator!=(const handle & lhs, const handle<OtherType> & rhs) noexcept { return !(lhs == rhs); }
+
+		template<typename OtherType>
+		friend
+		auto operator< (const handle & lhs, const handle<OtherType> & rhs) noexcept { return lhs.identity() < identity(rhs); }
+
+		template<typename OtherType>
+		friend
+		auto operator<=(const handle & lhs, const handle<OtherType> & rhs) noexcept { return !(rhs < lhs); }
+
+		template<typename OtherType>
+		friend
+		auto operator>(const handle & lhs, const handle<OtherType> & rhs) noexcept { return rhs < lhs; }
+
+		template<typename OtherType>
+		friend
+		auto operator>=(const handle & lhs, const handle<OtherType> & rhs) noexcept { return !(lhs < rhs); }
+
+		template<typename OtherType>
 		friend
 		auto operator<<(std::ostream & os, const handle & self) -> std::ostream & { return os << self.ptr;  }
 	private:
+		template<typename T>
+		static
+		auto identity(const handle<T> & self) noexcept {
+			void * result;
+			if constexpr(std::is_same_v<Type, component>) result = self.ptr;
+			else if(self) self.ptr->cwc$component$dynamic_cast_fast$3(&internal::interface_id_v<component>, &result);
+			else result = nullptr;
+			return reinterpret_cast<std::uintptr_t>(result);
+		}
+		auto identity() const noexcept { return identity(*this); }
+
 		template<typename OtherType>
 		friend
 		struct handle;
+
+		friend
+		std::hash<handle<Type>>;
 
 		template<typename Implementation, typename... Args>
 		friend
@@ -84,24 +118,6 @@ namespace cwc {
 	};
 	CWC_PACK_END
 
-	inline
-	auto operator==(const handle<component> & lhs, const handle<component> & rhs) noexcept -> bool { return std::addressof(*lhs) == std::addressof(*rhs); }
-
-	inline
-	auto operator!=(const handle<component> & lhs, const handle<component> & rhs) noexcept -> bool { return !(lhs == rhs); }
-
-	inline
-	auto operator< (const handle<component> & lhs, const handle<component> & rhs) noexcept -> bool { return std::addressof(*lhs) < std::addressof(*rhs); }
-
-	inline
-	auto operator<=(const handle<component> & lhs, const handle<component> & rhs) noexcept -> bool { return !(rhs < lhs); }
-
-	inline
-	auto operator> (const handle<component> & lhs, const handle<component> & rhs) noexcept -> bool { return rhs < lhs; }
-
-	inline
-	auto operator>=(const handle<component> & lhs, const handle<component> & rhs) noexcept -> bool { return !(lhs < rhs); }
-
 	template<typename Implementation, typename... Args>
 	auto make_handle(Args &&... args) -> handle<component> {
 		using TL = typename Implementation::cwc_interfaces;
@@ -112,4 +128,13 @@ namespace cwc {
 		//this indirection via an Interface ensures the identity relation for components
 		return handle<Interface>{new Implementation{std::forward<Args>(args)...}};
 	}
+}
+
+namespace std {
+	template<typename Type>
+	struct hash<cwc::handle<Type>> {
+		auto operator()(const cwc::handle<Type> & self) const noexcept -> std::size_t {
+			return self.identity();
+		}
+	};
 }

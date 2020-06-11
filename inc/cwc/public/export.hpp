@@ -30,6 +30,17 @@ namespace cwc::internal {
 		~factories_initializer() noexcept;
 	} factories_init;
 
+	template<typename Implementation, typename... Args>
+	auto make_handle(Args &&... args) -> handle<component> {
+		using TL = typename Implementation::cwc_interfaces;
+		static_assert(!TL::empty);
+		static_assert(std::is_same_v<component, typename TL::template at<0>>);
+		constexpr auto Index{TL::size == 1 ? 0 : 1};//component is only valid identity if there are no other interfaces
+		using Interface = typename TL::template at<Index>;
+		//this indirection via an Interface ensures the identity relation for components
+		return handle<Interface>{new Implementation{std::forward<Args>(args)...}};
+	}
+
 	template<typename Implementation, typename Component>
 	struct factory_implementation final : interface_implementation<factory_implementation<Implementation, Component>, typename Component::cwc_factory> {
 		template<typename... Params>
@@ -49,6 +60,6 @@ namespace cwc::internal {
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
 		static_assert(std::is_base_of_v<Component, Implementation>);\
 		using Factory = cwc::internal::factory_implementation<Implementation, Component>;\
-		cwc::internal::factories.add(cwc::internal::interface_id_v<Component::cwc_factory>, &cwc::make_handle<Factory>);\
+		cwc::internal::factories.add(cwc::internal::interface_id_v<Component::cwc_factory>, &cwc::internal::make_handle<Factory>);\
 		return 0;\
 	}()}

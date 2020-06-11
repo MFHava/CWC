@@ -14,6 +14,32 @@ namespace cwc {
 	class component;
 
 	namespace internal {
+		template<uint8... Bytes>
+		struct uuid_constant {
+			static_assert(sizeof...(Bytes) == 16);
+
+			static
+			constexpr
+			uuid value{Bytes...};
+		};
+
+		template<typename Interface>
+		struct interface_id;
+
+		template<typename Interface>
+		struct interface_id<const Interface> : interface_id<Interface> {};
+
+		template<typename Interface>
+		inline
+		constexpr
+		auto interface_id_v{interface_id<Interface>::value};
+
+		template<typename Interface, typename Implementation, typename TypeList>
+		struct vtable_wrapper;
+
+		template<typename Interface, typename Implementation>
+		struct vtable_wrapper<Interface, Implementation, ptl::type_list<>> : Interface {};
+
 		template<typename Implementation, typename TypeList>
 		struct default_implementation_chaining : vtable_wrapper<typename TypeList::template at<0>, Implementation, typename TypeList::template erase_at<0>> {};
 

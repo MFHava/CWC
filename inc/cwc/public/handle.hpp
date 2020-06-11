@@ -11,6 +11,14 @@
 #pragma once
 
 namespace cwc {
+	template<typename>
+	struct handle;
+
+	namespace internal {
+		template<typename Implementation, typename... Args>
+		auto make_handle(Args &&...) -> handle<component>;
+	}
+
 	CWC_PACK_BEGIN
 	//! @brief a smart pointer managing objects with embedded reference counts
 	//! @tparam Type type of the managed object
@@ -64,7 +72,7 @@ namespace cwc {
 
 		template<typename OtherType>
 		friend
-		auto operator==(const handle & lhs, const handle<OtherType> & rhs) noexcept { return lhs.identity() == identity(rhs); }
+		auto operator==(const handle & lhs, const handle<OtherType> & rhs) noexcept { return identity(lhs) == identity(rhs); }
 
 		template<typename OtherType>
 		friend
@@ -72,7 +80,7 @@ namespace cwc {
 
 		template<typename OtherType>
 		friend
-		auto operator< (const handle & lhs, const handle<OtherType> & rhs) noexcept { return lhs.identity() < identity(rhs); }
+		auto operator< (const handle & lhs, const handle<OtherType> & rhs) noexcept { return identity(lhs) < identity(rhs); }
 
 		template<typename OtherType>
 		friend
@@ -88,7 +96,7 @@ namespace cwc {
 
 		template<typename OtherType>
 		friend
-		auto operator<<(std::ostream & os, const handle & self) -> std::ostream & { return os << self.ptr;  }
+		auto operator<<(std::ostream & os, const handle & self) -> std::ostream & { return os << identity(self);  }
 	private:
 		template<typename T>
 		static
@@ -97,44 +105,32 @@ namespace cwc {
 			if constexpr(std::is_same_v<Type, component>) result = self.ptr;
 			else if(self) self.ptr->cwc$component$dynamic_cast_fast$3(&internal::interface_id_v<component>, &result);
 			else result = nullptr;
-			return reinterpret_cast<std::uintptr_t>(result);
+			return reinterpret_cast<std::size_t>(result);
 		}
-		auto identity() const noexcept { return identity(*this); }
 
-		template<typename OtherType>
+		template<typename>
 		friend
 		struct handle;
 
 		friend
 		std::hash<handle<Type>>;
 
-		template<typename Implementation, typename... Args>
+		template<typename, typename... Args>
 		friend
-		auto make_handle(Args &&...) -> handle<component>;
+		auto internal::make_handle(Args &&...) -> handle<component>;
 
 		handle(Type * ptr) noexcept : ptr{ptr} {}
 
 		Type * ptr{nullptr};
 	};
 	CWC_PACK_END
-
-	template<typename Implementation, typename... Args>
-	auto make_handle(Args &&... args) -> handle<component> {
-		using TL = typename Implementation::cwc_interfaces;
-		static_assert(!TL::empty);
-		static_assert(std::is_same_v<component, typename TL::template at<0>>);
-		constexpr auto Index{TL::size == 1 ? 0 : 1};//component is only valid identity if there are no other interfaces
-		using Interface = typename TL::template at<Index>;
-		//this indirection via an Interface ensures the identity relation for components
-		return handle<Interface>{new Implementation{std::forward<Args>(args)...}};
-	}
 }
 
 namespace std {
 	template<typename Type>
 	struct hash<cwc::handle<Type>> {
 		auto operator()(const cwc::handle<Type> & self) const noexcept -> std::size_t {
-			return self.identity();
+			return self.identity(self);
 		}
 	};
 }

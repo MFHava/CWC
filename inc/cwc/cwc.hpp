@@ -26,11 +26,9 @@ namespace cwc {
 	namespace internal {}
 }
 
-#include "public/types.hpp"
-
 #include "internal/detection.hpp"
-#include "internal/traits.hpp"
 
+#include "public/types.hpp"
 #include "public/error_context.hpp"
 #include "public/delegate.hpp"
 #include "public/default_implementations.hpp"

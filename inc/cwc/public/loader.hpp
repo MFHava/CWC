@@ -17,7 +17,7 @@ namespace cwc {
 
 		std::unique_ptr<pimpl> self;
 
-		auto factory(error_context & error, const std::type_info * type, const uuid & id , std::string_view dll) const -> handle<component>;
+		auto factory(error_context & error, const std::type_info * type, const internal::uuid & id , std::string_view dll) const -> handle<component>;
 	public:
 		//! @param[in] force_local override OS specific dll-path behavior and load DLLs only relative to host executable
 		loader(bool force_local = true);

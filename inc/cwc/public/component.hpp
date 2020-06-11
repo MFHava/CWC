@@ -23,9 +23,9 @@ namespace cwc {
 		virtual
 		void CWC_CALL cwc$component$delete$1() const noexcept =0;
 		virtual
-		void CWC_CALL cwc$component$dynamic_cast$2(const uuid * id, void ** result) const noexcept =0;
+		void CWC_CALL cwc$component$dynamic_cast$2(const internal::uuid * id, void ** result) const noexcept =0;
 		virtual
-		void CWC_CALL cwc$component$dynamic_cast_fast$3(const uuid * id, void ** result) const noexcept =0;
+		void CWC_CALL cwc$component$dynamic_cast_fast$3(const internal::uuid * id, void ** result) const noexcept =0;
 	protected:
 		~component() noexcept =default;
 	public:
@@ -50,11 +50,11 @@ namespace cwc {
 			CWC_PRAGMA_WARNING_NON_VIRTUAL_DTOR
 			void CWC_CALL cwc$component$delete$1() const noexcept final { if(!--ref_count) delete static_cast<const Implementation *>(this); }
 			CWC_PRAGMA_WARNING_POP
-			void CWC_CALL cwc$component$dynamic_cast$2(const uuid * id, void ** result) const noexcept final { cast_to_interface<true, typename Implementation::cwc_interfaces>(*id, result); }
-			void CWC_CALL cwc$component$dynamic_cast_fast$3(const uuid * id, void ** result) const noexcept final { cast_to_interface<false, typename Implementation::cwc_interfaces>(*id, result); }
+			void CWC_CALL cwc$component$dynamic_cast$2(const internal::uuid * id, void ** result) const noexcept final { cast_to_interface<true, typename Implementation::cwc_interfaces>(*id, result); }
+			void CWC_CALL cwc$component$dynamic_cast_fast$3(const internal::uuid * id, void ** result) const noexcept final { cast_to_interface<false, typename Implementation::cwc_interfaces>(*id, result); }
 
 			template<bool IncRefCount, typename TL>
-			void cast_to_interface(const uuid & id, void ** result) const noexcept {
+			void cast_to_interface(const internal::uuid & id, void ** result) const noexcept {
 				if constexpr(TL::empty) {
 					(void)id;
 					*result = nullptr;

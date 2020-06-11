@@ -25,6 +25,4 @@ namespace cwc {
 	using float64 = double;//!< @brief double precision (64bit) floating point
 	using boolean = bool;
 	//! @}
-
-	using uuid = ptl::array<uint8, 16>;//!< @brief universally unique identifier
 }

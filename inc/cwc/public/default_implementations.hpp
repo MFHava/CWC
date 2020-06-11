@@ -14,6 +14,8 @@ namespace cwc {
 	class component;
 
 	namespace internal {
+		using uuid = ptl::array<uint8, 16>;
+
 		template<uint8... Bytes>
 		struct uuid_constant {
 			static_assert(sizeof...(Bytes) == 16);

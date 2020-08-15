@@ -6,6 +6,8 @@
 
 #include <map>
 #include <sstream>
+#include <iterator>
+#include <algorithm>
 #include "line.hpp"
 #include "nodes.hpp"
 #include "utils.hpp"

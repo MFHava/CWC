@@ -43,9 +43,9 @@ namespace cwcc {
 			for(std::size_t i{0}; i < mangled.size(); ++i) {
 				const auto & method{self.methods[i]};
 				std::stringstream ss;
-				ss << "void CWC_CALL " << mangled[i] << "(::cwc::error_context * cwc_error";
-				for(const auto & p: method.params()) ss << ", " << p.mutable_ << p.type << " * " << p.name;
-				ss << ") " << method.mutable_ << "noexcept ";
+				ss << "void CWC_CALL " << mangled[i] << "(";
+				for(const auto & p: method.params()) ss << p.mutable_ << p.type << " * " << p.name << ", ";
+				ss << "::cwc::error_context * cwc_error) " << method.mutable_ << "noexcept ";
 				result.push_back(ss.str());
 			}
 			return result;
@@ -95,28 +95,8 @@ namespace cwcc {
 					const auto & method{self.methods[i]};
 					for(const auto & doc : method.lines) os << indent << doc << '\n';
 					os << indent << (method.out ? "auto" : "void") << " " << method.name << '(';
-					if(!method.in.empty()) {
-						auto print_param{[&](const param & p) { os << p.mutable_ << p.type << " & " << p.name; }};
-						print_param(method.in[0]);
-						for(std::size_t j{1}; j < method.in.size(); ++j) {
-							os << ", ";
-							print_param(method.in[j]);
-						}
-					}
-					os << ") " << method.mutable_;
-					if(method.out) os << "-> " << *method.out << ' ';
-					os << "{\n";
-					{
-						indent_scope scope{os};
-						os << indent << "::cwc::default_error_context cwc_error;\n"
-						   << indent << "return " << method.name << "(cwc_error";
-						for(const auto & p : method.in) os << ", " << p.name;
-						os << ");\n";
-					}
-					os << indent << "}\n"
-					   << indent << (method.out ? "auto" : "void") << " " << method.name << "(::cwc::error_context & cwc_error";
-					for(const auto & p : method.in) os << ", " << p.mutable_ << p.type << " & " << p.name;
-					os << ") " << method.mutable_;
+					for(const auto & p : method.in) os << p.mutable_ << p.type << " & " << p.name << ", ";
+					os << "::cwc::error_context cwc_error = ::cwc::error_context{::cwc::error_context::default_buffer{}}) " << method.mutable_;
 					if(method.out) os << "-> " << *method.out << ' ';
 					os << "{\n";
 					{

@@ -29,7 +29,7 @@ namespace cwc {
 		template<typename T>
 		using param_t = std::add_pointer_t<std::remove_reference_t<T>>;
 
-		std::conditional_t<std::is_same_v<void, Result>, void(void *, error_context *, param_t<Params>...) noexcept, void(void *, error_context *, param_t<Params>..., Result *) noexcept> * dispatch;
+		std::conditional_t<std::is_same_v<void, Result>, void(void *, param_t<Params>..., error_context *) noexcept, void(void *, param_t<Params>..., Result *, error_context *) noexcept> * dispatch;
 		void * context;
 
 		//only argument passing logic may take the address of a delegate
@@ -42,8 +42,8 @@ namespace cwc {
 		template<typename Functor>
 		delegate(Functor && func) noexcept {
 			if constexpr(std::is_pointer_v<Functor>) assert(func);
-			if constexpr(std::is_same_v<void, Result>) dispatch = [](void * context, error_context * error, param_t<Params>... args) noexcept { error->call_and_store([&] { (*reinterpret_cast<remove_cvref_t<Functor> *>(context))(*args...); }); };
-			else                                       dispatch = [](void * context, error_context * error, param_t<Params>... args, Result * result) noexcept { error->call_and_store([&] { *result = (*reinterpret_cast<remove_cvref_t<Functor> *>(context))(*args...); }); };
+			if constexpr(std::is_same_v<void, Result>) dispatch = [](void * context, param_t<Params>... args, error_context * error) noexcept { error->call_and_store([&] { (*reinterpret_cast<remove_cvref_t<Functor> *>(context))(*args...); }); };
+			else                                       dispatch = [](void * context, param_t<Params>... args, Result * result, error_context * error) noexcept { error->call_and_store([&] { *result = (*reinterpret_cast<remove_cvref_t<Functor> *>(context))(*args...); }); };
 			context = reinterpret_cast<void *>(std::addressof(func));
 		}
 
@@ -54,17 +54,13 @@ namespace cwc {
 
 		~delegate() noexcept =default;
 
-		auto operator()(Params &&...  args) const -> Result {
-			default_error_context error;
-			return (*this)(error, std::forward<Params>(args)...);
-		}
-		auto operator()(error_context & error, Params &&... args) const -> Result {
+		auto operator()(Params &&... args, error_context error= error_context{error_context::default_buffer{}}) const -> Result {
 			if constexpr(std::is_same_v<void, Result>) {
-				dispatch(context, &error, &args...);
+				dispatch(context, &args..., &error);
 				error.rethrow_if_necessary();
 			} else {
 				Result result;
-				dispatch(context, &error, &args..., &result);
+				dispatch(context, &args..., &result, &error);
 				error.rethrow_if_necessary();
 				return result; //cast to void if necessary, otherwise should result in nop
 			}

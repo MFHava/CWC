@@ -18,14 +18,14 @@ struct fibonacci_generator final {
 };
 
 int main() {
-	cwc::sized_error_context<64> error;
+	ptl::array<char, 64> error_buffer;
 	
 	cwc::loader loader;
 	try {
-		const auto factory{loader.factory<fibonacci_generator>(error)};
-		const cwc::handle<cwc::sample::fibonacci::sequence> generator{factory->create(error)};
+		const auto factory{loader.factory<fibonacci_generator>(cwc::error_context{error_buffer})};
+		const cwc::handle<cwc::sample::fibonacci::sequence> generator{factory->create(cwc::error_context{error_buffer})};
 
-		for(cwc::uint8 i{0}; i < 99; ++i) std::cout << "fibonacci(" << std::setw(2) << static_cast<int>(i) << ") = " << std::right << std::setw(20) << generator->calculate(error, i) << '\n';
+		for(cwc::uint8 i{0}; i < 99; ++i) std::cout << "fibonacci(" << std::setw(2) << static_cast<int>(i) << ") = " << std::right << std::setw(20) << generator->calculate(i) << '\n';
 	} catch(const std::exception & exc) {
 		std::cerr << typeid(exc).name() << ": \"" << exc.what() << "\"\n";
 	}
@@ -35,7 +35,6 @@ int main() {
 
 	{
 		const auto generator{loader.create<fibonacci_generator>()};
-		error.clear();
-		generator->calculate(error, 5, 10, [&](auto value) { std::cout << value << "\n"; });
+		generator->calculate(5, 10, [&](auto value) { std::cout << value << "\n"; }, cwc::error_context{error_buffer});
 	}
 }

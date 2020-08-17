@@ -64,12 +64,10 @@ namespace cwc {
 		};
 	}
 
-	void error_context::clear() noexcept { code.reset(); }
-
 	void error_context::rethrow_if_necessary() const {
-		if(!code) return;
+		if(!active) return;
 
-		auto error{*code};
+		auto error{code};
 		for(auto mask : masks) {
 			error &= ~mask; //slice inheritance level
 			if(error == std98_exception) throw std::exception{};
@@ -105,9 +103,9 @@ namespace cwc {
 
 	error_context::error_context(ptl::array_ref<char> msg) : msg{msg} { if(msg.empty()) throw std::invalid_argument{"message buffer must at least be able to store 1 char"}; }
 
-	error_context::~error_context() noexcept =default;
-
 	void error_context::store() noexcept { //lippincott function
+		active = true;
+
 		auto record{[&](const error_code & type, ptl::string_ref message) noexcept {
 			code = type;
 			msg[0] = '\0';

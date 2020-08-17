@@ -12,11 +12,18 @@
 
 namespace cwc {
 	CWC_PACK_BEGIN
-	struct error_context {
-		error_context(error_context &) =delete;
+	struct error_context final {
+		error_context(const error_context &) =delete;
 		error_context(error_context &&) noexcept =delete;
-		auto operator=(error_context &) -> error_context & =delete;
+		auto operator=(const error_context &) -> error_context & =delete;
 		auto operator=(error_context &&) noexcept -> error_context & =delete;
+		~error_context() noexcept =default;
+
+		using default_buffer = ptl::array<char, 256>;
+
+		//! @throws iff msg.empty()
+		explicit
+		error_context(ptl::array_ref<char> msg);
 
 		template<typename Func>
 		void call_and_store(Func func) noexcept {
@@ -26,31 +33,17 @@ namespace cwc {
 
 		template<typename Type, typename Func, typename... Args>
 		void call(Type & self, Func func, Args &&... args) {
-			(self.*func)(this, &args...);
+			(self.*func)(std::addressof(args)..., this);
 			rethrow_if_necessary();
 		}
 
-		void clear() noexcept;
-
 		void rethrow_if_necessary() const;
-	protected:
-		//! @throws iff msg.empty()
-		error_context(ptl::array_ref<char> msg);
-		~error_context() noexcept;
 	private:
 		void store() noexcept;
 
-		ptl::optional<ptl::bitset<64>> code;
+		ptl::bitset<64> code;
 		ptl::array_ref<char> msg;
+		bool active{false};
 	};
 	CWC_PACK_END
-
-	template<std::size_t Size>
-	struct sized_error_context final : error_context {
-		sized_error_context() : error_context{buffer} {}
-	private:
-		char buffer[Size];
-	};
-
-	using default_error_context = sized_error_context<256>;
 }

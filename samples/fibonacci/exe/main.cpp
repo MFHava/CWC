@@ -8,21 +8,17 @@
 #include <iostream>
 #include "../cwc.sample.fibonacci.cwch"
 
-struct fibonacci_generator final {
-	using interface = cwc::sample::fibonacci::sequence;
-	using component = cwc::sample::fibonacci::generator;
+inline
+constexpr
+cwc::import<cwc::sample::fibonacci::generator> fibonacci_generator{"sample-fibonacci"};
 
-	static
-	constexpr
-	std::string_view dll{"sample-fibonacci"};
-};
 
 int main() {
 	ptl::array<char, 64> error_buffer;
-	
+
 	cwc::loader loader;
 	try {
-		const auto factory{loader.factory<fibonacci_generator>(cwc::error_context{error_buffer})};
+		const auto factory{loader.factory(fibonacci_generator, cwc::error_context{error_buffer})};
 		const cwc::handle<cwc::sample::fibonacci::sequence> generator{factory->create(cwc::error_context{error_buffer})};
 
 		for(cwc::uint8 i{0}; i < 99; ++i) std::cout << "fibonacci(" << std::setw(2) << static_cast<int>(i) << ") = " << std::right << std::setw(20) << generator->calculate(i) << '\n';
@@ -34,7 +30,7 @@ int main() {
 	std::cout << "\n\n\n";
 
 	{
-		const auto generator{loader.create<fibonacci_generator>()};
+		const cwc::handle<cwc::sample::fibonacci::sequence> generator{loader.create(fibonacci_generator)};
 		generator->calculate(5, 10, [&](auto value) { std::cout << value << "\n"; }, cwc::error_context{error_buffer});
 	}
 }

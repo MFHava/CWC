@@ -4,6 +4,7 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+#include <map>
 #include <cassert>
 #include <shared_mutex>
 #include <unordered_map>
@@ -104,19 +105,22 @@ namespace cwc {
 			}
 		}
 
-		auto factory(error_context & error, const std::type_info * type, const internal::uuid & id, std::string_view dll) const -> handle<component> {
+		using key_type = std::pair<const internal::uuid *, const char *>;
+
+		auto factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component> {
+			const auto key{std::make_pair(&id, dll.data())};
 			{
 				const std::shared_lock lock{mutex};
-				if(const auto it{factories.find(type)}; it != std::end(factories)) return it->second;
+				if(const auto it{factories.find(key)}; it != std::end(factories)) return it->second;
 			}
-			return load_factory(error, type, id, std::string{dll});
+			return load_factory(error, key);
 		}
 	private:
 		using entry_point = void(CWC_CALL *)(error_context *, const internal::uuid *, handle<component> *);
 
 		const std::string executable_path;
 		mutable std::shared_mutex mutex;
-		mutable std::unordered_map<const std::type_info *, handle<component>> factories;
+		mutable std::map<key_type, handle<component>> factories;
 		mutable std::unordered_map<HMODULE, entry_point> dlls;
 
 		auto make_dll(std::string file) const -> std::string {
@@ -130,22 +134,22 @@ namespace cwc {
 			return file;
 		}
 
-		auto load_factory(error_context & error, const std::type_info * type, const internal::uuid & id, std::string dll) const -> handle<component> {
+		auto load_factory(error_context & error, key_type key) const -> handle<component> {
 			const std::lock_guard lock{mutex};
-			const auto handle{LoadLibrary(make_dll(dll).c_str())};
-			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
+			const auto handle{LoadLibrary(make_dll(key.second).c_str())};
+			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + key.second + '"'};
 			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per loader
 
 			const auto main{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_main"))};
 			if(!main) {
 				FreeLibrary(handle);
-				throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + dll + '"'};
+				throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + key.second + '"'};
 			}
 
 			cwc::handle<cwc::component> ptr;
-			main(&error, &id, &ptr);
+			main(&error, key.first, &ptr);
 			try {
-				if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + dll + '"'};
+				if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + key.second + '"'};
 				error.rethrow_if_necessary();
 			} catch(...) {
 				FreeLibrary(handle);
@@ -154,12 +158,12 @@ namespace cwc {
 
 			//TODO: this can throw an exception... (bad_alloc)
 			dlls[handle] = main;
-			factories[type] = ptr;
+			factories[key] = ptr;
 			return ptr;
 		}
 	};
 
-	auto loader::factory(error_context & error, const std::type_info * type, const internal::uuid & id, std::string_view dll) const -> handle<component> { return self->factory(error, type, id, dll); }
+	auto loader::factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component> { return self->factory(error, id, dll); }
 
 	loader::loader(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
 

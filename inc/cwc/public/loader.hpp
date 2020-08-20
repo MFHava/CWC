@@ -14,11 +14,6 @@
 namespace cwc {
 	template<typename Component>
 	struct import final {
-		template<std::size_t Size>
-		explicit
-		constexpr //TODO(C++20): should probably be consteval
-		import(const char (&literal)[Size]) : dll{literal} {}
-
 		const std::string_view dll;
 	};
 
@@ -27,7 +22,7 @@ namespace cwc {
 
 		std::unique_ptr<pimpl> self;
 
-		auto factory(error_context & error, const internal::uuid & id , std::string_view dll) const -> handle<component>;
+		auto factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component>;
 	public:
 		//! @param[in] force_local override OS specific dll-path behavior and load DLLs only relative to host executable
 		loader(bool force_local = true);

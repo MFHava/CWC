@@ -105,15 +105,15 @@ namespace cwc {
 			}
 		}
 
-		using key_type = std::pair<const internal::uuid *, const char *>;
+		using key_type = std::pair<const internal::uuid *, std::string>;
 
 		auto factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component> {
-			const auto key{std::make_pair(&id, dll.data())};
+			key_type key{&id, dll};
 			{
 				const std::shared_lock lock{mutex};
 				if(const auto it{factories.find(key)}; it != std::end(factories)) return it->second;
 			}
-			return load_factory(error, key);
+			return load_factory(error, std::move(key));
 		}
 	private:
 		using entry_point = void(CWC_CALL *)(error_context *, const internal::uuid *, handle<component> *);
@@ -134,22 +134,24 @@ namespace cwc {
 			return file;
 		}
 
-		auto load_factory(error_context & error, key_type key) const -> handle<component> {
+		auto load_factory(error_context & error, key_type && key) const -> handle<component> {
+			const auto & [uuid, dll]{key};
+
 			const std::lock_guard lock{mutex};
-			const auto handle{LoadLibrary(make_dll(key.second).c_str())};
-			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + key.second + '"'};
+			const auto handle{LoadLibrary(make_dll(dll).c_str())};
+			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
 			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per loader
 
 			const auto main{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_main"))};
 			if(!main) {
 				FreeLibrary(handle);
-				throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + key.second + '"'};
+				throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + dll + '"'};
 			}
 
 			cwc::handle<cwc::component> ptr;
-			main(&error, key.first, &ptr);
+			main(&error, uuid, &ptr);
 			try {
-				if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + key.second + '"'};
+				if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + dll + '"'};
 				error.rethrow_if_necessary();
 			} catch(...) {
 				FreeLibrary(handle);
@@ -158,7 +160,7 @@ namespace cwc {
 
 			//TODO: this can throw an exception... (bad_alloc)
 			dlls[handle] = main;
-			factories[key] = ptr;
+			factories[std::move(key)] = ptr;
 			return ptr;
 		}
 	};

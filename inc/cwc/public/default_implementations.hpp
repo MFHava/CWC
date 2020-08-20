@@ -17,24 +17,19 @@ namespace cwc {
 		using uuid = ptl::array<uint8, 16>;
 
 		template<uint8... Bytes>
-		struct uuid_constant {
-			static_assert(sizeof...(Bytes) == 16);
-
-			static
-			constexpr
-			uuid value{Bytes...};
-		};
-
-		template<typename Interface>
-		struct interface_id;
-
-		template<typename Interface>
-		struct interface_id<const Interface> : interface_id<Interface> {};
+		inline
+		constexpr
+		uuid make_uuid{Bytes...};
 
 		template<typename Interface>
 		inline
 		constexpr
-		auto interface_id_v{interface_id<Interface>::value};
+		void * interface_id{nullptr};
+
+		template<typename Interface>
+		inline
+		constexpr
+		auto interface_id<const Interface>{interface_id<Interface>};
 
 		template<typename Interface, typename Implementation, typename TypeList>
 		struct vtable_wrapper;

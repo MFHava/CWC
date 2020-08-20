@@ -60,6 +60,6 @@ namespace cwc::internal {
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
 		static_assert(std::is_base_of_v<Component, Implementation>);\
 		using Factory = cwc::internal::factory_implementation<Implementation, Component>;\
-		cwc::internal::factories.add(cwc::internal::interface_id_v<Component::cwc_factory>, &cwc::internal::make_handle<Factory>);\
+		cwc::internal::factories.add(cwc::internal::interface_id<Component::cwc_factory>, &cwc::internal::make_handle<Factory>);\
 		return 0;\
 	}()}

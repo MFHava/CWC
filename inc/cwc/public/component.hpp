@@ -33,7 +33,9 @@ namespace cwc {
 
 	namespace internal {
 		template<>
-		struct interface_id<component> final : uuid_constant<0x45, 0x91, 0x4, 0xE, 0xEF, 0xBF, 0x5E, 0x84, 0xA1, 0x58, 0x53, 0x3E, 0xD4, 0xAC, 0xFF, 0x93> {};
+		inline
+		constexpr
+		auto interface_id<component>{make_uuid<0x45, 0x91, 0x4, 0xE, 0xEF, 0xBF, 0x5E, 0x84, 0xA1, 0x58, 0x53, 0x3E, 0xD4, 0xAC, 0xFF, 0x93>};
 
 		template<typename Implementation, typename TypeList>
 		class vtable_wrapper<component, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {
@@ -60,7 +62,7 @@ namespace cwc {
 					*result = nullptr;
 				} else {
 					using Head = typename TL::template at<0>;
-					if(id == interface_id_v<Head>) {
+					if(id == interface_id<Head>) {
 						using IdentityType = typename Implementation::cwc_interfaces::template at<1>; //does not work for classes that implement no additional interfaces...
 						static_assert(!std::is_same_v<IdentityType, component>);
 

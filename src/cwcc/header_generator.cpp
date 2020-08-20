@@ -151,7 +151,9 @@ namespace cwcc {
 			void operator()(const delegate &) const { /*nothing to do*/ }
 			void operator()(const interface & self) const {
 				os << indent << "template<>\n"
-				   << indent << "struct interface_id<::" << this_bundle.name << "::" << self.name << "> : uuid_constant<" << name_to_uuid(this_bundle, self.name) << "> {};\n"
+				   << indent << "inline\n"
+				   << indent << "constexpr\n"
+				   << indent << "auto interface_id<::" << this_bundle.name << "::" << self.name << ">{make_uuid<" << name_to_uuid(this_bundle, self.name) << ">};\n"
 				                "\n"
 				   << indent << "template<typename Implementation, typename TypeList>\n"
 				   << indent << "class vtable_wrapper<" << this_bundle.name << "::" << self.name << ", Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {\n";

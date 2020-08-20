@@ -39,7 +39,7 @@ namespace cwc {
 		auto operator=(loader &&) noexcept -> loader & =delete;
 
 		template<typename Component>
-		auto factory(import<Component> import, error_context error = error_context{error_context::default_buffer{}}) const -> handle<typename Component::cwc_factory> { return factory(error, internal::interface_id_v<typename Component::cwc_factory>, import.dll); }
+		auto factory(import<Component> import, error_context error = error_context{error_context::default_buffer{}}) const -> handle<typename Component::cwc_factory> { return factory(error, internal::interface_id<typename Component::cwc_factory>, import.dll); }
 
 		template<typename Component, typename... Args>
 		auto create(import<Component> import, Args &&... args) const -> handle<component> { return factory(import)->create(std::forward<Args>(args)...); }

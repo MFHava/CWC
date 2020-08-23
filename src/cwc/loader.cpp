@@ -99,7 +99,8 @@ namespace cwc {
 
 		~pimpl() noexcept {
 			factories.clear();//clear all factories before unloading respective dlls
-			for(const auto & [handle, factory] : dlls) {
+			for(const auto & [path, pair] : dlls) {
+				const auto & [handle, factory]{pair};
 				(void)factory;
 				FreeLibrary(handle);
 			}
@@ -116,12 +117,12 @@ namespace cwc {
 			return load_factory(error, std::move(key));
 		}
 	private:
-		using entry_point = void(CWC_CALL *)(error_context *, const internal::uuid *, handle<component> *);
+		using entry_point = void(CWC_CALL *)(error_context *, const internal::uuid *, handle<component> *) noexcept;
 
 		const std::string executable_path;
 		mutable std::shared_mutex mutex;
 		mutable std::map<key_type, handle<component>> factories;
-		mutable std::unordered_map<HMODULE, entry_point> dlls;
+		mutable std::unordered_map<std::string, std::pair<HMODULE, entry_point>> dlls;
 
 		auto make_dll(std::string file) const -> std::string {
 			file.insert(std::begin(file), std::begin(executable_path), std::end(executable_path));
@@ -134,33 +135,39 @@ namespace cwc {
 			return file;
 		}
 
+		auto load_main(const std::string & path) const -> entry_point {
+			auto dll{make_dll(path)};
+
+			if(const auto it{dlls.find(dll)}; it == std::end(dlls)) {
+				const auto handle{LoadLibrary(dll.c_str())};
+				if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
+				const auto main{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_main"))};
+				if(!main) {
+					FreeLibrary(handle);
+					throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + dll + '"'};
+				}
+				dlls.emplace(std::move(dll), std::make_pair(handle, main));
+				return main;
+			} else return it->second.second;
+		}
+
+
 		auto load_factory(error_context & error, key_type && key) const -> handle<component> {
 			const auto & [uuid, dll]{key};
 
 			const std::lock_guard lock{mutex};
-			const auto handle{LoadLibrary(make_dll(dll).c_str())};
-			if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
-			if(dlls.count(handle)) FreeLibrary(handle); //keep only one "load count" per loader
+			const auto main{load_main(dll)};
 
-			const auto main{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_main"))};
-			if(!main) {
-				FreeLibrary(handle);
-				throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + dll + '"'};
-			}
-
-			cwc::handle<cwc::component> ptr;
+			handle<component> ptr;
 			main(&error, uuid, &ptr);
-			try {
-				if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + dll + '"'};
-				error.rethrow_if_necessary();
-			} catch(...) {
-				FreeLibrary(handle);
-				throw;
-			}
 
-			//TODO: this can throw an exception... (bad_alloc)
-			dlls[handle] = main;
-			factories[std::move(key)] = ptr;
+			//TODO: attempt to unload dll if the following code throws?
+			//TODO: would need info if dll was actually loaded for this call...
+
+			if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + dll + '"'};
+			error.rethrow_if_necessary();
+
+			factories.emplace(std::move(key), ptr);
 			return ptr;
 		}
 	};

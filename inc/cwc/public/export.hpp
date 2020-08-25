@@ -9,19 +9,21 @@
 #endif
 
 #pragma once
-#include <map>
 
 namespace cwc::internal {
 	struct factory_map final {
-		using function_pointer = handle<component>(*)();
+		using function_pointer = ptl::function_ref<handle<component>()>;
 
 		void add(const uuid & id, function_pointer func);
 		auto get(const uuid & id) const -> function_pointer;
 	private:
-		std::map<uuid, function_pointer> mapping;
+		auto find(const uuid & id) const noexcept -> std::vector<std::pair<uuid, function_pointer>>::const_iterator;
+
+		std::vector<std::pair<uuid, function_pointer>> mapping;
 	};
 
-	extern factory_map & factories;
+	extern
+	factory_map & factories;
 
 	static
 	const
@@ -59,7 +61,8 @@ namespace cwc::internal {
 	const\
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
 		static_assert(std::is_base_of_v<Component, Implementation>);\
-		using Factory = cwc::internal::factory_implementation<Implementation, Component>;\
-		cwc::internal::factories.add(cwc::internal::interface_id<Component::cwc_factory>, &cwc::internal::make_handle<Factory>);\
+		using namespace cwc::internal;\
+		using Factory = factory_implementation<Implementation, Component>;\
+		factories.add(interface_id<Component::cwc_factory>, make_handle<Factory>);\
 		return 0;\
 	}()}

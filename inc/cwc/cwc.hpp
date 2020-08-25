@@ -13,6 +13,7 @@
 #include <ptl/array_ref.hpp>
 #include <ptl/type_list.hpp>
 #include <ptl/string_ref.hpp>
+#include <ptl/function_ref.hpp>
 
 #define CWC_HPP_HEADER_INCLUDED
 

@@ -19,12 +19,20 @@ namespace cwc::internal {
 
 	factories_initializer::~factories_initializer() noexcept { if(!--nifty_counter) factories.~factory_map(); }
 
-	void factory_map::add(const uuid & id, function_pointer func) {
-		assert(func);
-		if(!mapping.emplace(id, func).second) throw std::logic_error{"detected duplicated export of component"};
+
+	auto factory_map::find(const uuid & id) const noexcept -> std::vector<std::pair<uuid, function_pointer>>::const_iterator {
+		return std::lower_bound(begin(mapping), end(mapping), id, [](const auto & lhs, const auto & rhs) { return lhs.first < rhs; });
 	}
 
-	auto factory_map::get(const uuid & id) const -> function_pointer { return mapping.at(id); }
+	void factory_map::add(const uuid & id, function_pointer func) {
+		if(const auto it{find(id)}; it == cend(mapping) || it->first != id) mapping.emplace(it, id, func);
+		else throw std::logic_error{"detected duplicated export of component"};
+	}
+
+	auto factory_map::get(const uuid & id) const -> function_pointer {
+		if(const auto it{find(id)}; it != end(mapping) && it->first == id) return it->second;
+		throw std::invalid_argument{"requested un-exported component"};
+	}
 }
 
 extern "C" CWC_EXPORT void CWC_CALL cwc_main(::cwc::error_context * error, const ::cwc::internal::uuid * id, cwc::handle<cwc::component> * result) noexcept {

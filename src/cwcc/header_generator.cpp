@@ -165,7 +165,7 @@ namespace cwcc {
 						const auto & method{self.methods[i]};
 						os << indent << vtable[i] << "final { return cwc_error->call_and_store([&] { ";
 						if(method.out) os << "*cwc_ret = ";
-						os << "static_cast<" << method.mutable_ << "Implementation &>(*this)." << method.name << '(';
+						os << "static_cast<" << method.mutable_ << "Implementation &>(*this).cwc_get()." << method.name << '(';
 						if(!method.in.empty()) {
 							auto print_param{[&](const param & p) { os << '*' << p.name; }};
 							print_param(method.in[0]);
@@ -176,11 +176,6 @@ namespace cwcc {
 						}
 						os << "); }); }\n";
 					}
-					os << indent << "//detect missing methods:\n";
-					std::vector<std::string> methods;
-					std::transform(std::begin(self.methods), std::end(self.methods), std::back_inserter(methods), [](const auto & method) { return method.name; });
-					methods.erase(std::unique(std::begin(methods), std::end(methods)), std::end(methods));
-					for(const auto & method : methods) os << indent << "void " << method << "();\n";
 				}
 				os << indent << "};\n\n";
 			}

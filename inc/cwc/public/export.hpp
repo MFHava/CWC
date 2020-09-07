@@ -44,7 +44,7 @@ namespace cwc::internal {
 	}
 
 	template<typename Implementation, typename Component>
-	struct factory_implementation final : interface_implementation<factory_implementation<Implementation, Component>, typename Component::cwc_factory> {
+	struct factory_implementation final {
 		template<typename... Params>
 		auto create(Params &&... params) const -> handle<component> { return make_handle<Implementation>(std::forward<Params>(params)...); }
 	};
@@ -54,15 +54,17 @@ namespace cwc::internal {
 #define CWC_INTERNAL_CAT_(lhs, rhs) lhs ## rhs
 
 //! @brief register implementation for export
-//! @param[in] Component public component that is being exported
 //! @param[in] Implementation the to be exported implementation of the public component
-#define CWC_EXPORT_COMPONENT(Component, Implementation)\
+//! @param[in] Component public component that is being exported
+//TODO: add support for additional interfaces
+#define CWC_EXPORT_COMPONENT(Implementation, Component)\
 	static\
 	const\
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
-		static_assert(std::is_base_of_v<Component, Implementation>);\
 		using namespace cwc::internal;\
-		using Factory = factory_implementation<Implementation, Component>;\
+		struct Wrapper : component_implementation<Implementation, Component> {};\
+		static_assert(std::is_base_of_v<Component, Wrapper>);\
+		using Factory = interface_implementation<factory_implementation<Wrapper, Component>, typename Component::cwc_factory>;\
 		factories.add(interface_id<Component::cwc_factory>, make_handle<Factory>);\
 		return 0;\
 	}()}

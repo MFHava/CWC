@@ -54,10 +54,8 @@ namespace cwc::internal {
 
 	template<typename Implementation, typename TypeList>
 	class vtable_wrapper<cwc::sample::fibonacci::sequence, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
-		void CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret, ::cwc::error_context * cwc_error) const noexcept final { return cwc_error->call_and_store([&] { *cwc_ret = static_cast<const Implementation &>(*this).calculate(*no); }); }
-		void CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::uint8 * first, const ::cwc::uint8 * last, const ::cwc::sample::fibonacci::handler * callback, ::cwc::error_context * cwc_error) const noexcept final { return cwc_error->call_and_store([&] { static_cast<const Implementation &>(*this).calculate(*first, *last, *callback); }); }
-		//detect missing methods:
-		void calculate();
+		void CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret, ::cwc::error_context * cwc_error) const noexcept final { return cwc_error->call_and_store([&] { *cwc_ret = static_cast<const Implementation &>(*this).cwc_get().calculate(*no); }); }
+		void CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::uint8 * first, const ::cwc::uint8 * last, const ::cwc::sample::fibonacci::handler * callback, ::cwc::error_context * cwc_error) const noexcept final { return cwc_error->call_and_store([&] { static_cast<const Implementation &>(*this).cwc_get().calculate(*first, *last, *callback); }); }
 	};
 
 	template<>
@@ -67,9 +65,7 @@ namespace cwc::internal {
 
 	template<typename Implementation, typename TypeList>
 	class vtable_wrapper<cwc::sample::fibonacci::generator::cwc_factory, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
-		void CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::handle<::cwc::component> * cwc_ret, ::cwc::error_context * cwc_error) const noexcept final { return cwc_error->call_and_store([&] { *cwc_ret = static_cast<const Implementation &>(*this).create(); }); }
-		//detect missing methods:
-		void create();
+		void CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::handle<::cwc::component> * cwc_ret, ::cwc::error_context * cwc_error) const noexcept final { return cwc_error->call_and_store([&] { *cwc_ret = static_cast<const Implementation &>(*this).cwc_get().create(); }); }
 	};
 
 }

@@ -34,14 +34,5 @@ namespace sample {
 	}
 }
 
-namespace {
-	//exporting fibonacci as implementation of generator
-	//    (there is no need to inherit the actual implementation itself from component_implementation)
-	struct generator : cwc::component_implementation<generator, cwc::sample::fibonacci::generator>, private ::sample::fibonacci {
-		//export member functions to component_implementation
-		using ::sample::fibonacci::fibonacci;
-		using ::sample::fibonacci::calculate;
-	};
-}
-
-CWC_EXPORT_COMPONENT(cwc::sample::fibonacci::generator, generator);
+//export sample::fibonacci as implementation of cwc::sample::fibonacci::generator
+CWC_EXPORT_COMPONENT(::sample::fibonacci, cwc::sample::fibonacci::generator);

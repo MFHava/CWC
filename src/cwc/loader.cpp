@@ -88,93 +88,120 @@
 #endif
 
 namespace cwc {
-	struct loader::pimpl final {
-		pimpl(bool force_local) : executable_path{[&] {
-			using namespace std::string_literals;
-			if(!force_local) return ""s;
-			auto exe{GetExecutableFileName()};
-			if(const auto it{std::find(std::rbegin(exe), std::rend(exe), path_separator)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
-			return exe;
-		}()} {}
+	namespace internal {
+		struct loader_interface : component {};
 
-		~pimpl() noexcept {
-			factories.clear();//clear all factories before unloading respective dlls
-			for(const auto & [path, pair] : dlls) {
-				const auto & [handle, factory]{pair};
-				(void)factory;
-				FreeLibrary(handle);
+		template<>
+		inline
+		constexpr
+		auto interface_id<loader_interface>{make_uuid<>}; //TODO: actual id
+
+		template<typename Implementation, typename TypeList>
+		struct vtable_wrapper<loader_interface, Implementation, TypeList> : default_implementation_chaining<Implementation, TypeList> {};
+	}
+
+	namespace {
+		struct loader_impl final {
+			loader_impl(bool force_local) : executable_path{[&] {
+				using namespace std::string_literals;
+				if(!force_local) return ""s;
+				auto exe{GetExecutableFileName()};
+				if(const auto it{std::find(std::rbegin(exe), std::rend(exe), path_separator)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
+				return exe;
+			}()} {
+				printf("loader_impl()\n");
 			}
-		}
 
-		using key_type = std::pair<const internal::uuid *, std::string>;
+			void detach() noexcept {
+				printf("loader_impl::detach()\n");
+				factories.clear();
+			} //factories no longer refer to loader
 
-		auto factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component> {
-			key_type key{&id, dll};
-			{
-				const std::shared_lock lock{mutex};
-				if(const auto it{factories.find(key)}; it != std::end(factories)) return it->second;
-			}
-			return load_factory(error, std::move(key));
-		}
-	private:
-		using entry_point = void(CWC_CALL *)(error_context *, const internal::uuid *, handle<component> *) noexcept;
-
-		const std::string executable_path;
-		mutable std::shared_mutex mutex;
-		mutable std::map<key_type, handle<component>> factories;
-		mutable std::unordered_map<std::string, std::pair<HMODULE, entry_point>> dlls;
-
-		auto make_dll(std::string file) const -> std::string {
-			file.insert(std::begin(file), std::begin(executable_path), std::end(executable_path));
-			file.insert(std::find(std::rbegin(file), std::rend(file), path_separator).base(), std::begin(dll_prefix), std::end(dll_prefix));
-			file.insert(std::end(file), std::begin(dll_suffix), std::end(dll_suffix));
-			if(std::find(std::begin(file), std::end(file), path_separator) == std::end(file)) {
-				file.insert(std::begin(file), '.');
-				file.insert(std::begin(file), path_separator);
-			}
-			return file;
-		}
-
-		auto load_main(const std::string & path) const -> entry_point {
-			auto dll{make_dll(path)};
-
-			if(const auto it{dlls.find(dll)}; it == std::end(dlls)) {
-				const auto handle{LoadLibrary(dll.c_str())};
-				if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
-				const auto main{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_main"))};
-				if(!main) {
+			~loader_impl() noexcept {
+				printf("~loader_impl()\n");
+				for(const auto & [path, pair] : dlls) {
+					const auto & [handle, factory]{pair};
+					(void)factory;
 					FreeLibrary(handle);
-					throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + dll + '"'};
 				}
-				dlls.emplace(std::move(dll), std::make_pair(handle, main));
-				return main;
-			} else return it->second.second;
-		}
+			}
+
+			using key_type = std::pair<const internal::uuid *, std::string>;
+
+			auto factory(error_context & error, const internal::uuid & id, std::string_view dll, const handle<component> & self) const -> handle<component> {
+				printf("loader_impl::factory()\n");
+
+				key_type key{&id, dll};
+				{
+					const std::shared_lock lock{mutex};
+					if(const auto it{factories.find(key)}; it != std::end(factories)) return it->second;
+				}
+				return load_factory(error, std::move(key), self);
+			}
+		private:
+			using entry_point = void(CWC_CALL *)(error_context *, const internal::uuid *, handle<component>, handle<component> *) noexcept;
+
+			const std::string executable_path;
+			mutable std::shared_mutex mutex;
+			mutable std::map<key_type, handle<component>> factories;
+			mutable std::unordered_map<std::string, std::pair<HMODULE, entry_point>> dlls;
+
+			auto make_dll(std::string file) const -> std::string {
+				file.insert(std::begin(file), std::begin(executable_path), std::end(executable_path));
+				file.insert(std::find(std::rbegin(file), std::rend(file), path_separator).base(), std::begin(dll_prefix), std::end(dll_prefix));
+				file.insert(std::end(file), std::begin(dll_suffix), std::end(dll_suffix));
+				if(std::find(std::begin(file), std::end(file), path_separator) == std::end(file)) {
+					file.insert(std::begin(file), '.');
+					file.insert(std::begin(file), path_separator);
+				}
+				return file;
+			}
+
+			auto load_main(const std::string & path) const -> entry_point {
+				auto dll{make_dll(path)};
+
+				if(const auto it{dlls.find(dll)}; it == std::end(dlls)) {
+					const auto handle{LoadLibrary(dll.c_str())};
+					if(!handle) throw std::runtime_error{"could not load " + dll_name + " \"" + dll + '"'};
+					const auto main{reinterpret_cast<entry_point>(GetProcAddress(handle, "cwc_main"))};
+					if(!main) {
+						FreeLibrary(handle);
+						throw std::logic_error{"could not find entry point 'cwc_main' in " + dll_name +" \"" + dll + '"'};
+					}
+					dlls.emplace(std::move(dll), std::make_pair(handle, main));
+					return main;
+				} else return it->second.second;
+			}
 
 
-		auto load_factory(error_context & error, key_type && key) const -> handle<component> {
-			const auto & [uuid, dll]{key};
+			auto load_factory(error_context & error, key_type && key, const handle<component> & self) const -> handle<component> {
+				const auto & [uuid, dll]{key};
 
-			const std::lock_guard lock{mutex};
-			const auto main{load_main(dll)};
+				const std::lock_guard lock{mutex};
+				const auto main{load_main(dll)};
 
-			handle<component> ptr;
-			main(&error, uuid, &ptr);
+				handle<component> ptr;
+				main(&error, uuid, self, &ptr);
 
-			//TODO: attempt to unload dll if the following code throws?
-			//TODO: would need info if dll was actually loaded for this call...
+				//TODO: attempt to unload dll if the following code throws?
+				//TODO: would need info if dll was actually loaded for this call...
 
-			if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + dll + '"'};
-			error.rethrow_if_necessary();
+				if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + dll + '"'};
+				error.rethrow_if_necessary();
 
-			factories.emplace(std::move(key), ptr);
-			return ptr;
-		}
-	};
+				factories.emplace(std::move(key), ptr);
+				return ptr;
+			}
+		};
 
-	auto loader::factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component> { return self->factory(error, id, dll); }
+		using Wrapper = cwc::internal::interface_implementation<loader_impl, cwc::internal::loader_interface>;
+	}
 
-	loader::loader(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
+	auto loader::factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component> {
+		return static_cast<Wrapper &>(*self).cwc_get().factory(error, id, dll, self);
+	}
 
-	loader::~loader() noexcept =default;
+	loader::loader(bool force_local) : self{cwc::internal::make_handle<Wrapper>(handle<component>{}, force_local)} {}
+
+	loader::~loader() noexcept { static_cast<Wrapper &>(*self).cwc_get().detach(); }
 }

@@ -12,6 +12,11 @@
 #include <atomic>
 
 namespace cwc {
+	namespace internal {
+		using uuid = ptl::array<uint8, 16>;
+	}
+
+
 	//! @brief base for all interfaces, every component can be cast to this interface
 	class component {
 		template<typename Type>
@@ -32,10 +37,28 @@ namespace cwc {
 	};
 
 	namespace internal {
+		template<typename Implementation, typename TypeList>
+		struct default_implementation_chaining;
+
+		template<uint8... Bytes>
+		inline
+		constexpr
+		uuid make_uuid{Bytes...};
+
+
+		template<typename Interface>
+		inline
+		constexpr
+		void * interface_id{nullptr};
+
 		template<>
 		inline
 		constexpr
 		auto interface_id<component>{make_uuid<0x45, 0x91, 0x4, 0xE, 0xEF, 0xBF, 0x5E, 0x84, 0xA1, 0x58, 0x53, 0x3E, 0xD4, 0xAC, 0xFF, 0x93>};
+
+
+		template<typename Interface, typename Implementation, typename TypeList>
+		struct vtable_wrapper;
 
 		template<typename Implementation, typename TypeList>
 		class vtable_wrapper<component, Implementation, TypeList> : public default_implementation_chaining<Implementation, TypeList> {

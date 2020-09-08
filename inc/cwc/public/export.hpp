@@ -12,7 +12,7 @@
 
 namespace cwc::internal {
 	struct factory_map final {
-		using function_pointer = ptl::function_ref<handle<component>()>;
+		using function_pointer = ptl::function_ref<handle<component>(const handle<component> &, const handle<component> &)>;
 
 		void add(const uuid & id, function_pointer func);
 		auto get(const uuid & id) const -> function_pointer;
@@ -43,10 +43,14 @@ namespace cwc::internal {
 		return handle<Interface>{new Implementation{std::forward<Args>(args)...}};
 	}
 
-	template<typename Implementation, typename Component>
+	template<typename Implementation>
 	struct factory_implementation final {
+		factory_implementation(const handle<component> & loader) : loader{loader} {}
+
 		template<typename... Params>
-		auto create(Params &&... params) const -> handle<component> { return make_handle<Implementation>(std::forward<Params>(params)...); }
+		auto create(Params &&... params) const -> handle<component> { return make_handle<Implementation>(loader, std::forward<Params>(params)...); }
+	private:
+		const handle<component> loader;
 	};
 }
 
@@ -61,10 +65,11 @@ namespace cwc::internal {
 	static\
 	const\
 	auto CWC_INTERNAL_CAT(registration_dummy_, __LINE__){[] {\
+		using namespace cwc;\
 		using namespace cwc::internal;\
-		struct Wrapper : component_implementation<Implementation, Component> {};\
+		using Wrapper = component_implementation<Implementation, Component>;/*/struct Wrapper : component_implementation<Implementation, Component> {};*/\
 		static_assert(std::is_base_of_v<Component, Wrapper>);\
-		using Factory = interface_implementation<factory_implementation<Wrapper, Component>, typename Component::cwc_factory>;\
-		factories.add(interface_id<Component::cwc_factory>, make_handle<Factory>);\
+		using Factory = interface_implementation<factory_implementation<Wrapper>, typename Component::cwc_factory>;\
+		factories.add(interface_id<Component::cwc_factory>, make_handle<Factory, const handle<component> &, const handle<component> &>);\
 		return 0;\
 	}()}

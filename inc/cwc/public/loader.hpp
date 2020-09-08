@@ -18,9 +18,7 @@ namespace cwc {
 	};
 
 	class loader final {
-		struct pimpl;
-
-		std::unique_ptr<pimpl> self;
+		handle<component> self;
 
 		auto factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component>;
 	public:

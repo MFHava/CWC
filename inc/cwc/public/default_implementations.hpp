@@ -11,31 +11,18 @@
 #pragma once
 
 namespace cwc {
+	template<typename T>
+	struct handle;
+
+
 	class component;
 
 	namespace internal {
-		using uuid = ptl::array<uint8, 16>;
-
-
-		template<uint8... Bytes>
-		inline
-		constexpr
-		uuid make_uuid{Bytes...};
-
-
-		template<typename Interface>
-		inline
-		constexpr
-		void * interface_id{nullptr};
-
 		template<typename Interface>
 		inline
 		constexpr
 		auto interface_id<const Interface>{interface_id<Interface>};
 
-
-		template<typename Interface, typename Implementation, typename TypeList>
-		struct vtable_wrapper;
 
 		template<typename Interface, typename Implementation>
 		struct vtable_wrapper<Interface, Implementation, ptl::type_list<>> : Interface {};
@@ -59,11 +46,12 @@ namespace cwc {
 		struct interface_implementation : default_implementation<interface_implementation<Implementation, Interface, AdditionalInterfaces...>, interface_implementation_base<Interface, AdditionalInterfaces...>> {
 
 			template<typename... Args>
-			interface_implementation(Args &&... args) : self{std::forward<Args>(args)...} {}
+			interface_implementation(const handle<component> & loader, Args &&... args) : loader{loader}, self{std::forward<Args>(args)...} {}
 
 			auto cwc_get() const noexcept -> const Implementation & { return self; }
 			auto cwc_get()       noexcept ->       Implementation & { return self; }
 		private:
+			const handle<component> loader;
 			Implementation self;
 		};
 
@@ -78,11 +66,12 @@ namespace cwc {
 		struct component_implementation : default_implementation<component_implementation<Implementation, Component, AdditionalInterfaces...>, component_implementation_base<Component, AdditionalInterfaces...>> {
 
 			template<typename... Args>
-			component_implementation(Args &&... args) : self{std::forward<Args>(args)...} {}
+			component_implementation(const handle<component> & loader, Args &&... args) : loader{loader}, self{std::forward<Args>(args)...} {}
 
 			auto cwc_get() const noexcept -> const Implementation & { return self; }
 			auto cwc_get()       noexcept ->       Implementation & { return self; }
 		private:
+			const handle<component> loader;
 			Implementation self;
 		};
 	}

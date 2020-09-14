@@ -31,6 +31,6 @@ int main() {
 
 	{
 		const cwc::handle<cwc::sample::fibonacci::sequence> generator{loader.create(fibonacci_generator)};
-		generator->calculate(5, 10, [&](auto value) { std::cout << value << "\n"; }, cwc::error_context{error_buffer});
+		generator->calculate(5, 10, [](auto value) { std::cout << value << "\n"; }, cwc::error_context{error_buffer});
 	}
 }

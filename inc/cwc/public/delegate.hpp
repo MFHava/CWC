@@ -9,6 +9,7 @@
 #endif
 
 #pragma once
+#include <cassert>
 
 namespace cwc {
 	CWC_PACK_BEGIN
@@ -42,9 +43,14 @@ namespace cwc {
 		template<typename Functor>
 		delegate(Functor && func) noexcept {
 			if constexpr(std::is_pointer_v<Functor>) assert(func);
-			if constexpr(std::is_same_v<void, Result>) dispatch = [](void * context, param_t<Params>... args, error_context * error) noexcept { error->call_and_store([&] { (*reinterpret_cast<remove_cvref_t<Functor> *>(context))(*args...); }); };
-			else                                       dispatch = [](void * context, param_t<Params>... args, Result * result, error_context * error) noexcept { error->call_and_store([&] { *result = (*reinterpret_cast<remove_cvref_t<Functor> *>(context))(*args...); }); };
-			context = reinterpret_cast<void *>(std::addressof(func));
+
+			using Dispatch = remove_cvref_t<std::conditional_t<std::is_pointer_v<Functor>, std::remove_pointer_t<Functor>, Functor>> *;
+
+			if constexpr(std::is_same_v<void, Result>) dispatch = [](void * context, param_t<Params>... args,                  error_context * error) noexcept { error->call_and_store([&] {           (*reinterpret_cast<Dispatch>(context))(*args...); }); };
+			else                                       dispatch = [](void * context, param_t<Params>... args, Result * result, error_context * error) noexcept { error->call_and_store([&] { *result = (*reinterpret_cast<Dispatch>(context))(*args...); }); };
+
+			if constexpr(std::is_pointer_v<Functor>) context = reinterpret_cast<void *>(func);
+			else                                     context = reinterpret_cast<void *>(std::addressof(func));
 		}
 
 		delegate(const delegate &) =delete;

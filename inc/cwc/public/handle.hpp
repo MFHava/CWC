@@ -102,7 +102,7 @@ namespace cwc {
 		static
 		auto identity(const handle<T> & self) noexcept {
 			void * result;
-			if constexpr(std::is_same_v<Type, component>) result = self.ptr;
+			if constexpr(std::is_same_v<std::remove_const_t<Type>, component>) result = self.ptr;
 			else if(self) self.ptr->cwc$component$dynamic_cast_fast$3(&internal::interface_id<component>, &result);
 			else result = nullptr;
 			return reinterpret_cast<std::size_t>(result);

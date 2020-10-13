@@ -108,16 +108,16 @@ namespace cwc {
 
 		using key_type = std::pair<const internal::uuid *, std::string>;
 
-		auto factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component> {
+		auto factory(const internal::uuid & id, std::string_view dll) const -> handle<component> {
 			key_type key{&id, dll};
 			{
 				const std::shared_lock lock{mutex};
 				if(const auto it{factories.find(key)}; it != std::end(factories)) return it->second;
 			}
-			return load_factory(error, std::move(key));
+			return load_factory(std::move(key));
 		}
 	private:
-		using entry_point = void(CWC_CALL *)(error_context *, const internal::uuid *, handle<component> *) noexcept;
+		using entry_point = internal::error_callback(CWC_CALL *)(const internal::uuid *, handle<component> *) noexcept;
 
 		const std::string executable_path;
 		mutable std::shared_mutex mutex;
@@ -152,27 +152,27 @@ namespace cwc {
 		}
 
 
-		auto load_factory(error_context & error, key_type && key) const -> handle<component> {
+		auto load_factory(key_type && key) const -> handle<component> {
 			const auto & [uuid, dll]{key};
 
 			const std::lock_guard lock{mutex};
 			const auto main{load_main(dll)};
 
 			handle<component> ptr;
-			main(&error, uuid, &ptr);
+			const auto error{main(uuid, &ptr)};
 
 			//TODO: attempt to unload dll if the following code throws?
 			//TODO: would need info if dll was actually loaded for this call...
 
 			if(!ptr) throw std::logic_error{"did not receive valid factory from " + dll_name + " \"" + dll + '"'};
-			error.rethrow_if_necessary();
+			internal::rethrow_last_error(error);
 
 			factories.emplace(std::move(key), ptr);
 			return ptr;
 		}
 	};
 
-	auto loader::factory(error_context & error, const internal::uuid & id, std::string_view dll) const -> handle<component> { return self->factory(error, id, dll); }
+	auto loader::factory(const internal::uuid & id, std::string_view dll) const -> handle<component> { return self->factory(id, dll); }
 
 	loader::loader(bool force_local) : self{std::make_unique<pimpl>(force_local)} {}
 

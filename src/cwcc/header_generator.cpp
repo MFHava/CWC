@@ -43,9 +43,14 @@ namespace cwcc {
 			for(std::size_t i{0}; i < mangled.size(); ++i) {
 				const auto & method{self.methods[i]};
 				std::stringstream ss;
-				ss << "void CWC_CALL " << mangled[i] << "(";
-				for(const auto & p: method.params()) ss << p.mutable_ << p.type << " * " << p.name << ", ";
-				ss << "::cwc::error_context * cwc_error) " << method.mutable_ << "noexcept ";
+				ss << "::cwc::internal::error_callback CWC_CALL " << mangled[i] << "(";
+				auto first{true}; //TODO: can be merged with loop in C++20
+				for(const auto & p: method.params()) {
+					if(first) first = false;
+					else ss << ", ";
+					ss << p.mutable_ << p.type << " * " << p.name;
+				}
+				ss << ") " << method.mutable_ << "noexcept ";
 				result.push_back(ss.str());
 			}
 			return result;
@@ -95,16 +100,28 @@ namespace cwcc {
 					const auto & method{self.methods[i]};
 					for(const auto & doc : method.lines) os << indent << doc << '\n';
 					os << indent << (method.out ? "auto" : "void") << " " << method.name << '(';
-					for(const auto & p : method.in) os << p.mutable_ << p.type << " & " << p.name << ", ";
-					os << "::cwc::error_context cwc_error = ::cwc::error_context{::cwc::error_context::default_buffer{}}) " << method.mutable_;
+
+					auto first{true};//TODO: can be merged with loop in C++20
+					for(const auto & p : method.in) {
+						if(first) first = false;
+						else os << ", ";
+						os << p.mutable_ << p.type << " & " << p.name;
+					}
+
+					os << ") " << method.mutable_;
 					if(method.out) os << "-> " << *method.out << ' ';
 					os << "{\n";
 					{
 						indent_scope scope{os};
 						if(method.out) os << indent << *method.out << " cwc_ret;\n";
-						os << indent << "cwc_error.call(*this, &" << self.name << "::" << mangled[i];
-						for(const auto & p : method.params()) os << ", " << p.name;
-						os << ");\n";
+						os << indent << "::cwc::internal::rethrow_last_error(" << mangled[i] << '(';
+						auto first{true};//TODO: can be merged with loop in C++20
+						for(const auto & p : method.params()) {
+							if(first) first = false;
+							else os << ", ";
+							os << '&' << p.name;
+						}
+						os << "));\n";
 						if(method.out) os << indent << "return cwc_ret;\n";
 					}
 					os << indent << "}\n";
@@ -163,7 +180,7 @@ namespace cwcc {
 					indent_scope scope{os};
 					for(std::size_t i{0}; i < vtable.size(); ++i) {
 						const auto & method{self.methods[i]};
-						os << indent << vtable[i] << "final { return cwc_error->call_and_store([&] { ";
+						os << indent << vtable[i] << "final { return call_and_store([&] { ";
 						if(method.out) os << "*cwc_ret = ";
 						os << "static_cast<" << method.mutable_ << "Implementation &>(*this).cwc_get()." << method.name << '(';
 						if(!method.in.empty()) {

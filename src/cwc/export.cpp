@@ -35,9 +35,8 @@ namespace cwc::internal {
 	}
 }
 
-extern "C" CWC_EXPORT void CWC_CALL cwc_main(::cwc::error_context * error, const ::cwc::internal::uuid * id, cwc::handle<cwc::component> * result) noexcept {
-	assert(error);
+extern "C" CWC_EXPORT ::cwc::internal::error_callback CWC_CALL cwc_main(const ::cwc::internal::uuid * id, cwc::handle<cwc::component> * result) noexcept {
 	assert(id);
 	assert(result);
-	error->call_and_store([&] { *result = cwc::internal::factories.get(*id)(); });
+	return cwc::internal::call_and_store([&] { *result = cwc::internal::factories.get(*id)(); });
 }

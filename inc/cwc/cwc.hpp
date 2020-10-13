@@ -28,9 +28,9 @@ namespace cwc {
 }
 
 #include "internal/detection.hpp"
+#include "internal/error_handling.hpp"
 
 #include "public/types.hpp"
-#include "public/error_context.hpp"
 #include "public/delegate.hpp"
 #include "public/default_implementations.hpp"
 #include "public/component.hpp"

@@ -30,15 +30,8 @@ namespace cwc {
 		template<typename T>
 		using param_t = std::add_pointer_t<std::remove_reference_t<T>>;
 
-		std::conditional_t<std::is_same_v<void, Result>, void(void *, param_t<Params>..., error_context *) noexcept, void(void *, param_t<Params>..., Result *, error_context *) noexcept> * dispatch;
+		std::conditional_t<std::is_same_v<void, Result>, internal::error_callback(void *, param_t<Params>...) noexcept, internal::error_callback(void *, param_t<Params>..., Result *) noexcept> * dispatch;
 		void * context;
-
-		//only argument passing logic may take the address of a delegate
-		auto operator&() const noexcept -> const delegate * { return this; }
-		auto operator&()       noexcept ->       delegate * { return this; }
-
-		friend
-		struct error_context;
 	public:
 		template<typename Functor>
 		delegate(Functor && func) noexcept {
@@ -46,8 +39,8 @@ namespace cwc {
 
 			using Dispatch = remove_cvref_t<std::conditional_t<std::is_pointer_v<Functor>, std::remove_pointer_t<Functor>, Functor>> *;
 
-			if constexpr(std::is_same_v<void, Result>) dispatch = [](void * context, param_t<Params>... args,                  error_context * error) noexcept { error->call_and_store([&] {           (*reinterpret_cast<Dispatch>(context))(*args...); }); };
-			else                                       dispatch = [](void * context, param_t<Params>... args, Result * result, error_context * error) noexcept { error->call_and_store([&] { *result = (*reinterpret_cast<Dispatch>(context))(*args...); }); };
+			if constexpr(std::is_same_v<void, Result>) dispatch = [](void * context, param_t<Params>... args                 ) noexcept { return internal::call_and_store([&] {           (*reinterpret_cast<Dispatch>(context))(*args...); }); };
+			else                                       dispatch = [](void * context, param_t<Params>... args, Result * result) noexcept { return internal::call_and_store([&] { *result = (*reinterpret_cast<Dispatch>(context))(*args...); }); };
 
 			if constexpr(std::is_pointer_v<Functor>) context = reinterpret_cast<void *>(func);
 			else                                     context = reinterpret_cast<void *>(std::addressof(func));
@@ -60,14 +53,11 @@ namespace cwc {
 
 		~delegate() noexcept =default;
 
-		auto operator()(Params &&... args, error_context error= error_context{error_context::default_buffer{}}) const -> Result {
-			if constexpr(std::is_same_v<void, Result>) {
-				dispatch(context, &args..., &error);
-				error.rethrow_if_necessary();
-			} else {
+		auto operator()(Params &&... args) const -> Result {
+			if constexpr(std::is_same_v<void, Result>) internal::rethrow_last_error(dispatch(context, &args...));
+			else {
 				Result result;
-				dispatch(context, &args..., &result, &error);
-				error.rethrow_if_necessary();
+				internal::rethrow_last_error(dispatch(context, &args..., &result));
 				return result; //cast to void if necessary, otherwise should result in nop
 			}
 		}

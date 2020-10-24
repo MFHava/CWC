@@ -282,6 +282,7 @@ namespace cwc::internal {
 		constexpr
 		bool has_paths<std::filesystem::filesystem_error>{true};
 
+
 		thread_local
 		struct {
 			std::variant<std::monostate, std::bad_optional_access, std::bad_variant_access, std::bad_function_call, std::bad_weak_ptr, std::bad_exception, std::bad_array_new_length, std::bad_alloc, std::bad_any_cast, std::bad_cast, std::bad_typeid, std::filesystem::filesystem_error, std::ios_base::failure, std::system_error, std::regex_error, std::underflow_error, std::overflow_error, std::range_error, std::runtime_error, std::future_error, std::out_of_range, std::length_error, std::domain_error, std::invalid_argument, std::logic_error, std::exception, unknown_exception> exc;
@@ -348,10 +349,10 @@ namespace cwc::internal {
 					catch(const std::domain_error & exc) { store_error(exc); }
 					catch(const std::invalid_argument & exc) { store_error(exc); }
 				catch(const std::logic_error & exc) { store_error(exc); }
+				catch(const unknown_exception & exc) { store_error(exc); }
 			catch(const std::exception & exc) { store_error(exc); }
 			catch(...) { store_error(unknown_exception{}); }
 		}
-
 		return last_error.func;
 	}
 }

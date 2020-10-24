@@ -282,14 +282,19 @@ namespace cwc::internal {
 		constexpr
 		bool has_paths<std::filesystem::filesystem_error>{true};
 
-
 		thread_local
-		std::function<const void *(error_selector)> last_error;
+		struct {
+			std::variant<std::monostate, std::bad_optional_access, std::bad_variant_access, std::bad_function_call, std::bad_weak_ptr, std::bad_exception, std::bad_array_new_length, std::bad_alloc, std::bad_any_cast, std::bad_cast, std::bad_typeid, std::filesystem::filesystem_error, std::ios_base::failure, std::system_error, std::regex_error, std::underflow_error, std::overflow_error, std::range_error, std::runtime_error, std::future_error, std::out_of_range, std::length_error, std::domain_error, std::invalid_argument, std::logic_error, std::exception, unknown_exception> exc;
+			error_callback func{nullptr};
+		} last_error;
+
 
 		template<typename Exception>
 		void store_error(const Exception & exc) noexcept {
-			last_error = [=](error_selector selector) noexcept -> const void * {
+			last_error.exc = exc;
+			last_error.func = [](error_selector selector) noexcept -> const void * {
 				//TODO: breaks currently on MSVC static_assert(std::is_nothrow_copy_constructible_v<Exception>);
+				const auto & exc{std::get<Exception>(last_error.exc)};
 				switch(selector) {
 					case error_selector::type:
 						return to_error_code(exc);
@@ -314,39 +319,39 @@ namespace cwc::internal {
 	}
 
 	auto store_last_error() noexcept -> error_callback {//lippincott function
-		if(std::current_exception() == std::exception_ptr{}) return nullptr;
+		if(std::current_exception() == std::exception_ptr{}) {
+			last_error.exc = std::monostate{};
+			last_error.func = nullptr;
+		} else {
+			try { throw; }
+				catch(const std::bad_optional_access & exc) { store_error(exc); }
+				catch(const std::bad_variant_access & exc) { store_error(exc); }
+				catch(const std::bad_function_call & exc) { store_error(exc); }
+				catch(const std::bad_weak_ptr & exc) { store_error(exc); }
+				catch(const std::bad_exception & exc) { store_error(exc); }
+					catch(const std::bad_array_new_length & exc) { store_error(exc); }
+				catch(const std::bad_alloc & exc) { store_error(exc); }
+					catch(const std::bad_any_cast & exc) { store_error(exc); }
+				catch(const std::bad_cast & exc) { store_error(exc); }
+				catch(const std::bad_typeid & exc) { store_error(exc); }
+						catch(const std::filesystem::filesystem_error & exc) { store_error(exc); }
+						catch(const std::ios_base::failure & exc) { store_error(exc); }
+					catch(const std::system_error & exc) { store_error(exc); }
+					catch(const std::regex_error & exc) { store_error(exc); }
+					catch(const std::underflow_error & exc) { store_error(exc); }
+					catch(const std::overflow_error & exc) { store_error(exc); }
+					catch(const std::range_error & exc) { store_error(exc); }
+				catch(const std::runtime_error & exc) { store_error(exc); }
+					catch(const std::future_error & exc) { store_error(exc); }
+					catch(const std::out_of_range & exc) { store_error(exc); }
+					catch(const std::length_error & exc) { store_error(exc); }
+					catch(const std::domain_error & exc) { store_error(exc); }
+					catch(const std::invalid_argument & exc) { store_error(exc); }
+				catch(const std::logic_error & exc) { store_error(exc); }
+			catch(const std::exception & exc) { store_error(exc); }
+			catch(...) { store_error(unknown_exception{}); }
+		}
 
-		try { throw; }
-			catch(const std::bad_optional_access & exc) { store_error(exc); }
-			catch(const std::bad_variant_access & exc) { store_error(exc); }
-			catch(const std::bad_function_call & exc) { store_error(exc); }
-			catch(const std::bad_weak_ptr & exc) { store_error(exc); }
-			catch(const std::bad_exception & exc) { store_error(exc); }
-				catch(const std::bad_array_new_length & exc) { store_error(exc); }
-			catch(const std::bad_alloc & exc) { store_error(exc); }
-				catch(const std::bad_any_cast & exc) { store_error(exc); }
-			catch(const std::bad_cast & exc) { store_error(exc); }
-			catch(const std::bad_typeid & exc) { store_error(exc); }
-					catch(const std::filesystem::filesystem_error & exc) { store_error(exc); }
-					catch(const std::ios_base::failure & exc) { store_error(exc); }
-				catch(const std::system_error & exc) { store_error(exc); }
-				catch(const std::regex_error & exc) { store_error(exc); }
-				catch(const std::underflow_error & exc) { store_error(exc); }
-				catch(const std::overflow_error & exc) { store_error(exc); }
-				catch(const std::range_error & exc) { store_error(exc); }
-			catch(const std::runtime_error & exc) { store_error(exc); }
-				catch(const std::future_error & exc) { store_error(exc); }
-				catch(const std::out_of_range & exc) { store_error(exc); }
-				catch(const std::length_error & exc) { store_error(exc); }
-				catch(const std::domain_error & exc) { store_error(exc); }
-				catch(const std::invalid_argument & exc) { store_error(exc); }
-			catch(const std::logic_error & exc) { store_error(exc); }
-		catch(const std::exception & exc) { store_error(exc); }
-		catch(...) { store_error(unknown_exception{}); }
-
-		return [](error_selector selector) noexcept -> const void * {
-			assert(last_error);
-			return last_error(selector);
-		};
+		return last_error.func;
 	}
 }

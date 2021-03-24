@@ -22,7 +22,7 @@
 	#error unknown operating system
 #endif
 
-#define CWC_COMPIELR_GNU   0
+#define CWC_COMPILER_GNU   0
 #define CWC_COMPILER_MSVC  0
 
 #if defined(__GNUG__)

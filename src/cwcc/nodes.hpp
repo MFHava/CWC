@@ -7,6 +7,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <ostream>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>

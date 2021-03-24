@@ -69,8 +69,8 @@ namespace cwcc {
 		interface p;
 		p.name = "cwc_factory";
 		intrusive_ptr ret;
-		ret.mutable_ = true;
-		ret.type = untemplated_type{"::cwc::component"};
+		ret.type.mutable_ = true;
+		ret.type.type = untemplated_type{"::cwc::component"};
 
 		auto transform = [&](const constructor & c) {
 			interface::method m;

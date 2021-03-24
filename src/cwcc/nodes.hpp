@@ -41,8 +41,11 @@ namespace cwcc {
 	struct array_ref;
 	struct bitset;
 	struct optional;
+	struct optional_ref;
 	struct tuple;
 	struct variant;
+	struct variant_ref;
+	struct vector;
 	struct intrusive_ptr;
 
 	using templated_type = boost::variant<
@@ -51,10 +54,26 @@ namespace cwcc {
 		boost::recursive_wrapper<array_ref>,
 		boost::recursive_wrapper<bitset>,
 		boost::recursive_wrapper<optional>,
+		boost::recursive_wrapper<optional_ref>,
 		boost::recursive_wrapper<tuple>,
 		boost::recursive_wrapper<variant>,
+		boost::recursive_wrapper<variant_ref>,
+		boost::recursive_wrapper<vector>,
 		boost::recursive_wrapper<intrusive_ptr>
 	>;
+
+	struct mutability_type final {
+		mutability mutable_;
+		templated_type type;
+
+		friend
+		auto operator==(const mutability_type & lhs, const mutability_type & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
+		friend
+		auto operator<<(std::ostream & os, const mutability_type & self) -> std::ostream & {
+			os << self.mutable_ << self.type;
+			return os;
+		}
+	};
 
 	struct array final {
 		templated_type type;
@@ -67,13 +86,12 @@ namespace cwcc {
 	};
 
 	struct array_ref final {
-		mutability mutable_;
-		templated_type type;
+		mutability_type type;
 
 		friend
-		auto operator==(const array_ref & lhs, const array_ref & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
+		auto operator==(const array_ref & lhs, const array_ref & rhs) -> bool { return lhs.type == rhs.type; }
 		friend
-		auto operator<<(std::ostream & os, const array_ref & self) -> std::ostream & { return os << "::cwc::array_ref<" << self.mutable_ << self.type << '>'; }
+		auto operator<<(std::ostream & os, const array_ref & self) -> std::ostream & { return os << "::cwc::array_ref<" << self.type << '>'; }
 	};
 
 	struct bitset final {
@@ -92,6 +110,15 @@ namespace cwcc {
 		auto operator==(const optional & lhs, const optional & rhs) -> bool { return lhs.type == rhs.type; }
 		friend
 		auto operator<<(std::ostream & os, const optional & self) -> std::ostream & { return os << "::cwc::optional<" << self.type << '>'; }
+	};
+
+	struct optional_ref final {
+		mutability_type type;
+
+		friend
+		auto operator==(const optional_ref & lhs, const optional_ref & rhs) -> bool { return lhs.type == rhs.type; }
+		friend
+		auto operator<<(std::ostream & os, const optional_ref & self) -> std::ostream & { return os << "::cwc::optional_ref<" << self.type << '>'; }	
 	};
 
 	struct tuple final {
@@ -124,14 +151,37 @@ namespace cwcc {
 		}
 	};
 
-	struct intrusive_ptr final {
-		mutability mutable_;
+	struct variant_ref final {
+		std::vector<mutability_type> types;
+
+		friend
+		auto operator==(const variant_ref & lhs, const variant_ref & rhs) -> bool { return lhs.types == rhs.types; }
+		friend
+		auto operator<<(std::ostream & os, const variant_ref & self) -> std::ostream & {
+			assert(!self.types.empty());
+			os << "::cwc::variant_ref<" << self.types[0];
+			for(std::size_t i{1}; i < self.types.size(); ++i) os << ", " << self.types[i];
+			os << '>';
+			return os;
+		}
+	};
+
+	struct vector final {
 		templated_type type;
 
 		friend
-		auto operator==(const intrusive_ptr & lhs, const intrusive_ptr & rhs) -> bool { return (lhs.mutable_ == rhs.mutable_) && (lhs.type == rhs.type); }
+		auto operator==(const vector & lhs, const vector & rhs) -> bool { return lhs.type == rhs.type; }
 		friend
-		auto operator<<(std::ostream & os, const intrusive_ptr & self) -> std::ostream & { return os << "::cwc::intrusive_ptr<" << self.mutable_ << self.type << '>'; }
+		auto operator<<(std::ostream & os, const vector & self) -> std::ostream & { return os << "::cwc::vector<" << self.type << '>'; }
+	};
+
+	struct intrusive_ptr final {
+		mutability_type type;
+
+		friend
+		auto operator==(const intrusive_ptr & lhs, const intrusive_ptr & rhs) -> bool { return lhs.type == rhs.type; }
+		friend
+		auto operator<<(std::ostream & os, const intrusive_ptr & self) -> std::ostream & { return os << "::cwc::intrusive_ptr<" << self.type << '>'; }
 	};
 
 	struct documentation final {

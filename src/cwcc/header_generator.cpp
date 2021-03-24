@@ -214,12 +214,15 @@ namespace cwcc {
 			}
 			void operator()(const untemplated_type & self) { (*this)(self.name); }
 			void operator()(const array & self) { self.type.apply_visitor(*this); }
-			void operator()(const array_ref & self) { self.type.apply_visitor(*this); }
+			void operator()(const array_ref & self) { self.type.type.apply_visitor(*this); }
 			void operator()(const bitset &) { /*nothing to do*/ }
 			void operator()(const optional & self) { self.type.apply_visitor(*this); }
+			void operator()(const optional_ref & self) { self.type.type.apply_visitor(*this); }
 			void operator()(const tuple & self) { for(const auto & t : self.types) t.apply_visitor(*this); }
 			void operator()(const variant & self) { for(const auto & t : self.types) t.apply_visitor(*this); }
-			void operator()(const intrusive_ptr & self) { self.type.apply_visitor(*this); }
+			void operator()(const vector & self) { self.type.apply_visitor(*this); }
+			void operator()(const variant_ref & self) { for(const auto & t : self.types) t.type.apply_visitor(*this); }
+			void operator()(const intrusive_ptr & self) { self.type.type.apply_visitor(*this); }
 			void operator()(const param & self) { self.type.apply_visitor(*this); }
 			void operator()(const struct_ & self) { for(const auto & m : self.members) (*this)(m); }
 			void operator()(const struct_::member & self) { self.type.apply_visitor(*this); }

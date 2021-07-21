@@ -6,6 +6,58 @@
 namespace cwc::sample::fibonacci {
 	using handler = ::cwc::delegate<void(const ::cwc::uint64 & /*no*/)>;
 
+	class sequence_ final {
+		enum class operation {
+			dtor,
+			calculate_0,
+			calculate_1,
+		};
+
+		void * obj;
+		void (*func)(void *, operation, void **);
+
+		void invoke(operation op, void ** args = nullptr) const { func(obj, op, args); }
+	public:
+		template<typename T>
+		sequence_(T && op) { //TODO: construct without constructing externally first
+			using Type = std::decay_t<T>;
+			obj = new Type{std::move(op)};
+			func = [](void * ctx, operation op, void ** args) {
+				switch(op) {
+					case operation::dtor: delete reinterpret_cast<Type *>(ctx); break;
+					case operation::calculate_0: *reinterpret_cast<::cwc::uint64 *>(args[1]) = (*reinterpret_cast<const Type *>(ctx))->calculate(*reinterpret_cast<const ::cwc::uint8 *>(args[0])); break;
+					case operation::calculate_1: (*reinterpret_cast<const Type *>(ctx))->calculate(*reinterpret_cast<const ::cwc::uint8 *>(args[0]), *reinterpret_cast<const ::cwc::uint8 *>(args[1]), *reinterpret_cast<const ::cwc::sample::fibonacci::handler *>(args[2])); break;
+				}
+			};
+		}
+
+		sequence_(const sequence_ &) =delete;
+		sequence_(sequence_ && other) noexcept {
+			std::swap(obj, other.obj);
+			std::swap(func, other.func);
+		}
+		auto operator=(const sequence_ &) -> sequence_ & =delete;
+		auto operator=(sequence_ && other) noexcept -> sequence_ & {
+			std::swap(obj, other.obj);
+			std::swap(func, other.func);
+			return *this;
+		}
+
+		~sequence_() noexcept { invoke(operation::dtor); }
+
+		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 { //TODO: exception handling
+			::cwc::uint64 result;
+			void * args[]{(void *)&no, &result};
+			invoke(operation::calculate_0, args);
+			return result;
+		}
+
+		void calculate(const ::cwc::uint8 & first, const ::cwc::uint8 & last, const ::cwc::sample::fibonacci::handler & callback) const {
+			void * args[]{(void *)&first, (void *)&last, (void *)std::addressof(callback)};
+			invoke(operation::calculate_1, args);
+		}
+	};
+
 	class sequence : public ::cwc::component {
 		virtual
 		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;

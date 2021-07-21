@@ -10,6 +10,7 @@
 namespace sample {
 	struct fibonacci {
 		fibonacci() noexcept { printf("%s()\n", __func__); }
+		fibonacci(int) noexcept { printf("%s(int)\n", __func__); }
 
 		~fibonacci() noexcept { printf("%s()\n", __func__); }
 

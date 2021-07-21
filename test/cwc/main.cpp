@@ -10,4 +10,3 @@
 
 #define CWC_CONTEXT_INIT_STRING ""
 #define CWC_CONTEXT_INIT_IS_NOT_FILE
-#include "cwc/host.hpp"

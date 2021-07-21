@@ -4,29 +4,26 @@
 #include <cwc/cwc.hpp>
 
 namespace cwc::sample::fibonacci {
-	using handler = ::cwc::delegate<void(const ::cwc::uint64 & /*no*/)>;
-
 	class sequence_ final {
-		enum class operation {
-			dtor,
-			calculate_0,
-			calculate_1,
-		};
-
 		void * obj;
-		void (*func)(void *, operation, void **);
+		void (*func)(void *, int, void **);
 
-		void invoke(operation op, void ** args = nullptr) const { func(obj, op, args); }
+		static
+		constexpr
+		const char * dll{"sample-fibonacci"};
 	public:
-		template<typename T>
-		sequence_(T && op) { //TODO: construct without constructing externally first
-			using Type = std::decay_t<T>;
-			obj = new Type{std::move(op)};
-			func = [](void * ctx, operation op, void ** args) {
+		sequence_(std::nullopt_t) noexcept : obj{nullptr}, func{nullptr} {} //TODO: need way to create internally without adding null-state (even possible?)
+
+		template<typename Type>
+		sequence_(std::in_place_type_t<Type>) { //TODO: general concept to construct with parameters
+			static_assert(std::is_nothrow_destructible_v<Type>);
+
+			obj = new Type{};
+			func = [](void * ctx, int op, void ** args) {
 				switch(op) {
-					case operation::dtor: delete reinterpret_cast<Type *>(ctx); break;
-					case operation::calculate_0: *reinterpret_cast<::cwc::uint64 *>(args[1]) = (*reinterpret_cast<const Type *>(ctx))->calculate(*reinterpret_cast<const ::cwc::uint8 *>(args[0])); break;
-					case operation::calculate_1: (*reinterpret_cast<const Type *>(ctx))->calculate(*reinterpret_cast<const ::cwc::uint8 *>(args[0]), *reinterpret_cast<const ::cwc::uint8 *>(args[1]), *reinterpret_cast<const ::cwc::sample::fibonacci::handler *>(args[2])); break;
+					case 0: delete reinterpret_cast<Type *>(ctx); break;
+					case 1: *reinterpret_cast<::cwc::uint64 *>(args[1]) = reinterpret_cast<const Type *>(ctx)->calculate(*reinterpret_cast<const ::cwc::uint8 *>(args[0])); break;
+					//default: unreachable(); break;
 				}
 			};
 		}
@@ -43,77 +40,13 @@ namespace cwc::sample::fibonacci {
 			return *this;
 		}
 
-		~sequence_() noexcept { invoke(operation::dtor); }
+		~sequence_() noexcept { if(obj) func(obj, 0, nullptr); }
 
 		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 { //TODO: exception handling
 			::cwc::uint64 result;
 			void * args[]{(void *)&no, &result};
-			invoke(operation::calculate_0, args);
+			func(obj, 1, args);
 			return result;
 		}
-
-		void calculate(const ::cwc::uint8 & first, const ::cwc::uint8 & last, const ::cwc::sample::fibonacci::handler & callback) const {
-			void * args[]{(void *)&first, (void *)&last, (void *)std::addressof(callback)};
-			invoke(operation::calculate_1, args);
-		}
 	};
-
-	class sequence : public ::cwc::component {
-		virtual
-		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;
-		virtual
-		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::uint8 * first, const ::cwc::uint8 * last, const ::cwc::sample::fibonacci::handler * callback) const noexcept -> const ::cwc::internal::error * =0;
-	public:
-		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 {
-			::cwc::uint64 cwc_ret;
-			::cwc::internal::call(*this, &sequence::cwc$sample$fibonacci$sequence$calculate$0, no, cwc_ret);
-			return cwc_ret;
-		}
-		void calculate(const ::cwc::uint8 & first, const ::cwc::uint8 & last, const ::cwc::sample::fibonacci::handler & callback) const {
-			::cwc::internal::call(*this, &sequence::cwc$sample$fibonacci$sequence$calculate$1, first, last, callback);
-		}
-	};
-
-	struct generator : ::cwc::sample::fibonacci::sequence {
-		static
-		auto cwc_fqn() -> ::cwc::string_ref { return "cwc::sample::fibonacci::generator"; }
-		using cwc_interfaces = ::cwc::internal::make_base_list_t<::cwc::sample::fibonacci::sequence>;
-
-		class cwc_factory : public ::cwc::component {
-			virtual
-			auto CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept -> const ::cwc::internal::error * =0;
-		public:
-			auto create() const -> ::cwc::intrusive_ptr<::cwc::component> {
-				::cwc::intrusive_ptr<::cwc::component> cwc_ret;
-				::cwc::internal::call(*this, &cwc_factory::cwc$sample$fibonacci$generator$cwc_factory$create$0, cwc_ret);
-				return cwc_ret;
-			}
-		};
-	};
-}
-
-
-//ATTENTION: don't modify the following code, it contains necessary metadata for CWC
-namespace cwc::internal {
-	template<>
-	struct interface_id<::cwc::sample::fibonacci::sequence> final : uuid_constant<0x55, 0x9, 0x67, 0x3D, 0x71, 0x7, 0x51, 0xC5, 0x97, 0xAA, 0x1F, 0xE8, 0xA8, 0x2A, 0x1A, 0x6> {};
-
-	template<typename Implementation, typename TypeList>
-	class vtable_implementation<cwc::sample::fibonacci::sequence, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
-		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$0(const ::cwc::uint8 * no, ::cwc::uint64 * cwc_ret) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).calculate(*no); }); }
-		auto CWC_CALL cwc$sample$fibonacci$sequence$calculate$1(const ::cwc::uint8 * first, const ::cwc::uint8 * last, const ::cwc::sample::fibonacci::handler * callback) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { static_cast<const Implementation &>(*this).calculate(*first, *last, *callback); }); }
-		//detect missing methods:
-		void calculate();
-	};
-
-	template<>
-	struct interface_id<::cwc::sample::fibonacci::generator::cwc_factory> final : uuid_constant<0x12, 0xEC, 0x4A, 0x37, 0x93, 0xBB, 0x54, 0x62, 0x81, 0x3E, 0xFA, 0xF0, 0x48, 0xD3, 0x64, 0x59> {};
-
-	template<typename Implementation, typename TypeList>
-	class vtable_implementation<cwc::sample::fibonacci::generator::cwc_factory, Implementation, TypeList> : public ::cwc::internal::default_implementation_chaining<Implementation, TypeList> {
-		auto CWC_CALL cwc$sample$fibonacci$generator$cwc_factory$create$0(::cwc::intrusive_ptr<::cwc::component> * cwc_ret) const noexcept -> const ::cwc::internal::error * final { return ::cwc::internal::call_and_return_error([&] { *cwc_ret = static_cast<const Implementation &>(*this).create(); }); }
-		//detect missing methods:
-		void create();
-	};
-
 }

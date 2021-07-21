@@ -44,18 +44,3 @@ namespace cwc {
 
 #include "public/types.hpp"
 
-#include "internal/traits.hpp"
-#include "internal/type_list.hpp"
-#include "internal/error_code.hpp"
-
-#include "public/intrusive_ptr.hpp"
-
-#include "internal/make_base_list.hpp"
-#include "internal/call.hpp"
-#include "internal/default_implementation_chaining.hpp"
-#include "internal/cast_to_interface.hpp"
-
-#include "public/delegate.hpp"
-#include "public/component.hpp"
-#include "public/context.hpp"
-#include "public/default_implementations.hpp"

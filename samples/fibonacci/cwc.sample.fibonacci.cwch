@@ -11,17 +11,29 @@ namespace cwc::internal {
 	auto addressof(T && arg) noexcept -> void * {
 		return const_cast<void *>(reinterpret_cast<const void *>(std::addressof(std::forward<T>(arg))));
 	}
+
+	using dispatch_t = void(*)(void *, int, void **); //TODO: always the same
 }
 
 namespace cwc::sample::fibonacci {
 	class sequence final {
-		void * obj;
-		using dispatch_t = void(*)(void *, int, void **); //TODO: always the same
-		dispatch_t func;
-
 		static
 		constexpr
 		const char * dll{"sample-fibonacci"}; //binding to respective DLL
+
+		static
+		auto load_vtable() -> cwc::internal::dispatch_t {
+			//TODO: code for loading DLLs belongs into CWC as core service
+			using namespace std::string_literals;
+			const auto lib = LoadLibrary((dll + ".dll"s).c_str());
+			return reinterpret_cast<void(*)(void *, int, void **)>(GetProcAddress(lib, "cwc_dispatch_fibonacci"));
+		}
+
+		inline
+		static
+		cwc::internal::dispatch_t cwc_vptr = load_vtable(); //TODO: use Schwarz Counter for static init
+
+		void * obj;
 
 		template<typename... Args>
 		void cwc_ctor(int ctor, Args &&... args) {
@@ -29,14 +41,14 @@ namespace cwc::sample::fibonacci {
 			using namespace std::string_literals;
 			const auto lib = LoadLibrary((dll + ".dll"s).c_str());
 			
-			const auto init = reinterpret_cast<void(*)(void **, dispatch_t *, int, void **)>(GetProcAddress(lib, "cwc_create_fibonacci"));
+			const auto init = reinterpret_cast<void(*)(void **, int, void **)>(GetProcAddress(lib, "cwc_create_fibonacci"));
 			void * tmp[]{cwc::internal::addressof(args)..., nullptr};
-			init(&obj, &func, ctor, tmp);
+			init(&obj, ctor, tmp);
 		}
 
 		void cwc_invoke(int op, void ** args) const {
 			//TODO: exception handling
-			func(obj, op, args);
+			cwc_vptr(obj, op, args);
 		}
 	public:
 		//TODO: empty state / aka moved-from state / partially-formed state after move
@@ -45,14 +57,10 @@ namespace cwc::sample::fibonacci {
 		sequence(const int & dummy) { cwc_ctor(1, dummy); }
 
 		sequence(const sequence &) =delete;
-		sequence(sequence && other) noexcept {
-			std::swap(obj, other.obj);
-			std::swap(func, other.func);
-		}
+		sequence(sequence && other) noexcept : obj{std::exchange(other.obj, nullptr)} {}
 		auto operator=(const sequence &) -> sequence & =delete;
 		auto operator=(sequence && other) noexcept -> sequence & {
 			std::swap(obj, other.obj);
-			std::swap(func, other.func);
 			return *this;
 		}
 

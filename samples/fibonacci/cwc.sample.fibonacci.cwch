@@ -12,22 +12,32 @@ namespace cwc::internal {
 		return const_cast<void *>(reinterpret_cast<const void *>(std::addressof(std::forward<T>(arg))));
 	}
 
-	struct dll final { //TODO: is this safe or isn't it forbidden to load a dll whilst beeing inside DllMain...
+	[[noreturn]]
+	inline
+	void unreachable() noexcept { std::terminate(); }
+
+	class dll final { //TODO: is this safe or isn't it forbidden to load a dll whilst beeing inside DllMain...
+		using vptr_t = void(*)(void *, int, void **) noexcept;
+		using ctor_t = void(*)(void **, int, void **) noexcept;
+	public:
 		dll(const char * file) { //TODO: pass class name
 			//TODO: code for loading DLLs belongs into CWC as core service
 			using namespace std::string_literals;
 			lib = LoadLibrary((file + ".dll"s).c_str());
 			assert(lib);
-			vptr = reinterpret_cast<void(*)(void *, int, void **)>(GetProcAddress(lib, "cwc_dispatch_fibonacci"));
-			assert(vptr);
-			ctor = reinterpret_cast<void(*)(void **, int, void **)>(GetProcAddress(lib, "cwc_create_fibonacci"));
+			ctor = reinterpret_cast<ctor_t>(GetProcAddress(lib, "cwc_create_fibonacci"));
 			assert(ctor);
+			vptr = reinterpret_cast<vptr_t>(GetProcAddress(lib, "cwc_dispatch_fibonacci"));
+			assert(vptr);
 		}
+
+		dll(const dll &) =delete;
+		auto operator=(const dll &) -> dll & =delete;
 
 		~dll() { FreeLibrary(lib); }
 
-		void(*vptr)(void *, int, void **);
-		void(*ctor)(void **, int, void **);
+		vptr_t vptr;
+		ctor_t ctor;
 	private:
 		HMODULE lib;
 	};

@@ -12,43 +12,44 @@ namespace cwc::internal {
 		return const_cast<void *>(reinterpret_cast<const void *>(std::addressof(std::forward<T>(arg))));
 	}
 
-	using dispatch_t = void(*)(void *, int, void **); //TODO: always the same
+	struct dll final { //TODO: is this safe or isn't it forbidden to load a dll whilst beeing inside DllMain...
+		dll(const char * file) { //TODO: pass class name
+			//TODO: code for loading DLLs belongs into CWC as core service
+			using namespace std::string_literals;
+			lib = LoadLibrary((file + ".dll"s).c_str());
+			assert(lib);
+			vptr = reinterpret_cast<void(*)(void *, int, void **)>(GetProcAddress(lib, "cwc_dispatch_fibonacci"));
+			assert(vptr);
+			ctor = reinterpret_cast<void(*)(void **, int, void **)>(GetProcAddress(lib, "cwc_create_fibonacci"));
+			assert(ctor);
+		}
+
+		~dll() { FreeLibrary(lib); }
+
+		void(*vptr)(void *, int, void **);
+		void(*ctor)(void **, int, void **);
+	private:
+		HMODULE lib;
+	};
 }
 
 namespace cwc::sample::fibonacci {
 	class sequence final {
-		static
-		constexpr
-		const char * dll{"sample-fibonacci"}; //binding to respective DLL
-
-		static
-		auto load_vtable() -> cwc::internal::dispatch_t {
-			//TODO: code for loading DLLs belongs into CWC as core service
-			using namespace std::string_literals;
-			const auto lib = LoadLibrary((dll + ".dll"s).c_str());
-			return reinterpret_cast<void(*)(void *, int, void **)>(GetProcAddress(lib, "cwc_dispatch_fibonacci"));
-		}
-
 		inline
 		static
-		cwc::internal::dispatch_t cwc_vptr = load_vtable(); //TODO: use Schwarz Counter for static init
+		cwc::internal::dll context{"sample-fibonacci"};
 
 		void * obj;
 
 		template<typename... Args>
 		void cwc_ctor(int ctor, Args &&... args) {
-			//TODO: code for loading DLLs belongs into CWC as core service
-			using namespace std::string_literals;
-			const auto lib = LoadLibrary((dll + ".dll"s).c_str());
-			
-			const auto init = reinterpret_cast<void(*)(void **, int, void **)>(GetProcAddress(lib, "cwc_create_fibonacci"));
 			void * tmp[]{cwc::internal::addressof(args)..., nullptr};
-			init(&obj, ctor, tmp);
+			context.ctor(&obj, ctor, tmp);
 		}
 
 		void cwc_invoke(int op, void ** args) const {
 			//TODO: exception handling
-			cwc_vptr(obj, op, args);
+			context.vptr(obj, op, args);
 		}
 	public:
 		//TODO: empty state / aka moved-from state / partially-formed state after move

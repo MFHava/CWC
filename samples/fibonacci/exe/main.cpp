@@ -9,7 +9,7 @@
 #include "../cwc.sample.fibonacci.cwch"
 
 int main() {
-	cwc::sample::fibonacci::sequence_ s{1};
+	cwc::sample::fibonacci::sequence s{1};
 
 	std::cout << "\n\n\n";
 

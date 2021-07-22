@@ -5,8 +5,16 @@
 
 #include <Windows.h>
 
+namespace cwc::internal {
+	template<typename T>
+	constexpr
+	auto addressof(T && arg) noexcept -> void * {
+		return const_cast<void *>(reinterpret_cast<const void *>(std::addressof(std::forward<T>(arg))));
+	}
+}
+
 namespace cwc::sample::fibonacci {
-	class sequence_ final {
+	class sequence final {
 		void * obj;
 		using dispatch_t = void(*)(void *, int, void **); //TODO: always the same
 		dispatch_t func;
@@ -22,7 +30,7 @@ namespace cwc::sample::fibonacci {
 			const auto lib = LoadLibrary((dll + ".dll"s).c_str());
 			
 			const auto init = reinterpret_cast<void(*)(void **, dispatch_t *, int, void **)>(GetProcAddress(lib, "cwc_create_fibonacci"));
-			void * tmp[]{std::addressof(args)..., nullptr};
+			void * tmp[]{cwc::internal::addressof(args)..., nullptr};
 			init(&obj, &func, ctor, tmp);
 		}
 
@@ -33,26 +41,26 @@ namespace cwc::sample::fibonacci {
 	public:
 		//TODO: empty state / aka moved-from state / partially-formed state after move
 
-		sequence_() { cwc_ctor(0); }
-		sequence_(const int & dummy) { cwc_ctor(1, dummy); }
+		sequence() { cwc_ctor(0); }
+		sequence(const int & dummy) { cwc_ctor(1, dummy); }
 
-		sequence_(const sequence_ &) =delete;
-		sequence_(sequence_ && other) noexcept {
+		sequence(const sequence &) =delete;
+		sequence(sequence && other) noexcept {
 			std::swap(obj, other.obj);
 			std::swap(func, other.func);
 		}
-		auto operator=(const sequence_ &) -> sequence_ & =delete;
-		auto operator=(sequence_ && other) noexcept -> sequence_ & {
+		auto operator=(const sequence &) -> sequence & =delete;
+		auto operator=(sequence && other) noexcept -> sequence & {
 			std::swap(obj, other.obj);
 			std::swap(func, other.func);
 			return *this;
 		}
 
-		~sequence_() noexcept { cwc_invoke(0, nullptr); }
+		~sequence() noexcept { cwc_invoke(0, nullptr); }
 
 		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 { //TODO: exception handling
 			::cwc::uint64 result;
-			void * args[]{(void *)&no, &result};
+			void * args[]{cwc::internal::addressof(no), cwc::internal::addressof(result)};
 			cwc_invoke(1, args);
 			return result;
 		}

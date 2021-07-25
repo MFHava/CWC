@@ -48,21 +48,23 @@ namespace cwc::sample::fibonacci {
 
 		void * obj;
 
-		void cwc_invoke(int op, void ** args) const {
-			//TODO: exception handling
-			context.vptr()(op, args);
+		template<typename... Args>
+		void cwc_invoke(int op, Args &&... args) const {
+			int error{}; //TODO: error handler
+
+			void * tmp[]{&error, args...};
+			context.vptr()(op, tmp);
+
+			if(error) {
+				//TODO: evaluate error handler
+				throw std::runtime_error{"exception happened"};
+			}
 		}
 	public:
 		//TODO: empty state / aka moved-from state / partially-formed state after move
 
-		sequence() {
-			void * args[]{&obj};
-			cwc_invoke(0, args);
-		}
-		sequence(const int & dummy) {
-			void * args[]{&obj, cwc::internal::addressof(dummy)};
-			cwc_invoke(1, args);
-		}
+		sequence() { cwc_invoke(0, &obj); }
+		sequence(const int & dummy) { cwc_invoke(1, &obj, cwc::internal::addressof(dummy)); }
 
 		sequence(const sequence &) =delete;
 		sequence(sequence && other) noexcept : obj{std::exchange(other.obj, nullptr)} {}
@@ -72,15 +74,11 @@ namespace cwc::sample::fibonacci {
 			return *this;
 		}
 
-		~sequence() noexcept {
-			void * args[]{obj};
-			cwc_invoke(2, args);
-		}
+		~sequence() noexcept { cwc_invoke(2, obj); }
 
-		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 { //TODO: exception handling
+		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 {
 			::cwc::uint64 result;
-			void * args[]{obj, cwc::internal::addressof(no), cwc::internal::addressof(result)};
-			cwc_invoke(3, args);
+			cwc_invoke(3, obj, cwc::internal::addressof(no), cwc::internal::addressof(result));
 			return result;
 		}
 	};

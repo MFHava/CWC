@@ -16,4 +16,10 @@ int main() {
 	for(cwc::uint8 i{0}; i < 94; ++i) std::cout << "fibonacci(" << std::setw(2) << static_cast<int>(i) << ") = " << std::right << std::setw(20) << s.calculate(i) << '\n';
 
 	std::cout << "\n\n\n";
+
+	try {
+		s.calculate(94);
+	} catch(const std::exception & exc) {
+		std::cout << "ERROR: " << exc.what() << "\n";
+	}
 }

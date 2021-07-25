@@ -20,15 +20,15 @@ namespace cwc::internal {
 		using vptr_t = void(*)(void *, int, void **) noexcept;
 		using ctor_t = void(*)(void **, int, void **) noexcept;
 	public:
-		dll(const char * file) { //TODO: pass class name
+		dll(const char * dll, const char * class_) {
 			//TODO: code for loading DLLs belongs into CWC as core service
 			using namespace std::string_literals;
-			lib = LoadLibrary((file + ".dll"s).c_str());
+			lib = LoadLibrary((dll + ".dll"s).c_str());
 			assert(lib);
-			ctor = reinterpret_cast<ctor_t>(GetProcAddress(lib, "cwc_create_fibonacci"));
-			assert(ctor);
-			vptr = reinterpret_cast<vptr_t>(GetProcAddress(lib, "cwc_dispatch_fibonacci"));
-			assert(vptr);
+			ctor_ = reinterpret_cast<ctor_t>(GetProcAddress(lib, ("cwc_ctor_"s + class_).c_str()));
+			assert(ctor_);
+			vptr_ = reinterpret_cast<vptr_t>(GetProcAddress(lib, ("cwc_vptr_"s + class_).c_str()));
+			assert(vptr_);
 		}
 
 		dll(const dll &) =delete;
@@ -36,9 +36,11 @@ namespace cwc::internal {
 
 		~dll() { FreeLibrary(lib); }
 
-		vptr_t vptr;
-		ctor_t ctor;
+		auto vptr() const noexcept { return vptr_; }
+		auto ctor() const noexcept { return ctor_; }
 	private:
+		vptr_t vptr_;
+		ctor_t ctor_;
 		HMODULE lib;
 	};
 }
@@ -47,19 +49,19 @@ namespace cwc::sample::fibonacci {
 	class sequence final {
 		inline
 		static
-		cwc::internal::dll context{"sample-fibonacci"};
+		cwc::internal::dll context{"sample-fibonacci", "cwc_sample_fibonacci_sequence"};
 
 		void * obj;
 
 		template<typename... Args>
 		void cwc_ctor(int ctor, Args &&... args) {
 			void * tmp[]{cwc::internal::addressof(args)..., nullptr};
-			context.ctor(&obj, ctor, tmp);
+			context.ctor()(&obj, ctor, tmp);
 		}
 
 		void cwc_invoke(int op, void ** args) const {
 			//TODO: exception handling
-			context.vptr(obj, op, args);
+			context.vptr()(obj, op, args);
 		}
 	public:
 		//TODO: empty state / aka moved-from state / partially-formed state after move

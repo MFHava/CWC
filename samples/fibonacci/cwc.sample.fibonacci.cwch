@@ -17,15 +17,15 @@ namespace cwc::internal {
 	void unreachable() noexcept { std::terminate(); }
 
 	class dll final { //TODO: is this safe or isn't it forbidden to load a dll whilst beeing inside DllMain...
-		using vptr_t = void(*)(int, void **) noexcept;
+		using vptr_t = void(*)(unsigned, void **) noexcept;
 	public:
 		dll(const char * dll, const char * class_) {
 			//TODO: code for loading DLLs belongs into CWC as core service
 			using namespace std::string_literals;
 			lib = LoadLibrary((dll + ".dll"s).c_str());
 			assert(lib);
-			vptr_ = reinterpret_cast<vptr_t>(GetProcAddress(lib, class_));
-			assert(vptr_);
+			vptr = reinterpret_cast<vptr_t>(GetProcAddress(lib, class_));
+			assert(vptr);
 		}
 
 		dll(const dll &) =delete;
@@ -33,38 +33,35 @@ namespace cwc::internal {
 
 		~dll() { FreeLibrary(lib); }
 
-		auto vptr() const noexcept { return vptr_; }
-	private:
-		vptr_t vptr_;
-		HMODULE lib;
-	};
-}
-
-namespace cwc::sample::fibonacci {
-	class sequence final {
-		inline
-		static
-		cwc::internal::dll context{"sample-fibonacci", "cwc_sample_fibonacci_sequence"};
-
-		void * obj;
-
 		template<typename... Args>
-		void cwc_invoke(int op, Args &&... args) const {
+		void operator()(unsigned op, Args &&... args) const {
 			int error{}; //TODO: error handler
 
 			void * tmp[]{&error, args...};
-			context.vptr()(op, tmp);
+			invoke(error, op, tmp);
+		}
+	private:
+		void invoke(const int & error, unsigned op, void * args[]) const { //TODO: move to lib
+			vptr(op, args);
 
 			if(error) {
 				//TODO: evaluate error handler
 				throw std::runtime_error{"exception happened"};
 			}
 		}
-	public:
+
+		vptr_t vptr;
+		HMODULE lib;
+	};
+}
+
+namespace cwc::sample::fibonacci {
+	struct sequence final {
+		struct impl;
 		//TODO: empty state / aka moved-from state / partially-formed state after move
 
-		sequence() { cwc_invoke(0, &obj); }
-		sequence(const int & dummy) { cwc_invoke(1, &obj, cwc::internal::addressof(dummy)); }
+		sequence() { cwc_dll(0, &obj); }
+		sequence(const int & dummy) { cwc_dll(1, &obj, cwc::internal::addressof(dummy)); }
 
 		sequence(const sequence &) =delete;
 		sequence(sequence && other) noexcept : obj{std::exchange(other.obj, nullptr)} {}
@@ -74,12 +71,18 @@ namespace cwc::sample::fibonacci {
 			return *this;
 		}
 
-		~sequence() noexcept { cwc_invoke(2, obj); }
+		~sequence() noexcept { cwc_dll(2, obj); }
 
 		auto calculate(const ::cwc::uint8 & no) const -> ::cwc::uint64 {
 			::cwc::uint64 result;
-			cwc_invoke(3, obj, cwc::internal::addressof(no), cwc::internal::addressof(result));
+			cwc_dll(3, obj, cwc::internal::addressof(no), cwc::internal::addressof(result));
 			return result;
 		}
+	private:
+		inline
+		static
+		cwc::internal::dll cwc_dll{"sample-fibonacci", "cwc_sample_fibonacci_sequence"};
+
+		impl * obj;
 	};
 }

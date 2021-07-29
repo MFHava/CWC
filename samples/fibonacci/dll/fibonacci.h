@@ -7,12 +7,12 @@
 #pragma once
 #include "../cwc.sample.fibonacci.cwch"
 
-namespace sample {
-	struct fibonacci {
-		fibonacci() noexcept { printf("%s()\n", __func__); }
-		fibonacci(int) noexcept { printf("%s(int)\n", __func__); }
+namespace cwc::sample::fibonacci {
+	struct sequence::impl {
+		impl() noexcept { printf("%s()\n", __func__); }
+		impl(int) noexcept { printf("%s(int)\n", __func__); }
 
-		~fibonacci() noexcept { printf("%s()\n", __func__); }
+		~impl() noexcept { printf("%s()\n", __func__); }
 
 		auto calculate(::cwc::uint8 no) const -> ::cwc::uint64;
 	};

@@ -4,7 +4,6 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include <cwc/cwc.hpp>
 #include <string>
 #include <stdexcept>
 #include <algorithm>
@@ -96,9 +95,11 @@
 	#error unknown operating system
 #endif
 
+#include <cwc/cwc.hpp>
+
 namespace cwc::internal {
 	class dll::impl final {
-		using vptr_t = void(CWC_CALL *)(int, void **) noexcept;
+		using vptr_t = error_callback(CWC_CALL *)(int, void **) noexcept;
 
 		vptr_t vptr;
 		handle lib;
@@ -122,17 +123,7 @@ namespace cwc::internal {
 		auto operator=(const impl &) -> impl & =delete;
 		~impl() noexcept { FreeLibrary(lib); }
 
-		void invoke(int op, void * args[]) const {
-			int error{}; //TODO: use correct type for error handler
-			args[0] = &error;
-
-			vptr(op, args);
-
-			if(error) {
-				//TODO: evaluate error handler
-				throw std::runtime_error{"exception happened"};
-			}
-		}
+		void invoke(int op, void * args[]) const { rethrow_last_error(vptr(op, args)); }
 	};
 
 	void dll::invoke(int op, void * args[]) const { self->invoke(op, args); }

@@ -48,8 +48,16 @@ namespace cwc::internal {
 		template<typename... Args>
 		//TODO: [C++20] requires(std::is_pointer_v<std::decay_t<Args>> &&...)
 		void operator()(int op, Args &&... args) const {
-			void * tmp[]{nullptr, args...};
+			void * tmp[]{args...};
 			invoke(op, tmp);
 		}
 	};
+
+	enum class error_selector : std::uint32_t;
+
+	using error_callback = const void * (CWC_CALL *)(error_selector) noexcept;
+
+	auto store_last_error() noexcept -> error_callback;
+
+	void rethrow_last_error(error_callback callback);
 }

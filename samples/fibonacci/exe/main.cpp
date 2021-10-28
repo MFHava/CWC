@@ -20,6 +20,6 @@ int main() {
 	try {
 		s.calculate(94);
 	} catch(const std::exception & exc) {
-		std::cout << "ERROR: " << exc.what() << "\n";
+		std::cout << "ERROR(" << typeid(exc).name() << "): " << exc.what() << "\n";
 	}
 }

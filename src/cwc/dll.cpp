@@ -98,13 +98,10 @@
 #include <cwc/cwc.hpp>
 
 namespace cwc::internal {
-	class dll::impl final {
-		using vptr_t = error_callback(CWC_CALL *)(int, void **) noexcept;
-
-		vptr_t vptr;
+	struct dll::native_handle final {
 		handle lib;
-	public:
-		impl(const char * dll, const char * class_) {
+
+		native_handle(const char * dll) {
 			auto fullpath{executable_name()};
 			if(const auto it{std::find(std::rbegin(fullpath), std::rend(fullpath), std::filesystem::path::preferred_separator)}; it != std::rend(fullpath)) fullpath.erase(it.base(), std::end(fullpath));
 			fullpath += dll_prefix;
@@ -112,23 +109,18 @@ namespace cwc::internal {
 			fullpath += dll_suffix;
 			lib = LoadLibrary(fullpath.c_str());
 			if(!lib) throw std::runtime_error{"could not load library"};
-			vptr = reinterpret_cast<vptr_t>(GetProcAddress(lib, class_));
-			if(!vptr) {
-				FreeLibrary(lib);
-				throw std::runtime_error{"could not find entry point"};
-			}
 		}
 
-		impl(const impl &) =delete;
-		auto operator=(const impl &) -> impl & =delete;
-		~impl() noexcept { FreeLibrary(lib); }
+		native_handle(const native_handle &) =delete;
+		auto operator=(const native_handle &) -> native_handle & =delete;
 
-		void invoke(int op, void * args[]) const { rethrow_last_error(vptr(op, args)); }
+		~native_handle() noexcept { FreeLibrary(lib); }
 	};
 
-	void dll::invoke(int op, void * args[]) const { self->invoke(op, args); }
-
-	dll::dll(const char * dll, const char * class_) : self{std::make_unique<impl>(dll, class_)} {}
+	dll::dll(const char * dll, const char * class_) : ref{std::make_unique<const native_handle>(dll)} {
+		vptr = reinterpret_cast<vptr_t>(GetProcAddress(ref->lib, class_));
+		if(!vptr) throw std::runtime_error{"could not find entry point"};
+	}
 
 	dll::~dll() noexcept =default;
 }

@@ -27,6 +27,7 @@
 #endif
 
 #include <memory>
+#include <cstdint>
 
 namespace cwc::internal {
 	template<typename T>
@@ -36,22 +37,6 @@ namespace cwc::internal {
 	[[noreturn]]
 	void unreachable() noexcept; //TODO: [C++23] use stacktrace to report error with trace
 
-	class dll final {
-		class impl;
-		std::unique_ptr<impl> self;
-
-		void invoke(int op, void * args[]) const;
-	public:
-		dll(const char * dll, const char * class_);
-		~dll() noexcept;
-
-		template<typename... Args>
-		//TODO: [C++20] requires(std::is_pointer_v<std::decay_t<Args>> &&...)
-		void operator()(int op, Args &&... args) const {
-			void * tmp[]{args...};
-			invoke(op, tmp);
-		}
-	};
 
 	enum class error_selector : std::uint32_t;
 
@@ -60,4 +45,23 @@ namespace cwc::internal {
 	auto store_last_error() noexcept -> error_callback;
 
 	void rethrow_last_error(error_callback callback);
+
+
+	class dll final { //TODO: name is not ideal as this not just a reference to the DLL but also to the respective entry-point...
+		struct native_handle;
+		const std::unique_ptr<const native_handle> ref;
+
+		using vptr_t = error_callback(CWC_CALL *)(int, void **) noexcept;
+		vptr_t vptr;
+	public:
+		dll(const char * dll, const char * class_);
+		~dll() noexcept;
+
+		template<typename... Args>
+		//TODO: [C++20] requires(std::is_pointer_v<std::decay_t<Args>> &&...)
+		void operator()(int op, Args &&... args) const {
+			void * tmp[]{args...};
+			rethrow_last_error(vptr(op, tmp));
+		}
+	};
 }

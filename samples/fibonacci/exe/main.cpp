@@ -22,7 +22,4 @@ int main() {
 	} catch(const std::exception & exc) {
 		std::cout << "ERROR: " << exc.what() << "\n";
 	}
-
-	std::cout << "ranged:\n";
-	s.calculate(10, 20, [](std::uint64_t res) noexcept { std::cout << "  " << res << "\n"; });
 }

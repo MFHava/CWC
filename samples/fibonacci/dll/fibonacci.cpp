@@ -18,12 +18,6 @@ namespace cwc::sample::fibonacci {
 		}
 		return a;
 	}
-
-	void sequence::impl::calculate(std::uint8_t first, std::uint8_t last, ptl::function_ref<void(std::uint64_t) noexcept> callback) const {
-		if(last < first) throw std::invalid_argument{"last < first"};
-
-		for(; first != last; ++first) callback(calculate(first));
-	}
 }
 
 CWC_EXPORT_cwc_sample_fibonacci_sequence

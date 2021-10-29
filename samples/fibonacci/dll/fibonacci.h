@@ -8,11 +8,11 @@
 #include "../cwc.sample.fibonacci.cwch"
 
 namespace cwc::sample::fibonacci {
-	struct sequence::impl {
-		impl() noexcept { printf("%s()\n", __func__); }
-		impl(int) noexcept { printf("%s(int)\n", __func__); }
+	struct sequence::cwc_impl {
+		cwc_impl() noexcept { printf("%s()\n", __func__); }
+		cwc_impl(int) noexcept { printf("%s(int)\n", __func__); }
 
-		~impl() noexcept { printf("%s()\n", __func__); }
+		~cwc_impl() noexcept { printf("%s()\n", __func__); }
 
 		auto calculate(std::uint8_t no) const -> std::uint64_t;
 	};

@@ -39,7 +39,7 @@ extern "C" CWC_EXPORT cwc::internal::error_callback CWC_CALL cwc$sample$fibonacc
 		switch(op) {\
 			case -1: *reinterpret_cast<void **>(args[0]) = new cwc::sample::fibonacci::sequence::cwc_impl; break;\
 			case -2: *reinterpret_cast<void **>(args[0]) = new cwc::sample::fibonacci::sequence::cwc_impl{*reinterpret_cast<int *>(args[1])}; break;\
-			case 0: delete reinterpret_cast<cwc::sample::fibonacci::sequence::cwc_impl *>(args[0]); break;\
+			case  0: delete reinterpret_cast<cwc::sample::fibonacci::sequence::cwc_impl *>(args[0]); break;\
 			case +1: *reinterpret_cast<std::uint64_t *>(args[2]) = reinterpret_cast<const cwc::sample::fibonacci::sequence::cwc_impl *>(args[0])->calculate(*reinterpret_cast<const std::uint8_t *>(args[1])); break;\
 			default: cwc::internal::unreachable(); /*TODO: include some type of crash information*/\
 		}\

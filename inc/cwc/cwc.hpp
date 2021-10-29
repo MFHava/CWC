@@ -51,7 +51,7 @@ namespace cwc::internal {
 		struct native_handle;
 		const std::unique_ptr<const native_handle> ref;
 
-		using vptr_t = error_callback(CWC_CALL *)(int, void **) noexcept;
+		using vptr_t = error_callback (CWC_CALL *)(int, void *[]) noexcept;
 		vptr_t vptr;
 	public:
 		dll(const char * dll, const char * class_);

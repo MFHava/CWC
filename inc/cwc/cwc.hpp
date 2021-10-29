@@ -44,7 +44,7 @@ namespace cwc::internal {
 
 	auto store_last_error() noexcept -> error_callback;
 
-	void rethrow_last_error(error_callback callback);
+	void rethrow_last_error(error_callback callback); //TODO: [C++??] precondition(callback);
 
 
 	class dll final { //TODO: name is not ideal as this not just a reference to the DLL but also to the respective entry-point...
@@ -61,7 +61,7 @@ namespace cwc::internal {
 		//TODO: [C++20] requires(std::is_pointer_v<std::decay_t<Args>> &&...)
 		void operator()(int op, Args &&... args) const {
 			void * tmp[]{args...};
-			rethrow_last_error(vptr(op, tmp));
+			if(const auto error{vptr(op, tmp)}) rethrow_last_error(error);
 		}
 	};
 }

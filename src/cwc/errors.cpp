@@ -97,7 +97,7 @@ namespace cwc::internal {
 	};
 
 	void rethrow_last_error(error_callback callback) {
-		if(!callback) return;
+		assert(callback);
 
 		const auto type{reinterpret_cast<const error_code *>(callback(error_selector::type))};
 		assert(type);
@@ -323,39 +323,34 @@ namespace cwc::internal {
 	}
 
 	auto store_last_error() noexcept -> error_callback {//lippincott function
-		if(std::current_exception() == std::exception_ptr{}) {
-			last_error.exc = std::monostate{};
-			last_error.func = nullptr;
-		} else {
-			try { throw; }
-				catch(const std::bad_optional_access & exc) { store_error(exc); }
-				catch(const std::bad_variant_access & exc) { store_error(exc); }
-				catch(const std::bad_function_call & exc) { store_error(exc); }
-				catch(const std::bad_weak_ptr & exc) { store_error(exc); }
-				catch(const std::bad_exception & exc) { store_error(exc); }
-					catch(const std::bad_array_new_length & exc) { store_error(exc); }
-				catch(const std::bad_alloc & exc) { store_error(exc); }
-					catch(const std::bad_any_cast & exc) { store_error(exc); }
-				catch(const std::bad_cast & exc) { store_error(exc); }
-				catch(const std::bad_typeid & exc) { store_error(exc); }
-						catch(const std::filesystem::filesystem_error & exc) { store_error(exc); }
-						catch(const std::ios_base::failure & exc) { store_error(exc); }
-					catch(const std::system_error & exc) { store_error(exc); }
-					catch(const std::regex_error & exc) { store_error(exc); }
-					catch(const std::underflow_error & exc) { store_error(exc); }
-					catch(const std::overflow_error & exc) { store_error(exc); }
-					catch(const std::range_error & exc) { store_error(exc); }
-				catch(const std::runtime_error & exc) { store_error(exc); }
-					catch(const std::future_error & exc) { store_error(exc); }
-					catch(const std::out_of_range & exc) { store_error(exc); }
-					catch(const std::length_error & exc) { store_error(exc); }
-					catch(const std::domain_error & exc) { store_error(exc); }
-					catch(const std::invalid_argument & exc) { store_error(exc); }
-				catch(const std::logic_error & exc) { store_error(exc); }
-				catch(const unknown_exception & exc) { store_error(exc); }
-			catch(const std::exception & exc) { store_error(exc); }
-			catch(...) { store_error(unknown_exception{}); }
-		}
+		try { throw; }
+			catch(const std::bad_optional_access & exc) { store_error(exc); }
+			catch(const std::bad_variant_access & exc) { store_error(exc); }
+			catch(const std::bad_function_call & exc) { store_error(exc); }
+			catch(const std::bad_weak_ptr & exc) { store_error(exc); }
+			catch(const std::bad_exception & exc) { store_error(exc); }
+				catch(const std::bad_array_new_length & exc) { store_error(exc); }
+			catch(const std::bad_alloc & exc) { store_error(exc); }
+				catch(const std::bad_any_cast & exc) { store_error(exc); }
+			catch(const std::bad_cast & exc) { store_error(exc); }
+			catch(const std::bad_typeid & exc) { store_error(exc); }
+					catch(const std::filesystem::filesystem_error & exc) { store_error(exc); }
+					catch(const std::ios_base::failure & exc) { store_error(exc); }
+				catch(const std::system_error & exc) { store_error(exc); }
+				catch(const std::regex_error & exc) { store_error(exc); }
+				catch(const std::underflow_error & exc) { store_error(exc); }
+				catch(const std::overflow_error & exc) { store_error(exc); }
+				catch(const std::range_error & exc) { store_error(exc); }
+			catch(const std::runtime_error & exc) { store_error(exc); }
+				catch(const std::future_error & exc) { store_error(exc); }
+				catch(const std::out_of_range & exc) { store_error(exc); }
+				catch(const std::length_error & exc) { store_error(exc); }
+				catch(const std::domain_error & exc) { store_error(exc); }
+				catch(const std::invalid_argument & exc) { store_error(exc); }
+			catch(const std::logic_error & exc) { store_error(exc); }
+			catch(const unknown_exception & exc) { store_error(exc); }
+		catch(const std::exception & exc) { store_error(exc); }
+		catch(...) { store_error(unknown_exception{}); }
 		return last_error.func;
 	}
 }

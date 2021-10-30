@@ -196,7 +196,7 @@ namespace cwc::internal {
 				if(error == std17_bad_optional_access) throw std::bad_optional_access{};
 		}
 
-		unreachable();
+		std::abort(); //unreachable
 	}
 
 	namespace {

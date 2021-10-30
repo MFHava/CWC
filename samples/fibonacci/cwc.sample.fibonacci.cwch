@@ -6,20 +6,26 @@
 namespace cwc::sample::fibonacci {
 	struct sequence final {
 		struct cwc_impl;
+		struct cwc_vtable final {
+			cwc::internal::error_callback(CWC_CALL *ctor0)(cwc_impl **) noexcept;
+			cwc::internal::error_callback(CWC_CALL *ctor1)(const int *, cwc_impl **) noexcept;
+			void (CWC_CALL *dtor)(cwc_impl *) noexcept;
+			cwc::internal::error_callback(CWC_CALL *calculate)(const cwc_impl *, const std::uint8_t *, std::uint64_t *) noexcept;
+		};
 
-		sequence() { cwc_dll()(-1, &cwc_self); }
-		sequence(const int & dummy) { cwc_dll()(-2, &cwc_self, cwc::internal::addressof(dummy)); }
+		sequence() { cwc_dll().call<&cwc_vtable::ctor0>(&cwc_self); }
+		sequence(const int & dummy) { cwc_dll().call<&cwc_vtable::ctor1>(std::addressof(dummy), &cwc_self); }
 
 		sequence(const sequence &) =delete;
 		sequence(sequence && other) noexcept : cwc_self{std::exchange(other.cwc_self, nullptr)} {}
 		auto operator=(const sequence &) -> sequence & =delete;
 		auto operator=(sequence && other) noexcept -> sequence & { std::swap(cwc_self, other.cwc_self); return *this; }
 
-		~sequence() noexcept { cwc_dll()(0, cwc_self); }
+		~sequence() noexcept { cwc_dll().call<&cwc_vtable::dtor>(cwc_self); }
 
 		auto calculate(const std::uint8_t & no) const -> std::uint64_t {
 			std::uint64_t cwc_result;
-			cwc_dll()(+1, cwc_self, cwc::internal::addressof(no), cwc::internal::addressof(cwc_result));
+			cwc_dll().call<&cwc_vtable::calculate>(cwc_self, std::addressof(no), std::addressof(cwc_result));
 			return cwc_result;
 		}
 	private:
@@ -34,17 +40,9 @@ namespace cwc::sample::fibonacci {
 }
 
 #define CWC_EXPORT_cwc_sample_fibonacci_sequence \
-extern "C" CWC_EXPORT cwc::internal::error_callback CWC_CALL cwc$sample$fibonacci$sequence(int op, void * args[]) noexcept {\
-	try {\
-		switch(op) {\
-			case -1: *reinterpret_cast<void **>(args[0]) = new cwc::sample::fibonacci::sequence::cwc_impl; break;\
-			case -2: *reinterpret_cast<void **>(args[0]) = new cwc::sample::fibonacci::sequence::cwc_impl{*reinterpret_cast<int *>(args[1])}; break;\
-			case  0: delete reinterpret_cast<cwc::sample::fibonacci::sequence::cwc_impl *>(args[0]); break;\
-			case +1: *reinterpret_cast<std::uint64_t *>(args[2]) = reinterpret_cast<const cwc::sample::fibonacci::sequence::cwc_impl *>(args[0])->calculate(*reinterpret_cast<const std::uint8_t *>(args[1])); break;\
-			default: cwc::internal::unreachable(); /*TODO: include some type of crash information*/\
-		}\
-		return nullptr;\
-	} catch(...) {\
-		return cwc::internal::store_last_error();\
-	}\
+extern "C" CWC_EXPORT const cwc::sample::fibonacci::sequence::cwc_vtable cwc$sample$fibonacci$sequence{\
+	+[](cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::error_marshalling([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl; }); },\
+	+[](const int * dummy, cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::error_marshalling([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl{*dummy}; }); },\
+	+[](cwc::sample::fibonacci::sequence::cwc_impl * cwc_self) noexcept { delete cwc_self; },\
+	+[](const cwc::sample::fibonacci::sequence::cwc_impl * cwc_self, const std::uint8_t * no, std::uint64_t * cwc_result) noexcept { return cwc::internal::error_marshalling([&] { *cwc_result = cwc_self->calculate(*no); }); }\
 }

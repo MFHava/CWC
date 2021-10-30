@@ -70,7 +70,7 @@
 	#define LoadLibrary(file) std::max(load_add_on(file), image_id{0})
 	#define GetProcAddress(dll, function) [] {\
 		void * result{nullptr};\
-		get_image_symbol(dll, function, B_SYMBOL_TYPE_TEXT, &result);\
+		get_image_symbol(dll, function, B_SYMBOL_TYPE_DATA, &result);\
 		return result;\
 	}()
 	#define FreeLibrary(dll) unload_add_on(dll)
@@ -118,7 +118,7 @@ namespace cwc::internal {
 	};
 
 	dll::dll(const char * dll, const char * class_) : ref{std::make_unique<const native_handle>(dll)} {
-		vptr = reinterpret_cast<vptr_t>(GetProcAddress(ref->lib, class_));
+		vptr = reinterpret_cast<const void *>(GetProcAddress(ref->lib, class_));
 		if(!vptr) throw std::runtime_error{"could not find entry point"};
 	}
 

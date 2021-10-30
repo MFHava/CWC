@@ -46,10 +46,10 @@ namespace cwc::internal {
 
 
 	template<typename>
-	struct member_object_type;
+	struct member_function_pointer_result;
 
 	template<typename Result, typename... Args>
-	struct member_object_type<Result(CWC_CALL *)(Args...) noexcept> {
+	struct member_function_pointer_result<Result(CWC_CALL *)(Args...) noexcept> {
 		using type = Result;
 	};
 
@@ -60,7 +60,7 @@ namespace cwc::internal {
 	template<typename Class, typename T>
 	struct vtable_trait<T Class::*> {
 		using vtable_type = Class;
-		using result_type = typename member_object_type<T>::type;
+		using result_type = typename member_function_pointer_result<T>::type;
 	};
 
 

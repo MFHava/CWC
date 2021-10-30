@@ -7,25 +7,25 @@ namespace cwc::sample::fibonacci {
 	struct sequence final {
 		struct cwc_impl;
 		struct cwc_vtable final {
-			cwc::internal::error_callback(CWC_CALL *ctor0)(cwc_impl **) noexcept;
-			cwc::internal::error_callback(CWC_CALL *ctor1)(const int *, cwc_impl **) noexcept;
-			void (CWC_CALL *dtor)(cwc_impl *) noexcept;
-			cwc::internal::error_callback(CWC_CALL *calculate)(const cwc_impl *, const std::uint8_t *, std::uint64_t *) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_0)(cwc_impl **) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_1)(const int *, cwc_impl **) noexcept;
+			void (CWC_CALL * cwc_2)(cwc_impl *) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_3)(const cwc_impl *, const std::uint8_t *, std::uint64_t *) noexcept;
 		};
 
-		sequence() { cwc_dll().call<&cwc_vtable::ctor0>(&cwc_self); }
-		sequence(const int & dummy) { cwc_dll().call<&cwc_vtable::ctor1>(std::addressof(dummy), &cwc_self); }
+		sequence() { cwc_dll().call<&cwc_vtable::cwc_0>(&cwc_self); }
+		sequence(const int & dummy) { cwc_dll().call<&cwc_vtable::cwc_1>(std::addressof(dummy), &cwc_self); }
 
 		sequence(const sequence &) =delete;
 		sequence(sequence && other) noexcept : cwc_self{std::exchange(other.cwc_self, nullptr)} {}
 		auto operator=(const sequence &) -> sequence & =delete;
 		auto operator=(sequence && other) noexcept -> sequence & { std::swap(cwc_self, other.cwc_self); return *this; }
 
-		~sequence() noexcept { cwc_dll().call<&cwc_vtable::dtor>(cwc_self); }
+		~sequence() noexcept { cwc_dll().call<&cwc_vtable::cwc_2>(cwc_self); }
 
 		auto calculate(const std::uint8_t & no) const -> std::uint64_t {
 			std::uint64_t cwc_result;
-			cwc_dll().call<&cwc_vtable::calculate>(cwc_self, std::addressof(no), std::addressof(cwc_result));
+			cwc_dll().call<&cwc_vtable::cwc_3>(cwc_self, std::addressof(no), std::addressof(cwc_result));
 			return cwc_result;
 		}
 	private:

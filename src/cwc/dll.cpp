@@ -15,7 +15,9 @@
 	#define NOMCX
 	#define NOTIME
 	#define NOIME
-	#define NOMINMAX
+	#ifndef NOMINMAX
+		#define NOMINMAX
+	#endif
 	#include <Windows.h> //TODO: can this include be minimized?
 
 	//TODO: all Windows-related code must be updated to support wchar_t => can impl::impl still be a shared implementation?!

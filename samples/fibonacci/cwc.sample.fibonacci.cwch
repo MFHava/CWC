@@ -25,7 +25,7 @@ namespace cwc::sample::fibonacci {
 
 		auto calculate(
 			std::uint8_t no //!< no
-		) const -> std::uint64_t { 
+		) const -> std::uint64_t {
 			std::uint64_t cwc_result;
 			cwc_dll().call<&cwc_vtable::cwc_3>(cwc_self, std::move(no), std::addressof(cwc_result));
 			return cwc_result;

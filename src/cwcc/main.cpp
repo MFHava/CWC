@@ -364,8 +364,9 @@ public:
 		os << ") ";
 		if(const_) os << "const ";
 		if(result) os << "-> " << *result << " ";
-		os << "{ ";
+		os << "{";
 		if(result) os << "\n" << *result << " cwc_result;\n";
+		else os << " ";
 		os << "cwc_dll().call<&cwc_vtable::cwc_" << no << ">(cwc_self";
 		if(!plist.empty() || result) os << ", ";
 		plist.generate_param_passing(os);

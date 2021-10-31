@@ -12,12 +12,11 @@
 #include <algorithm>
 
 //TODO: support pass by value
-//TODO: type could be template => must support <>()[]
 
 /* GRAMMAR
 
 CWC             =      NAMESPACE*;
-NAMESPACE       =      COMMENT* "namespace" NESTED_NAME '{' COMPONENT* '}'
+NAMESPACE       =      COMMENT* "namespace" NAMESPACE_NAME '{' COMPONENT* '}'
 COMPONENT       =      COMMENT* ATTRIBUTES "component" NAME '{' BODY* '}' ';'
 BODY            =      CONSTRUCTOR | METHOD
 CONSTRUCTOR     =      COMMENT* NAME ARG_LIST
@@ -28,9 +27,11 @@ ARG             =      CONST TYPE '&' NAME COMMENT
 CONST           =      "const"?
 COMMENT         =      "//" .* \n
 ATTRIBUTES      =      "[[" "library" '=' LIB_NAME "]]"
-TYPE            =      NESTED_NAME
+//TODO: TYPE can be template - grammar must include <()> ...
+TYPE            =      NAME
 NAME            =      (a-zA-Z)(a-zA-Z0-9_)*
-NESTED_NAME     =      NAME("::"NAME)*
+NAMESPACE_NAME  =      NAME("::"NAME)*
+//TODO: LIB_NAME is not correctly implemented in parser
 LIB_NAME        =      (a-zA-Z0-9_-)+
 */
 
@@ -105,8 +106,18 @@ retry:
 								in >> c;
 								if(c == ':') token += "::";
 								else throw_stray(':');
-							}
-							else {
+							} else if(c == '<') {
+								auto nested{1};
+								token += '<';
+								while(nested) {
+									in >> c;
+									switch(c) {
+										case '<': ++nested; break;
+										case '>': --nested; break;
+									}
+									token += c;
+								}
+							} else {
 								tokens.push(std::move(token));
 								goto retry;
 							}
@@ -143,17 +154,29 @@ retry:
 
 	auto name() -> std::string {
 		auto tmp{next()};
-		if(tmp.find(':') != tmp.npos) throw std::logic_error{"expected name - found nested_name"};
+		if(tmp.find(':') != tmp.npos) throw std::logic_error{"expected name - found namespace_name"};
+		if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected name - found template_name"};
 		return tmp;
 	}
 
-	auto nested_name() -> std::string { return next(); }
+	auto namespace_name() -> std::string {
+		auto tmp{next()};
+		if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected nested_name - found template_name"};
+		return tmp;
+	}
 
 	auto comment() -> std::string {
 		auto tmp{next()};
 		if(tmp.front() != '/') throw std::logic_error{"expected comment - found something else"};
 		return tmp;
 	}
+
+	auto dll_name() -> std::string {
+		//TODO: validation
+		return next();
+	}
+
+	auto type() -> std::string { return next(); }
 
 	auto starts_with(char ch) const -> bool {
 		if(tokens.empty()) return false;
@@ -171,7 +194,7 @@ class param_list final {
 
 		param(parser & p) {
 			const_ = p.consume("const");
-			type = p.nested_name();
+			type = p.type();
 			p.expect("&");
 			name = p.name();
 			if(p.starts_with('/')) trailing_comment = p.comment();
@@ -317,7 +340,7 @@ public:
 		const_ = p.consume("const");
 		if(returning) {
 			p.expect("->");
-			result = p.nested_name();
+			result = p.type();
 		}
 	}
 
@@ -386,7 +409,7 @@ public:
 		p.expect("[[");
 		p.expect("library");
 		p.expect("=");
-		dll = p.nested_name();
+		dll = p.dll_name();
 		p.expect("]]");
 		p.expect("component");
 		name = p.name();
@@ -471,7 +494,7 @@ class namespace_ final {
 public:
 	namespace_(parser & p) : clist{p} {
 		p.expect("namespace");
-		name = p.nested_name();
+		name = p.namespace_name();
 		p.expect("{");
 		while(!p.consume("}")) components.emplace_back(p);
 	}
@@ -552,6 +575,10 @@ int main(int argc, char * argv[]) {
 				auto calculate(
 					const std::uint8_t & no //!< no
 				) const -> std::uint64_t;
+
+void func(
+	ptl::function_ref<void(int) noexcept> & f
+);
 			};
 		}
 	)"};

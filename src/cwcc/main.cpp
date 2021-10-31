@@ -11,8 +11,6 @@
 #include <iostream>
 #include <algorithm>
 
-//TODO: support pass by value
-
 /* GRAMMAR
 
 CWC             =      NAMESPACE*;
@@ -23,7 +21,8 @@ CONSTRUCTOR     =      COMMENT* NAME ARG_LIST
 METHOD          =      COMMENT* ("void" | "auto") NAME ARG_LIST CONST "->" TYPE ';'
 ARG_LIST        =      '(' ARGS ')'
 ARGS            =      ARG (',' ARG)*
-ARG             =      CONST TYPE '&' NAME COMMENT
+ARG             =      ("const" TYPE '&' NAME | TYPE REF NAME) COMMENT
+REF             =      "&"?
 CONST           =      "const"?
 COMMENT         =      "//" .* \n
 ATTRIBUTES      =      "[[" "library" '=' LIB_NAME "]]"
@@ -190,19 +189,25 @@ retry:
 class param_list final {
 	struct param final {
 		bool const_;
+		bool ref;
 		std::string type, name, trailing_comment;
 
 		param(parser & p) {
 			const_ = p.consume("const");
 			type = p.type();
-			p.expect("&");
+			if(const_) {
+				ref = true;
+				p.expect("&");
+			} else ref = p.accept("&");
 			name = p.name();
 			if(p.starts_with('/')) trailing_comment = p.comment();
 		}
 
 		void generate_param(std::ostream & os) const {
 			if(const_) os << "const ";
-			os << type << " & " << name;
+			os << type << " ";
+			if(ref) os << "& ";
+			os << name;
 		}
 	};
 
@@ -215,7 +220,8 @@ class param_list final {
 			if(first) first = false;
 			else os << ", ";
 			if(p.const_) os << "const ";
-			os << p.type << " *";
+			os << p.type;
+			if(p.ref) os << " *";
 			if constexpr(Definition) os << " " << p.name;
 		}
 	}
@@ -237,7 +243,9 @@ public:
 		for(const auto & p : params) {
 			if(first) first = false;
 			else os << ", ";
-			os << "std::addressof(" << p.name << ")";
+			if(p.ref) os << "std::addressof(";
+			else os << "std::move(";
+			os << p.name << ")";
 		}
 	}
 
@@ -253,7 +261,9 @@ public:
 		for(std::size_t i{0}; i < params.size(); ++i) {
 			const auto & p{params[i]};
 			if(p.const_) os << "const ";
-			os << p.type << " & " << p.name;
+			os << p.type << " ";
+			if(p.ref) os << "& ";
+			os << p.name;
 			if(i + 1 != params.size()) {
 				os << ",";
 				if(!split_list) os << " ";
@@ -270,7 +280,10 @@ public:
 		for(const auto & p : params) {
 			if(first) first = false;
 			else os << ", ";
-			os << "*" << p.name;
+			if(p.ref) os << "*";
+			else os << "std::move(";
+			os << p.name;
+			if(!p.ref) os << ")";
 		}
 	}
 
@@ -573,12 +586,8 @@ int main(int argc, char * argv[]) {
 				sequence(const int & dummy);
 
 				auto calculate(
-					const std::uint8_t & no //!< no
+					std::uint8_t no //!< no
 				) const -> std::uint64_t;
-
-void func(
-	ptl::function_ref<void(int) noexcept> & f
-);
 			};
 		}
 	)"};

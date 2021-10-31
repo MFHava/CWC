@@ -7,7 +7,6 @@
 cmake_minimum_required(VERSION 3.13)
 project(CWC)
 
-option(CWC_BUILD_TESTS "Build tests" OFF)
 option(CWC_BUILD_SAMPLES "Build samples" OFF)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -29,17 +28,14 @@ target_include_directories(cwc PUBLIC "inc")
 target_link_libraries(cwc PUBLIC ${CMAKE_DL_LIBS})
 set_target_properties(cwc PROPERTIES FOLDER "C++ with Components" POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden)
 
-find_package(Boost 1.59 REQUIRED program_options)
-
 file(GLOB_RECURSE CWCC "src/cwcc/*")
 source_group("" FILES ${CWCC})
 add_executable(cwcc ${CWCC})
-target_link_libraries(cwcc cwc Boost::program_options)
 set_target_properties(cwcc PROPERTIES FOLDER "C++ with Components")
 
 find_package(Doxygen 1.8.2) #Doxygen 1.8.2 is the first version to support C++11
 if(Doxygen_FOUND)
-	set(DOXYGEN_PROJECT_NAME "C++ with Components (${CWC_VERSION})")
+	set(DOXYGEN_PROJECT_NAME "C++ with Components")
 	set(DOXYGEN_PROJECT_BRIEF "A portable extension of C++ to support component oriented software enginnering.")
 	set(DOXYGEN_OUTPUT_DIRECTORY "docs")
 	set(DOXYGEN_BUILTIN_STL_SUPPORT YES)
@@ -52,21 +48,6 @@ if(Doxygen_FOUND)
 	set(DOXYGEN_COLLABORATION_GRAPH NO)
 	doxygen_add_docs(CWC-Documentation "inc;docs")
 	set_target_properties(CWC-Documentation PROPERTIES FOLDER "C++ with Components")
-endif()
-
-if(CWC_BUILD_TESTS)
-	find_package(Boost 1.59 REQUIRED unit_test_framework)
-	file(GLOB_RECURSE CWC_TEST "test/cwc/*")
-	source_group("" FILES ${CWC_TEST})
-	add_executable(test-cwc ${CWC} ${CWC_TEST}) #including CWC sources here to have them included in IDEs
-	target_link_libraries(test-cwc PRIVATE cwc Boost::unit_test_framework)
-	set_target_properties(test-cwc PROPERTIES FOLDER "C++ with Components")
-
-	file(GLOB_RECURSE CWCC_TEST "test/cwcc/*")
-	source_group("" FILES ${CWCC_TEST})
-	add_executable(test-cwcc ${CWCC_TEST})
-	target_link_libraries(test-cwcc PRIVATE cwc Boost::unit_test_framework)
-	set_target_properties(test-cwcc PROPERTIES FOLDER "C++ with Components")
 endif()
 
 if(CWC_BUILD_SAMPLES)

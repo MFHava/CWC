@@ -20,4 +20,4 @@ namespace cwc::sample::fibonacci {
 	}
 }
 
-CWC_EXPORT_cwc_sample_fibonacci_sequence;
+CWC_EXPORT_cwc$sample$fibonacci$sequence;

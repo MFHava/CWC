@@ -96,7 +96,7 @@ namespace cwc::internal {
 		filesystem_path2,
 	};
 
-	void rethrow_last_error(error_callback callback) {
+	void throw_(error_callback callback) {
 		assert(callback);
 
 		const auto type{reinterpret_cast<const error_code *>(callback(error_selector::type))};
@@ -322,7 +322,7 @@ namespace cwc::internal {
 		}
 	}
 
-	auto store_last_error() noexcept -> error_callback {//lippincott function
+	auto catch_() noexcept -> error_callback {//lippincott function
 		try { throw; }
 			catch(const std::bad_optional_access & exc) { store_error(exc); }
 			catch(const std::bad_variant_access & exc) { store_error(exc); }

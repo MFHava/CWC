@@ -34,15 +34,15 @@ namespace cwc::internal {
 
 	using error_callback = const void * (CWC_CALL *)(error_selector) noexcept;
 
-	auto store_last_error() noexcept -> error_callback;
-
-	void rethrow_last_error(error_callback callback); //TODO: [C++??] precondition(callback);
+	auto catch_() noexcept -> error_callback;
 
 	template<typename Functor>
-	auto error_marshalling(Functor func) noexcept -> error_callback {
+	auto try_(Functor func) noexcept -> error_callback {
 		try { func(); return nullptr; }
-		catch(...) { return store_last_error(); }
+		catch(...) { return catch_(); }
 	}
+
+	void throw_(error_callback callback); //TODO: [C++??] precondition(callback);
 
 
 	template<typename>
@@ -86,7 +86,7 @@ namespace cwc::internal {
 			else {
 				static_assert(std::is_same_v<Result, error_callback>);
 				const auto error{(vtable->*VFunc)(std::forward<Args>(args)...)};
-				if(error) rethrow_last_error(error);
+				if(error) throw_(error);
 			}
 		}
 	};

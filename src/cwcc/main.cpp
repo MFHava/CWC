@@ -155,12 +155,14 @@ retry:
 		auto tmp{next()};
 		if(tmp.find(':') != tmp.npos) throw std::logic_error{"expected name - found namespace_name"};
 		if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected name - found template_name"};
+		if(tmp.find('-') != tmp.npos) throw std::logic_error{"expected name - found lib_name"};
 		return tmp;
 	}
 
 	auto namespace_name() -> std::string {
 		auto tmp{next()};
 		if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected nested_name - found template_name"};
+		if(tmp.find('-') != tmp.npos) throw std::logic_error{"expected nested_name - found lib_name"};
 		return tmp;
 	}
 
@@ -171,8 +173,11 @@ retry:
 	}
 
 	auto dll_name() -> std::string {
+		auto tmp{next()};
 		//TODO: validation
-		return next();
+		if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected lib_name - found template_name"};
+		if(tmp.find('/') != tmp.npos) throw std::logic_error{"expected lib_name - found comment"};
+		return tmp;
 	}
 
 	auto type() -> std::string { return next(); }
@@ -329,7 +334,7 @@ public:
 		plist.generate_vtable_definition(os);
 		if(!plist.empty()) os << ", ";
 		os << fqn << "::cwc_impl ** cwc_result";
-		os << ") noexcept { return cwc::internal::error_marshalling([&] { *cwc_result = new " << fqn << "::cwc_impl{";
+		os << ") noexcept { return cwc::internal::try_([&] { *cwc_result = new " << fqn << "::cwc_impl{";
 		plist.generate_vtable_definition_paramters(os);
 		os << "}; }); }";
 		if(!last) os << ",";
@@ -403,7 +408,7 @@ public:
 			if(!plist.empty()) os << ", ";
 			os << *result << " * cwc_result";
 		}
-		os << ") noexcept { return cwc::internal::error_marshalling([&] { ";
+		os << ") noexcept { return cwc::internal::try_([&] { ";
 		if(result) os << "*cwc_result = ";
 		os << "cwc_self->" << name << "(";
 		plist.generate_vtable_definition_paramters(os);

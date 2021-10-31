@@ -560,7 +560,8 @@ void indent(std::istream & is, std::ostream & os) {
 			continue;
 		}
 
-		if(line.front() == ')' || line.front() == '}' || line == "private:") std::fill_n(std::ostream_iterator<char>{os}, indent - 1, '\t');
+		if(line.front() == '#');
+		else if(line.front() == ')' || line.front() == '}' || line == "private:") std::fill_n(std::ostream_iterator<char>{os}, indent - 1, '\t');
 		else std::fill_n(std::ostream_iterator<char>{os}, indent, '\t');
 		os << line << '\n';
 

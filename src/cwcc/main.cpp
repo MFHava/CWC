@@ -11,6 +11,9 @@
 #include <iostream>
 #include <algorithm>
 
+//TODO: support pass by value
+//TODO: type could be template => must support <>()[]
+
 /* GRAMMAR
 
 CWC             =      NAMESPACE*;
@@ -40,6 +43,13 @@ class parser final {
 		msg += c;
 		msg += '\'';
 		throw std::logic_error{msg};
+	}
+
+	auto next() -> std::string {
+		std::string result;
+		result = std::move(tokens.front());
+		tokens.pop();
+		return result;
 	}
 public:
 	parser(std::istream & in) {
@@ -130,11 +140,19 @@ retry:
 		} else return false;
 	}
 
-	auto next() -> std::string {
-		std::string result;
-		result = std::move(tokens.front());
-		tokens.pop();
-		return result;
+
+	auto name() -> std::string {
+		auto tmp{next()};
+		if(tmp.find(':') != tmp.npos) throw std::logic_error{"expected name - found nested_name"};
+		return tmp;
+	}
+
+	auto nested_name() -> std::string { return next(); }
+
+	auto comment() -> std::string {
+		auto tmp{next()};
+		if(tmp.front() != '/') throw std::logic_error{"expected comment - found something else"};
+		return tmp;
 	}
 
 	auto starts_with(char ch) const -> bool {
@@ -153,10 +171,10 @@ class param_list final {
 
 		param(parser & p) {
 			const_ = p.consume("const");
-			type = p.next();
+			type = p.nested_name();
 			p.expect("&");
-			name = p.next();
-			if(p.starts_with('/')) trailing_comment = p.next();
+			name = p.name();
+			if(p.starts_with('/')) trailing_comment = p.comment();
 		}
 
 		void generate_param(std::ostream & os) const {
@@ -240,7 +258,7 @@ class comment_list final {
 	std::vector<std::string> comments;
 public:
 	comment_list() =default;
-	comment_list(parser & p) { while(p.starts_with('/')) comments.emplace_back(p.next()); }
+	comment_list(parser & p) { while(p.starts_with('/')) comments.emplace_back(p.comment()); }
 
 	void generate(std::ostream & os) const { for(const auto & c : comments) os << c << '\n'; }
 };
@@ -294,12 +312,12 @@ public:
 		const auto returning{p.consume("auto")};
 		if(!returning) p.expect("void");
 
-		name = p.next();
+		name = p.name();
 		plist = p;
 		const_ = p.consume("const");
 		if(returning) {
 			p.expect("->");
-			result = p.next();
+			result = p.nested_name();
 		}
 	}
 
@@ -368,10 +386,10 @@ public:
 		p.expect("[[");
 		p.expect("library");
 		p.expect("=");
-		dll = p.next();
+		dll = p.nested_name();
 		p.expect("]]");
 		p.expect("component");
-		name = p.next();
+		name = p.name();
 		p.expect("{");
 		while(!p.consume("}")) {
 			comment_list comments{p};
@@ -453,7 +471,7 @@ class namespace_ final {
 public:
 	namespace_(parser & p) : clist{p} {
 		p.expect("namespace");
-		name = p.next();
+		name = p.nested_name();
 		p.expect("{");
 		while(!p.consume("}")) components.emplace_back(p);
 	}
@@ -477,10 +495,10 @@ public:
 	cwcc(parser & p) { while(p.has_tokens()) namespaces.emplace_back(p); }
 
 	void generate(std::ostream & os) const {
+		os << "//generated with CWCC\n\n";
 		os << "#pragma once\n";
 		os << "#include <cwc/cwc.hpp>\n\n";
 
-		//TODO: some kind of disclaimer
 		auto first{true};
 		for(const auto & n : namespaces) {
 			if(first) first = false;
@@ -534,18 +552,6 @@ int main(int argc, char * argv[]) {
 				auto calculate(
 					const std::uint8_t & no //!< no
 				) const -> std::uint64_t;
-			};
-
-			[[library=sample]]
-			component seq {
-
-			};
-		}
-
-		namespace sa {
-			[[library=say]]
-			component s {
-
 			};
 		}
 	)"};

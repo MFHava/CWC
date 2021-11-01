@@ -15,5 +15,8 @@ namespace cwc::sample::fibonacci {
 		~cwc_impl() noexcept { printf("%s()\n", __func__); }
 
 		auto calculate(std::uint8_t no) const -> std::uint64_t;
+
+		static
+		auto max() noexcept -> std::uint8_t;
 	};
 }

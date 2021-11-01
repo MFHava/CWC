@@ -18,7 +18,9 @@ int main() {
 	std::cout << "\n\n\n";
 
 	try {
-		s.calculate(94);
+		const auto max{s.max()};
+		std::cout << "MAX: " << static_cast<int>(max) << '\n';
+		s.calculate(max + 1);
 	} catch(const std::exception & exc) {
 		std::cout << "ERROR(" << typeid(exc).name() << "): " << exc.what() << "\n";
 	}

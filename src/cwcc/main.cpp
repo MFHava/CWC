@@ -16,8 +16,9 @@
 CWC             =      NAMESPACE*;
 NAMESPACE       =      COMMENT* "namespace" NAMESPACE_NAME '{' COMPONENT* '}'
 COMPONENT       =      COMMENT* ATTRIBUTES "component" NAME '{' BODY* '}' ';'
-BODY            =      CONSTRUCTOR | METHOD
+BODY            =      CONSTRUCTOR | METHOD | STATIC_METHOD
 CONSTRUCTOR     =      COMMENT* NAME ARG_LIST
+STATIC_METHOD   =      COMMENT* "static" ("void" | "auto") NAME ARG_LIST "->" TYPE ';'
 METHOD          =      COMMENT* ("void" | "auto") NAME ARG_LIST CONST "->" TYPE ';'
 ARG_LIST        =      '(' ARGS ')'
 ARGS            =      ARG (',' ARG)*
@@ -33,6 +34,8 @@ NAMESPACE_NAME  =      NAME("::"NAME)*
 //TODO: LIB_NAME is not correctly implemented in parser
 LIB_NAME        =      (a-zA-Z0-9_-)+
 */
+
+//TODO: extensive error messages
 
 class parser final {
 	std::queue<std::string> tokens;
@@ -343,6 +346,7 @@ public:
 };
 
 class method final {
+	bool static_;
 	comment_list clist;
 	std::string name;
 	param_list plist;
@@ -350,12 +354,14 @@ class method final {
 	std::optional<std::string> result;
 public:
 	method(parser & p, comment_list clist) : clist{std::move(clist)} {
+		static_ = p.consume("static");
 		const auto returning{p.consume("auto")};
 		if(!returning) p.expect("void");
 
 		name = p.name();
 		plist = p;
-		const_ = p.consume("const");
+		if(static_) const_ = false;
+		else const_ = p.consume("const");
 		if(returning) {
 			p.expect("->");
 			result = p.type();
@@ -364,6 +370,7 @@ public:
 
 	void generate_definition(std::ostream & os, std::size_t no) const {
 		clist.generate(os);
+		if(static_) os << "static\n";
 		os << (result ? "auto" : "void") << " " << name << "(";
 		plist.generate_param_list(os);
 		os << ") ";
@@ -372,8 +379,11 @@ public:
 		os << "{";
 		if(result) os << "\n" << *result << " cwc_result;\n";
 		else os << " ";
-		os << "cwc_dll().call<&cwc_vtable::cwc_" << no << ">(cwc_self";
-		if(!plist.empty() || result) os << ", ";
+		os << "cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
+		if(!static_) {
+			os << "cwc_self";
+			if(!plist.empty() || result) os << ", ";
+		}
 		plist.generate_param_passing(os);
 		if(result) {
 			if(!plist.empty()) os << ", ";
@@ -387,9 +397,11 @@ public:
 
 	void generate_vtable_declaration(std::ostream & os, std::size_t no) const {
 		os << "cwc::internal::error_callback(CWC_CALL * cwc_" << no << ")(";
-		if(const_) os << "const ";
-		os << "cwc_impl *";
-		if(!plist.empty() || result) os << ", ";
+		if(!static_) {
+			if(const_) os << "const ";
+			os << "cwc_impl *";
+			if(!plist.empty() || result) os << ", ";
+		}
 		plist.generate_vtable_declaration(os);
 		if(result) {
 			if(!plist.empty()) os << ", ";
@@ -400,9 +412,11 @@ public:
 
 	void generate_vtable_definition(std::ostream & os, std::string_view fqn, bool last) const {
 		os << "+[](";
-		if(const_) os << "const ";
-		os << fqn << "::cwc_impl * cwc_self";
-		if(!plist.empty() || result) os << ", ";
+		if(!static_) {
+			if(const_) os << "const ";
+			os << fqn << "::cwc_impl * cwc_self";
+			if(!plist.empty() || result) os << ", ";
+		}
 		plist.generate_vtable_definition(os);
 		if(result) {
 			if(!plist.empty()) os << ", ";
@@ -410,7 +424,9 @@ public:
 		}
 		os << ") noexcept { return cwc::internal::try_([&] { ";
 		if(result) os << "*cwc_result = ";
-		os << "cwc_self->" << name << "(";
+		if(static_) os << fqn << "::cwc_impl::";
+		else os << "cwc_self->";
+		os << name << "(";
 		plist.generate_vtable_definition_paramters(os);
 		os << "); }); }";
 		if(!last) os << ",";
@@ -595,6 +611,9 @@ int main(int argc, char * argv[]) {
 				auto calculate(
 					std::uint8_t no //!< no
 				) const -> std::uint64_t;
+
+				static
+				auto max() -> std::uint8_t;
 			};
 		}
 	)"};

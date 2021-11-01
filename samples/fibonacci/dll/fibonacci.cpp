@@ -9,7 +9,7 @@
 
 namespace cwc::sample::fibonacci {
 	auto sequence::cwc_impl::calculate(std::uint8_t no) const -> std::uint64_t {
-		if(no > 93) throw std::out_of_range{"fibonacci number 93 is the last to fit into uint64"};
+		if(no > max()) throw std::out_of_range{"fibonacci number 93 is the last to fit into uint64"};
 		std::uint64_t a{0}, b{1};
 		for(decltype(no) i{0}; i < no; ++i) {
 			const auto c{a + b};
@@ -17,6 +17,10 @@ namespace cwc::sample::fibonacci {
 			b = c;
 		}
 		return a;
+	}
+
+	auto sequence::cwc_impl::max() noexcept -> std::uint8_t {
+		return 93;
 	}
 }
 

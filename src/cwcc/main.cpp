@@ -22,8 +22,8 @@ STATIC_METHOD   =      COMMENT* "static" ("void" | "auto") NAME ARG_LIST NOEXCEP
 METHOD          =      COMMENT* ("void" | "auto") NAME ARG_LIST CONST NOEXCEPT "->" TYPE ';'
 ARG_LIST        =      '(' ARGS ')'
 ARGS            =      ARG (',' ARG)*
-ARG             =      ("const" TYPE '&' NAME | TYPE REF NAME) COMMENT
-REF             =      "&"?
+ARG             =      ("const" TYPE "&" NAME | TYPE REF NAME) COMMENT
+REF             =      ("&" | "&&")?
 CONST           =      "const"?
 NOEXCEPT        =      "noexcept"?
 COMMENT         =      "//" .* \n
@@ -90,7 +90,14 @@ retry:
 					if(c == ']') tokens.push("]]");
 					else throw_stray(']');
 				} break;
-				case '&':
+				case '&': {
+					in >> c;
+					if(c == '&') tokens.push("&&");
+					else {
+						tokens.push("&");
+						goto retry;
+					}
+				} break;
 				case '(':
 				case ')':
 				case '{':
@@ -196,18 +203,24 @@ retry:
 
 
 class param_list final {
+	enum class ref_t { none, lvalue, rvalue };
+
 	struct param final {
 		bool const_;
-		bool ref;
+		ref_t ref;
 		std::string type, name, trailing_comment;
 
 		param(parser & p) {
 			const_ = p.consume("const");
 			type = p.type();
 			if(const_) {
-				ref = true;
 				p.expect("&");
-			} else ref = p.accept("&");
+				ref = ref_t::lvalue;
+			} else {
+				if(p.consume("&")) ref = ref_t::lvalue;
+				else if(p.consume("&&")) ref = ref_t::rvalue;
+				else ref = ref_t::none;
+			}
 			name = p.name();
 			if(p.starts_with('/')) trailing_comment = p.comment();
 		}
@@ -215,7 +228,10 @@ class param_list final {
 		void generate_param(std::ostream & os) const {
 			if(const_) os << "const ";
 			os << type << " ";
-			if(ref) os << "& ";
+			switch(ref) {
+				case ref_t::lvalue: os << "& "; break;
+				case ref_t::rvalue: os << "&& "; break;
+			}
 			os << name;
 		}
 	};
@@ -230,7 +246,7 @@ class param_list final {
 			else os << ", ";
 			if(p.const_) os << "const ";
 			os << p.type;
-			if(p.ref) os << " *";
+			if(p.ref != ref_t::none) os << " *";
 			if constexpr(Definition) os << " " << p.name;
 		}
 	}
@@ -252,7 +268,7 @@ public:
 		for(const auto & p : params) {
 			if(first) first = false;
 			else os << ", ";
-			if(p.ref) os << "std::addressof(";
+			if(p.ref != ref_t::none) os << "std::addressof(";
 			else os << "std::move(";
 			os << p.name << ")";
 		}
@@ -271,7 +287,10 @@ public:
 			const auto & p{params[i]};
 			if(p.const_) os << "const ";
 			os << p.type << " ";
-			if(p.ref) os << "& ";
+			switch(p.ref) {
+				case ref_t::lvalue: os << "& "; break;
+				case ref_t::rvalue: os << "&& "; break;
+			}
 			os << p.name;
 			if(i + 1 != params.size()) {
 				os << ",";
@@ -289,10 +308,13 @@ public:
 		for(const auto & p : params) {
 			if(first) first = false;
 			else os << ", ";
-			if(p.ref) os << "*";
-			else os << "std::move(";
+			switch(p.ref) {
+				case ref_t::none: os << "std::move("; break;
+				case ref_t::lvalue: os << "*"; break;
+				case ref_t::rvalue: os << "std::move(*"; break;
+			}
 			os << p.name;
-			if(!p.ref) os << ")";
+			if(p.ref != ref_t::lvalue) os << ")";
 		}
 	}
 

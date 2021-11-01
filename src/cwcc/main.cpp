@@ -18,13 +18,14 @@ NAMESPACE       =      COMMENT* "namespace" NAMESPACE_NAME '{' COMPONENT* '}'
 COMPONENT       =      COMMENT* ATTRIBUTES "component" NAME '{' BODY* '}' ';'
 BODY            =      CONSTRUCTOR | METHOD | STATIC_METHOD
 CONSTRUCTOR     =      COMMENT* NAME ARG_LIST
-STATIC_METHOD   =      COMMENT* "static" ("void" | "auto") NAME ARG_LIST "->" TYPE ';'
-METHOD          =      COMMENT* ("void" | "auto") NAME ARG_LIST CONST "->" TYPE ';'
+STATIC_METHOD   =      COMMENT* "static" ("void" | "auto") NAME ARG_LIST NOEXCEPT "->" TYPE ';'
+METHOD          =      COMMENT* ("void" | "auto") NAME ARG_LIST CONST NOEXCEPT "->" TYPE ';'
 ARG_LIST        =      '(' ARGS ')'
 ARGS            =      ARG (',' ARG)*
 ARG             =      ("const" TYPE '&' NAME | TYPE REF NAME) COMMENT
 REF             =      "&"?
 CONST           =      "const"?
+NOEXCEPT        =      "noexcept"?
 COMMENT         =      "//" .* \n
 ATTRIBUTES      =      "[[" "library" '=' LIB_NAME "]]"
 //TODO: TYPE can be template - grammar must include <()> ...
@@ -351,6 +352,7 @@ class method final {
 	std::string name;
 	param_list plist;
 	bool const_;
+	bool noexcept_;
 	std::optional<std::string> result;
 public:
 	method(parser & p, comment_list clist) : clist{std::move(clist)} {
@@ -362,6 +364,7 @@ public:
 		plist = p;
 		if(static_) const_ = false;
 		else const_ = p.consume("const");
+		noexcept_ = p.consume("noexcept");
 		if(returning) {
 			p.expect("->");
 			result = p.type();
@@ -375,6 +378,7 @@ public:
 		plist.generate_param_list(os);
 		os << ") ";
 		if(const_) os << "const ";
+		if(noexcept_) os << "noexcept ";
 		if(result) os << "-> " << *result << " ";
 		os << "{";
 		if(result) os << "\n" << *result << " cwc_result;\n";
@@ -396,7 +400,9 @@ public:
 	}
 
 	void generate_vtable_declaration(std::ostream & os, std::size_t no) const {
-		os << "cwc::internal::error_callback(CWC_CALL * cwc_" << no << ")(";
+		if(noexcept_) os << "void";
+		else os << "cwc::internal::error_callback";
+		os << "(CWC_CALL * cwc_" << no << ")(";
 		if(!static_) {
 			if(const_) os << "const ";
 			os << "cwc_impl *";
@@ -422,13 +428,16 @@ public:
 			if(!plist.empty()) os << ", ";
 			os << *result << " * cwc_result";
 		}
-		os << ") noexcept { return cwc::internal::try_([&] { ";
+		os << ") noexcept { ";
+		if(!noexcept_) os << "return cwc::internal::try_([&] { ";
 		if(result) os << "*cwc_result = ";
 		if(static_) os << fqn << "::cwc_impl::";
 		else os << "cwc_self->";
 		os << name << "(";
 		plist.generate_vtable_definition_paramters(os);
-		os << "); }); }";
+		os << "); ";
+		if(!noexcept_) os << "}); ";
+		os << "}";
 		if(!last) os << ",";
 		os << "\\\n";
 	}
@@ -479,7 +488,7 @@ public:
 		os << "struct " << name << " {\n";
 		os << "struct cwc_impl;\n";
 		os << "struct cwc_vtable final {\n";
-		os << "void (CWC_CALL * cwc_0)(cwc_impl *) noexcept;\n";
+		os << "void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;\n";
 		{
 			std::size_t no{1};
 			for(const auto & c : constructors) c.generate_vtable_declaration(os, no++);
@@ -613,7 +622,7 @@ int main(int argc, char * argv[]) {
 				) const -> std::uint64_t;
 
 				static
-				auto max() -> std::uint8_t;
+				auto max() noexcept -> std::uint8_t;
 			};
 		}
 	)"};

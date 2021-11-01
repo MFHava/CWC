@@ -7,11 +7,11 @@ namespace cwc::sample::fibonacci {
 	struct sequence {
 		struct cwc_impl;
 		struct cwc_vtable final {
-			void (CWC_CALL * cwc_0)(cwc_impl *) noexcept;
+			void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;
 			cwc::internal::error_callback(CWC_CALL * cwc_1)(cwc_impl **) noexcept;
 			cwc::internal::error_callback(CWC_CALL * cwc_2)(const int *, cwc_impl **) noexcept;
 			cwc::internal::error_callback(CWC_CALL * cwc_3)(const cwc_impl *, std::uint8_t, std::uint64_t *) noexcept;
-			cwc::internal::error_callback(CWC_CALL * cwc_4)(std::uint8_t *) noexcept;
+			void(CWC_CALL * cwc_4)(std::uint8_t *) noexcept;
 		};
 
 		sequence(const sequence &) =delete;
@@ -32,7 +32,7 @@ namespace cwc::sample::fibonacci {
 			return cwc_result;
 		}
 		static
-		auto max() -> std::uint8_t {
+		auto max() noexcept -> std::uint8_t {
 			std::uint8_t cwc_result;
 			cwc_dll().call<&cwc_vtable::cwc_4>(std::addressof(cwc_result));
 			return cwc_result;
@@ -52,6 +52,6 @@ namespace cwc::sample::fibonacci {
 		+[](cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl{}; }); },\
 		+[](const int * dummy, cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl{*dummy}; }); },\
 		+[](const cwc::sample::fibonacci::sequence::cwc_impl * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = cwc_self->calculate(std::move(no)); }); },\
-		+[](std::uint8_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = cwc::sample::fibonacci::sequence::cwc_impl::max(); }); }\
+		+[](std::uint8_t * cwc_result) noexcept { *cwc_result = cwc::sample::fibonacci::sequence::cwc_impl::max(); }\
 	}
 }

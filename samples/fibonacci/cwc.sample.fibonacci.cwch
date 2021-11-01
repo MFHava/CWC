@@ -22,15 +22,20 @@ namespace cwc::sample::fibonacci {
 
 
 		sequence() { cwc_dll().call<&cwc_vtable::cwc_1>(&cwc_self); }
+
 		sequence(const int & dummy) { cwc_dll().call<&cwc_vtable::cwc_2>(std::addressof(dummy), &cwc_self); }
 
+		//! @brief compute fibonacci number
+		//! @returns fibonacci number
 		auto calculate(
-			std::uint8_t no //!< no
+			std::uint8_t no //!< [in] no
 		) const -> std::uint64_t {
 			std::uint64_t cwc_result;
 			cwc_dll().call<&cwc_vtable::cwc_3>(cwc_self, std::move(no), std::addressof(cwc_result));
 			return cwc_result;
 		}
+
+		//! @returns max supported fibonacci number that can be computed before result would overflow
 		static
 		auto max() noexcept -> std::uint8_t {
 			std::uint8_t cwc_result;

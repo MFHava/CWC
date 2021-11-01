@@ -316,6 +316,7 @@ public:
 	constructor(parser & p, comment_list clist) : clist{std::move(clist)}, plist{p} {}
 
 	void generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const {
+		os << "\n";
 		clist.generate(os);
 		os << class_ << "(";
 		plist.generate_param_list(os);
@@ -372,6 +373,7 @@ public:
 	}
 
 	void generate_definition(std::ostream & os, std::size_t no) const {
+		os << "\n";
 		clist.generate(os);
 		if(static_) os << "static\n";
 		os << (result ? "auto" : "void") << " " << name << "(";
@@ -502,11 +504,9 @@ public:
 		os << "auto operator=(" << name << " && cwc_other) noexcept -> " << name << " & { std::swap(cwc_self, cwc_other.cwc_self); return *this; }\n";
 		os << "~" << name << "() noexcept { cwc_dll().call<&cwc_vtable::cwc_0>(cwc_self); }\n";
 		os << "\n";
-		os << "\n";
 		{
 			std::size_t no{1};
 			for(const auto & c : constructors) c.generate_definition(os, name, no++);
-			if(!methods.empty()) os << "\n";
 			for(const auto & m : methods) m.generate_definition(os, no++);
 		}
 		os << "private:\n";
@@ -617,10 +617,13 @@ int main(int argc, char * argv[]) {
 				sequence();
 				sequence(const int & dummy);
 
+				//! @brief compute fibonacci number
+				//! @returns fibonacci number
 				auto calculate(
-					std::uint8_t no //!< no
+					std::uint8_t no //!< [in] no
 				) const -> std::uint64_t;
 
+				//! @returns max supported fibonacci number that can be computed before result would overflow
 				static
 				auto max() noexcept -> std::uint8_t;
 			};

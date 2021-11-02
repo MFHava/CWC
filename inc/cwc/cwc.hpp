@@ -45,23 +45,11 @@ namespace cwc::internal {
 	void throw_(error_callback callback); //TODO: [C++??] precondition(callback);
 
 
-	template<typename>
-	struct member_function_pointer_result;
-
-	template<typename Result, typename... Args>
-	struct member_function_pointer_result<Result(CWC_CALL *)(Args...) noexcept> {
-		using type = Result;
-	};
-
-
 	template<typename VFunc>
-	struct vtable_trait;
+	struct vtable;
 
 	template<typename Class, typename T>
-	struct vtable_trait<T Class::*> {
-		using vtable_type = Class;
-		using result_type = typename member_function_pointer_result<T>::type;
-	};
+	struct vtable<T Class::*> { using type = Class; };
 
 
 	class dll final { //TODO: name is not ideal as this not just a reference to the DLL but also to the respective entry-point...
@@ -77,16 +65,15 @@ namespace cwc::internal {
 		void call(Args &&... args) const {
 			static_assert(std::is_member_object_pointer_v<decltype(VFunc)>); //TODO: [C++20] make requirement
 
-			using Trait = vtable_trait<decltype(VFunc)>;
-			using Vtable = typename Trait::vtable_type;
-			using Result = typename Trait::result_type;
-
+			using Vtable = typename vtable<decltype(VFunc)>::type;
 			const auto vtable{reinterpret_cast<const Vtable *>(vptr)};
-			if constexpr(std::is_same_v<Result, void>) (vtable->*VFunc)(std::forward<Args>(args)...);
+			const auto call_{[&] { return (vtable->*VFunc)(std::forward<Args>(args)...); }};
+			using Result = decltype(call_());
+
+			if constexpr(std::is_same_v<Result, void>) call_();
 			else {
 				static_assert(std::is_same_v<Result, error_callback>);
-				const auto error{(vtable->*VFunc)(std::forward<Args>(args)...)};
-				if(error) throw_(error);
+				if(const auto error{call_()}) throw_(error);
 			}
 		}
 	};

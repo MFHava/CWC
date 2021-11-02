@@ -246,9 +246,10 @@ namespace cwcc {
 
 	component::component(parser & p) : clist{p} {
 		p.expect("[[");
-		p.expect("library");
-		p.expect("=");
-		dll = p.next(type::library);
+		p.expect("cwc::library");
+		p.expect("(");
+		dll = p.next(type::string);
+		p.expect(")");
 		p.expect("]]");
 		p.expect("component");
 		name = p.next(type::name);
@@ -305,7 +306,7 @@ namespace cwcc {
 		os << "private:\n";
 		os << "static\n";
 		os << "auto cwc_dll() -> const cwc::internal::dll & {\n";
-		os << "static const cwc::internal::dll instance{\"" << dll << "\", \"" << mangled_name << "\"};\n";
+		os << "static const cwc::internal::dll instance{" << dll << ", \"" << mangled_name << "\"};\n";
 		os << "return instance;\n";
 		os << "}\n";
 		os << "\n";
@@ -326,7 +327,7 @@ namespace cwcc {
 
 	namespace_::namespace_(parser & p) : clist{p} {
 		p.expect("namespace");
-		name = p.next(type::namespace_);
+		name = p.next(type::nested);
 		p.expect("{");
 		while(!p.consume("}")) components.emplace_back(p);
 	}

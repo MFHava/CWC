@@ -12,29 +12,32 @@
 /* GRAMMAR
 
 CWC                  =      NAMESPACE*;
-NAMESPACE            =      COMMENT* "namespace" NAMESPACE_NAME '{' COMPONENT* '}'
-COMPONENT            =      COMMENT* ATTRIBUTES "component" NAME '{' BODY* '}' ';'
-BODY                 =      (CONSTRUCTOR | METHOD | STATIC_METHOD) ';'
-CONSTRUCTOR          =      COMMENT* NAME ARG_LIST
-STATIC_METHOD        =      COMMENT* "static" (STATIC_AUTO_METHOD | STATIC_VOID_METHOD)
+NAMESPACE            =      COMMENT* "namespace" NESTED_NAME "{" COMPONENT* "}"
+COMPONENT            =      COMMENT* LIBRARY "component" NAME "{" BODY* "}" ";"
+LIBRARY              =      "[[" "cwc::library" "(" STRING ")" "]]"
+BODY                 =      COMMENT* (CONSTRUCTOR | METHOD | STATIC_METHOD) ";"
+CONSTRUCTOR          =      NAME ARG_LIST
+STATIC_METHOD        =      "static" (STATIC_AUTO_METHOD | STATIC_VOID_METHOD)
 STATIC_VOID_METHOD   =      "void" NAME ARG_LIST NOEXCEPT
 STATIC_AUTO_METHOD   =      "auto" NAME ARG_LIST NOEXCEPT "->" TYPE
-METHOD               =      COMMENT* (AUTO_METHOD | VOID_METHOD)
+METHOD               =      (AUTO_METHOD | VOID_METHOD)
 AUTO_METHOD          =      "auto" NAME ARG_LIST CONST NOEXCEPT "->" TYPE
 VOID_METHOD          =      "void" NAME ARG_LIST CONST NOEXCEPT
-ARG_LIST             =      '(' ARGS ')'
-ARGS                 =      (ARG (',' ARG)*)?
+ARG_LIST             =      "(" ARGS ")"
+ARGS                 =      ARG % ","
 ARG                  =      ("const" TYPE "&" NAME | TYPE REF NAME) COMMENT
 REF                  =      ("&" | "&&")?
 CONST                =      "const"?
 NOEXCEPT             =      "noexcept"?
 COMMENT              =      "//" .* \n
-ATTRIBUTES           =      "[[" "library" '=' LIB_NAME "]]"
+//TODO: ATTRIBUTES           =      ATTRIBUTE*;
+//TODO: ATTRIBUTE            =      "[[" NESTED_NAME ("(" STRING ")")? "]]"
 TYPE                 =      NAME TEMPLATE?
 TEMPLATE             =      '<' (TEMPLATE | [^>])* '>'
 NAME                 =      (a-zA-Z)(a-zA-Z0-9_)*
-NAMESPACE_NAME       =      NAME("::"NAME)*
+NESTED_NAME          =      NAME("::"NAME)*
 LIB_NAME             =      (a-zA-Z0-9_-)+
+STRING               =      "\"" .* "\""
 */
 
 namespace cwcc {
@@ -95,6 +98,14 @@ retry:
 						tokens.push("&");
 						goto retry;
 					}
+				} break;
+				case '"': {
+					std::string token{"\""};
+					do {
+						in >> c;
+						token += c;
+					} while(c != '"');
+					tokens.push(std::move(token));
 				} break;
 				case '(':
 				case ')':
@@ -167,18 +178,17 @@ retry:
 				if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected name - found template_name"};
 				if(tmp.find('-') != tmp.npos) throw std::logic_error{"expected name - found lib_name"};
 				break;
-			case type::namespace_:
+			case type::nested:
 				if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected nested_name - found template_name"};
 				if(tmp.find('-') != tmp.npos) throw std::logic_error{"expected nested_name - found lib_name"};
 				break;
 			case type::comment:
 				if(tmp.front() != '/') throw std::logic_error{"expected comment - found something else"};
 				break;
-			case type::library:
-				if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected lib_name - found template_name"};
-				if(tmp.find('/') != tmp.npos) throw std::logic_error{"expected lib_name - found comment"};
-				break;
 			case type::type:
+				break;
+			case type::string:
+				if(tmp.front() != '"') throw std::logic_error{"expected string - found something else"};
 				break;
 			default:
 				std::abort(); //unreachable

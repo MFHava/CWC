@@ -14,7 +14,7 @@ int main(int argc, char * argv[]) {
 	//TODO: read input from argv
 	std::stringstream ss{R"(
 		namespace cwc::sample::fibonacci {
-			[[library=sample-fibonacci]]
+			[[cwc::library("sample-fibonacci")]]
 			component sequence {
 				sequence();
 				sequence(const int & dummy);

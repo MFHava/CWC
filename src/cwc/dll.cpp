@@ -70,7 +70,7 @@
 #elif defined(__HAIKU__)
 	#include <image.h>
 	#define LoadLibrary(file) std::max(load_add_on(file), image_id{0})
-	#define GetProcAddress(dll, function) [] {\
+	#define GetProcAddress(dll, function) [&] {\
 		void * result{nullptr};\
 		get_image_symbol(dll, function, B_SYMBOL_TYPE_DATA, &result);\
 		return result;\

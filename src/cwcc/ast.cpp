@@ -304,13 +304,10 @@ retry:
 
 
 	component::component(parser & p) : clist{p} {
-		//TODO: evaluate how cwc::library can be merged transparently with alist => move to "correct" location"
-		p.expect("[[");
-		p.expect("cwc::library");
+		p.expect("@library");
 		p.expect("(");
 		dll = p.next(type::string);
 		p.expect(")");
-		p.expect("]]");
 		p.expect("component");
 		if(p.accept("[[")) alist = {p, attribute_deprecated | attribute_nodiscard};
 		name = p.next(type::name);

@@ -13,7 +13,7 @@
 
 CWC                  =      NAMESPACE*;
 NAMESPACE            =      COMMENT* "namespace" ATTRIBUTES* NESTED_NAME "{" COMPONENT* "}"
-COMPONENT            =      COMMENT* ATTRIBUTE_LIBRARY "component" ATTRIBUTES* NAME "{" BODY* "}" ";"
+COMPONENT            =      COMMENT* ANNOTATION "component" ATTRIBUTES* NAME "{" BODY* "}" ";"
 BODY                 =      COMMENT* ATTRIBUTES* (CONSTRUCTOR | METHOD | STATIC_METHOD) ";"
 CONSTRUCTOR          =      NAME ARG_LIST
 STATIC_METHOD        =      "static" (STATIC_AUTO_METHOD | STATIC_VOID_METHOD)
@@ -22,8 +22,7 @@ STATIC_AUTO_METHOD   =      "auto" NAME ARG_LIST NOEXCEPT "->" TYPE
 METHOD               =      (AUTO_METHOD | VOID_METHOD)
 AUTO_METHOD          =      "auto" NAME ARG_LIST CONST NOEXCEPT "->" TYPE
 VOID_METHOD          =      "void" NAME ARG_LIST CONST NOEXCEPT
-ARG_LIST             =      "(" ARGS ")"
-ARGS                 =      ARG % ","
+ARG_LIST             =      "(" ARG % "," ")"
 ARG                  =      ("const" TYPE "&" NAME | TYPE REF NAME) COMMENT
 REF                  =      ("&" | "&&")?
 CONST                =      "const"?
@@ -31,7 +30,7 @@ NOEXCEPT             =      "noexcept"?
 COMMENT              =      "//" .* \n
 ATTRIBUTES           =      "[[" ATTRIBUTE % "," "]]" //TODO: [C++23] before C++23 duplicated attributes are forbidden...
 ATTRIBUTE            =      ("deprecated" | "nodiscard") ("(" STRING ")")? //TODO: not all attributes are supported in all locations
-ATTRIBUTE_LIBRARY    =      "[[" "cwc::library" "(" STRING ")" "]]"
+ANNOTATION           =      "@library" "(" STRING ")"
 TYPE                 =      NAME TEMPLATE?
 TEMPLATE             =      '<' (TEMPLATE | [^>])* '>'
 NAME                 =      (a-zA-Z)(a-zA-Z0-9_)*
@@ -117,10 +116,10 @@ retry:
 					tokens.push(std::string(1, c));
 					break;
 				default: {
-					if(std::isalpha(c)) {
+					if(std::isalpha(c) || c == '@') {
 						std::string token(1, c);
 						while(in >> c) {
-							if(c == '_' || c == '-' || std::isalnum(c)) token += c;
+							if(c == '_' || c == '-' || c == '@' || std::isalnum(c)) token += c;
 							else if(c == ':') {
 								in >> c;
 								if(c == ':') token += "::";
@@ -174,11 +173,13 @@ retry:
 		auto tmp{next()};
 		switch(type) {
 			case type::name:
+				if(tmp.find('@') != tmp.npos) throw std::logic_error{"expected name - found annotation"};
 				if(tmp.find(':') != tmp.npos) throw std::logic_error{"expected name - found namespace_name"};
 				if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected name - found template_name"};
 				if(tmp.find('-') != tmp.npos) throw std::logic_error{"expected name - found lib_name"};
 				break;
 			case type::nested:
+				if(tmp.find('@') != tmp.npos) throw std::logic_error{"expected nested_name - found annotation"};
 				if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected nested_name - found template_name"};
 				if(tmp.find('-') != tmp.npos) throw std::logic_error{"expected nested_name - found lib_name"};
 				break;

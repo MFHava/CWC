@@ -11,6 +11,55 @@
 //TODO: split AST from parsing and code generation
 
 namespace cwcc {
+	attribute_list::attribute_list(parser & p) {
+		//TODO: [C++23] all attributes are allowed to appear multiple times in a declaration
+		while(p.consume("[[")) {
+retry:
+			if(p.consume("deprecated")) {
+				if(!std::holds_alternative<std::monostate>(deprecated)) throw std::logic_error{"detected duplicated deprecated-attribute"};
+				if(p.consume("(")) {
+					deprecated = p.next(type::string);
+					p.expect(")");
+				} else deprecated = 0;
+			} else {
+				p.expect("nodiscard");
+				if(!std::holds_alternative<std::monostate>(nodiscard)) throw std::logic_error{"detected duplicated nodiscard-attribute"};
+				if(p.consume("(")) {
+					nodiscard = p.next(type::string);
+					p.expect(")");
+				} else nodiscard = 0;
+			}
+			if(p.consume(",")) goto retry;
+			p.expect("]]");
+		}
+	}
+
+	void attribute_list::generate(std::ostream & os) const {
+		os << "[[";
+		auto first{true};
+		struct visitor {
+			bool & first;
+			std::ostream & os;
+			const char * name;
+
+			void operator()(std::monostate) const noexcept {}
+			void operator()(int) const {
+				if(!first) os << ", ";
+				os << name;
+				first = false;
+			}
+			void operator()(const std::string & msg) const noexcept {
+				if(!first) os << ", ";
+				os << name << "(" << msg << ")";
+				first = false;
+			}
+		};
+		std::visit(visitor{first, os, "nodiscard"}, nodiscard);
+		std::visit(visitor{first, os, "deprecated"}, deprecated);
+		os << "]] ";
+	}
+
+
 	param_list::param::param(parser & p) {
 		const_ = p.consume("const");
 		type = p.next(type::type);
@@ -121,11 +170,15 @@ namespace cwcc {
 	void comment_list::generate(std::ostream & os) const { for(const auto & c : comments) os << c << '\n'; }
 
 
-	constructor::constructor(parser & p, comment_list clist) : clist{std::move(clist)}, plist{p} {}
+	constructor::constructor(parser & p, comment_list clist, std::optional<attribute_list> alist) : clist{std::move(clist)}, alist{std::move(alist)}, plist{p} {}
 
 	void constructor::generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const {
 		os << "\n";
 		clist.generate(os);
+		if(alist) {
+			alist->generate(os);
+			os << "\n";
+		}
 		os << class_ << "(";
 		plist.generate_param_list(os);
 		os << ") { cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
@@ -155,7 +208,7 @@ namespace cwcc {
 	}
 
 
-	method::method(parser & p, comment_list clist) : clist{std::move(clist)} {
+	method::method(parser & p, comment_list clist, std::optional<attribute_list> alist) : clist{std::move(clist)}, alist{std::move(alist)} {
 		static_ = p.consume("static");
 		const auto returning{p.consume("auto")};
 		if(!returning) p.expect("void");
@@ -174,6 +227,10 @@ namespace cwcc {
 	void method::generate_definition(std::ostream & os, std::size_t no) const {
 		os << "\n";
 		clist.generate(os);
+		if(alist) {
+			alist->generate(os);
+			os << "\n";
+		}
 		if(static_) os << "static\n";
 		os << (result ? "auto" : "void") << " " << name << "(";
 		plist.generate_param_list(os);
@@ -252,12 +309,15 @@ namespace cwcc {
 		p.expect(")");
 		p.expect("]]");
 		p.expect("component");
+		if(p.starts_with('[')) alist = p;
 		name = p.next(type::name);
 		p.expect("{");
 		while(!p.consume("}")) {
-			comment_list comments{p};
-			if(p.consume(name)) constructors.emplace_back(p, std::move(comments));
-			else methods.emplace_back(p, std::move(comments));
+			comment_list clist{p};
+			std::optional<attribute_list> alist;
+			if(p.starts_with('[')) alist = p;
+			if(p.consume(name)) constructors.emplace_back(p, std::move(clist), std::move(alist));
+			else methods.emplace_back(p, std::move(clist), std::move(alist));
 			p.expect(";");
 		}
 		p.expect(";");
@@ -281,7 +341,9 @@ namespace cwcc {
 			return mangled_name;
 		}()};
 		clist.generate(os);
-		os << "struct " << name << " {\n";
+		os << "struct ";
+		if(alist) alist->generate(os);
+		os << name << " {\n";
 		os << "struct cwc_impl;\n";
 		os << "struct cwc_vtable final {\n";
 		os << "void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;\n";
@@ -327,6 +389,14 @@ namespace cwcc {
 
 	namespace_::namespace_(parser & p) : clist{p} {
 		p.expect("namespace");
+		if(p.consume("[[")) { //TODO: this duplicates subset of attribute_list...
+			p.expect("deprecated");
+			if(p.consume("(")) {
+				deprecated = p.next(type::string);
+				p.expect(")");
+			} else deprecated = 0;
+			p.expect("]]");
+		}
 		name = p.next(type::nested);
 		p.expect("{");
 		while(!p.consume("}")) components.emplace_back(p);
@@ -334,7 +404,16 @@ namespace cwcc {
 
 	void namespace_::generate(std::ostream & os) const {
 		clist.generate(os);
-		os << "namespace " << name << " {\n";
+		os << "namespace ";
+		struct visitor {
+			std::ostream & os;
+
+			void operator()(std::monostate) const noexcept {}
+			void operator()(int) const { os << "[[deprecated]] "; }
+			void operator()(const std::string & msg) const { os << "[[deprecated(" << msg << ")]] "; }
+		};
+		std::visit(visitor{os}, deprecated);
+		os << name << " {\n";
 		auto first{true};
 		for(const auto & c : components) {
 			if(first) first = false;

@@ -7,10 +7,21 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <variant>
 #include <optional>
 
 namespace cwcc {
 	class parser;
+
+
+	class attribute_list final {
+		std::variant<std::monostate, int /*present but no message*/, std::string> deprecated, nodiscard;
+	public:
+		attribute_list(parser & p);
+
+		void generate(std::ostream & os) const;
+	};
+
 
 	class param_list final {
 		enum class ref_t { none, lvalue, rvalue };
@@ -53,10 +64,11 @@ namespace cwcc {
 
 	class constructor final {
 		comment_list clist;
+		std::optional<attribute_list> alist;
 		param_list plist;
 	public:
 		constructor() =default;
-		constructor(parser & p, comment_list clist);
+		constructor(parser & p, comment_list clist, std::optional<attribute_list> alist);
 
 		void generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const;
 
@@ -67,13 +79,14 @@ namespace cwcc {
 	class method final {
 		bool static_;
 		comment_list clist;
+		std::optional<attribute_list> alist;
 		std::string name;
 		param_list plist;
 		bool const_;
 		bool noexcept_;
 		std::optional<std::string> result;
 	public:
-		method(parser & p, comment_list clist);
+		method(parser & p, comment_list clist, std::optional<attribute_list> alist);
 
 		void generate_definition(std::ostream & os, std::size_t no) const;
 
@@ -83,7 +96,9 @@ namespace cwcc {
 
 	class component final {
 		comment_list clist;
-		std::string dll, name;
+		std::string dll;
+		std::optional<attribute_list> alist;
+		std::string name;
 		std::vector<constructor> constructors;
 		std::vector<method> methods;
 	public:
@@ -95,6 +110,7 @@ namespace cwcc {
 	class namespace_ final {
 		comment_list clist;
 		std::string name;
+		std::variant<std::monostate, int /*present but no message*/, std::string> deprecated;
 		std::vector<component> components;
 	public:
 		namespace_(parser & p);

@@ -14,10 +14,16 @@ namespace cwcc {
 	class parser;
 
 
+	inline
+	constexpr
+	unsigned attribute_deprecated{0b01},
+	         attribute_nodiscard{0b10};
+
+
 	class attribute_list final {
 		std::variant<std::monostate, int /*present but no message*/, std::string> deprecated, nodiscard;
 	public:
-		attribute_list(parser & p);
+		attribute_list(parser & p, unsigned supported);
 
 		void generate(std::ostream & os) const;
 	};
@@ -109,8 +115,8 @@ namespace cwcc {
 
 	class namespace_ final {
 		comment_list clist;
+		std::optional<attribute_list> alist;
 		std::string name;
-		std::variant<std::monostate, int /*present but no message*/, std::string> deprecated;
 		std::vector<component> components;
 	public:
 		namespace_(parser & p);

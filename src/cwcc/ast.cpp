@@ -11,11 +11,12 @@
 //TODO: split AST from parsing and code generation
 
 namespace cwcc {
-	attribute_list::attribute_list(parser & p) {
+	attribute_list::attribute_list(parser & p, unsigned supported) {
 		//TODO: [C++23] all attributes are allowed to appear multiple times in a declaration
 		while(p.consume("[[")) {
 retry:
 			if(p.consume("deprecated")) {
+				if(!(supported & attribute_deprecated)) throw std::logic_error{"detected unsupported deprecated-attribute"};
 				if(!std::holds_alternative<std::monostate>(deprecated)) throw std::logic_error{"detected duplicated deprecated-attribute"};
 				if(p.consume("(")) {
 					deprecated = p.next(type::string);
@@ -23,6 +24,7 @@ retry:
 				} else deprecated = 0;
 			} else {
 				p.expect("nodiscard");
+				if(!(supported & attribute_nodiscard)) throw std::logic_error{"detected unsupported nodiscard-attribute"};
 				if(!std::holds_alternative<std::monostate>(nodiscard)) throw std::logic_error{"detected duplicated nodiscard-attribute"};
 				if(p.consume("(")) {
 					nodiscard = p.next(type::string);
@@ -302,6 +304,7 @@ retry:
 
 
 	component::component(parser & p) : clist{p} {
+		//TODO: evaluate how cwc::library can be merged transparently with alist => move to "correct" location"
 		p.expect("[[");
 		p.expect("cwc::library");
 		p.expect("(");
@@ -309,13 +312,13 @@ retry:
 		p.expect(")");
 		p.expect("]]");
 		p.expect("component");
-		if(p.starts_with('[')) alist = p;
+		if(p.accept("[[")) alist = {p, attribute_deprecated | attribute_nodiscard};
 		name = p.next(type::name);
 		p.expect("{");
 		while(!p.consume("}")) {
 			comment_list clist{p};
 			std::optional<attribute_list> alist;
-			if(p.starts_with('[')) alist = p;
+			if(p.accept("[[")) alist = {p, attribute_deprecated | attribute_nodiscard};
 			if(p.consume(name)) constructors.emplace_back(p, std::move(clist), std::move(alist));
 			else methods.emplace_back(p, std::move(clist), std::move(alist));
 			p.expect(";");
@@ -389,14 +392,7 @@ retry:
 
 	namespace_::namespace_(parser & p) : clist{p} {
 		p.expect("namespace");
-		if(p.consume("[[")) { //TODO: this duplicates subset of attribute_list...
-			p.expect("deprecated");
-			if(p.consume("(")) {
-				deprecated = p.next(type::string);
-				p.expect(")");
-			} else deprecated = 0;
-			p.expect("]]");
-		}
+		if(p.accept("[[")) alist = {p, attribute_deprecated};
 		name = p.next(type::nested);
 		p.expect("{");
 		while(!p.consume("}")) components.emplace_back(p);
@@ -405,14 +401,7 @@ retry:
 	void namespace_::generate(std::ostream & os) const {
 		clist.generate(os);
 		os << "namespace ";
-		struct visitor {
-			std::ostream & os;
-
-			void operator()(std::monostate) const noexcept {}
-			void operator()(int) const { os << "[[deprecated]] "; }
-			void operator()(const std::string & msg) const { os << "[[deprecated(" << msg << ")]] "; }
-		};
-		std::visit(visitor{os}, deprecated);
+		if(alist) alist->generate(os);
 		os << name << " {\n";
 		auto first{true};
 		for(const auto & c : components) {

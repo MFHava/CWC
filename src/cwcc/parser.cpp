@@ -12,8 +12,8 @@
 /* GRAMMAR
 
 CWC                  =      NAMESPACE*;
-NAMESPACE            =      COMMENT* "namespace" ATTRIBUTE_DEPRECATED? NESTED_NAME "{" COMPONENT* "}"
-COMPONENT            =      COMMENT* ATTRIBUTE_LIBRARY "component" NAME "{" BODY* "}" ";"
+NAMESPACE            =      COMMENT* "namespace" ATTRIBUTES* NESTED_NAME "{" COMPONENT* "}"
+COMPONENT            =      COMMENT* ATTRIBUTE_LIBRARY "component" ATTRIBUTES* NAME "{" BODY* "}" ";"
 BODY                 =      COMMENT* ATTRIBUTES* (CONSTRUCTOR | METHOD | STATIC_METHOD) ";"
 CONSTRUCTOR          =      NAME ARG_LIST
 STATIC_METHOD        =      "static" (STATIC_AUTO_METHOD | STATIC_VOID_METHOD)
@@ -30,9 +30,8 @@ CONST                =      "const"?
 NOEXCEPT             =      "noexcept"?
 COMMENT              =      "//" .* \n
 ATTRIBUTES           =      "[[" ATTRIBUTE % "," "]]" //TODO: [C++23] before C++23 duplicated attributes are forbidden...
-ATTRIBUTE            =      ("deprecated" | "nodiscard") ("(" STRING ")")?
+ATTRIBUTE            =      ("deprecated" | "nodiscard") ("(" STRING ")")? //TODO: not all attributes are supported in all locations
 ATTRIBUTE_LIBRARY    =      "[[" "cwc::library" "(" STRING ")" "]]"
-ATTRIBUTE_DEPRECATED =      "[[" "deprecated" ("(" STRING ")")? "]]"
 TYPE                 =      NAME TEMPLATE?
 TEMPLATE             =      '<' (TEMPLATE | [^>])* '>'
 NAME                 =      (a-zA-Z)(a-zA-Z0-9_)*

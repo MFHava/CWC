@@ -7,7 +7,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <variant>
 #include <optional>
 
 namespace cwcc {
@@ -15,7 +14,7 @@ namespace cwcc {
 
 
 	class attribute_list final {
-		std::variant<std::monostate, int /*present but no message*/, std::string> deprecated, nodiscard;
+		std::optional<std::string> deprecated, nodiscard;
 	public:
 		attribute_list(parser & p);
 

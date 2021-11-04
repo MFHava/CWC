@@ -16,18 +16,18 @@ namespace cwcc {
 		while(p.consume("[[")) {
 retry:
 			if(p.consume("deprecated")) {
-				if(!std::holds_alternative<std::monostate>(deprecated)) throw std::logic_error{"detected duplicated deprecated-attribute"};
+				if(deprecated) throw std::logic_error{"detected duplicated deprecated-attribute"};
 				if(p.consume("(")) {
 					deprecated = p.next(type::string);
 					p.expect(")");
-				} else deprecated = 0;
+				} else deprecated = "";
 			} else {
 				p.expect("nodiscard");
-				if(!std::holds_alternative<std::monostate>(nodiscard)) throw std::logic_error{"detected duplicated nodiscard-attribute"};
+				if(nodiscard) throw std::logic_error{"detected duplicated nodiscard-attribute"};
 				if(p.consume("(")) {
 					nodiscard = p.next(type::string);
 					p.expect(")");
-				} else nodiscard = 0;
+				} else nodiscard = "";
 			}
 			if(p.consume(",")) goto retry;
 			p.expect("]]");
@@ -36,26 +36,16 @@ retry:
 
 	void attribute_list::generate(std::ostream & os) const {
 		os << "[[";
-		auto first{true};
-		struct visitor {
-			bool & first;
-			std::ostream & os;
-			const char * name;
+		auto func{[&, first{true}](const char * name, const auto & value) mutable {
+			if(!value) return;
+			if(!first) os << ", ";
+			os << name;
+			if(value->size() > 2) os << "(" << *value << ")"; //collapse empty comments (provided by parser as "")
+			first = false;
+		}};
 
-			void operator()(std::monostate) const noexcept {}
-			void operator()(int) const {
-				if(!first) os << ", ";
-				os << name;
-				first = false;
-			}
-			void operator()(const std::string & msg) const noexcept {
-				if(!first) os << ", ";
-				os << name << "(" << msg << ")";
-				first = false;
-			}
-		};
-		std::visit(visitor{first, os, "nodiscard"}, nodiscard);
-		std::visit(visitor{first, os, "deprecated"}, deprecated);
+		func("nodiscard", nodiscard);
+		func("deprecated", deprecated);
 		os << "]]";
 	}
 

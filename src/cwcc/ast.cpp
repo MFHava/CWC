@@ -8,6 +8,7 @@
 #include "ast.hpp"
 #include "parser.hpp"
 
+//TODO: extensive error messages
 //TODO: split AST from parsing and code generation
 
 namespace cwcc {

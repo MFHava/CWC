@@ -11,12 +11,11 @@
 //TODO: split AST from parsing and code generation
 
 namespace cwcc {
-	attribute_list::attribute_list(parser & p, unsigned supported) {
+	attribute_list::attribute_list(parser & p) {
 		//TODO: [C++23] all attributes are allowed to appear multiple times in a declaration
 		while(p.consume("[[")) {
 retry:
 			if(p.consume("deprecated")) {
-				if(!(supported & attribute_deprecated)) throw std::logic_error{"detected unsupported deprecated-attribute"};
 				if(!std::holds_alternative<std::monostate>(deprecated)) throw std::logic_error{"detected duplicated deprecated-attribute"};
 				if(p.consume("(")) {
 					deprecated = p.next(type::string);
@@ -24,7 +23,6 @@ retry:
 				} else deprecated = 0;
 			} else {
 				p.expect("nodiscard");
-				if(!(supported & attribute_nodiscard)) throw std::logic_error{"detected unsupported nodiscard-attribute"};
 				if(!std::holds_alternative<std::monostate>(nodiscard)) throw std::logic_error{"detected duplicated nodiscard-attribute"};
 				if(p.consume("(")) {
 					nodiscard = p.next(type::string);
@@ -58,7 +56,7 @@ retry:
 		};
 		std::visit(visitor{first, os, "nodiscard"}, nodiscard);
 		std::visit(visitor{first, os, "deprecated"}, deprecated);
-		os << "]] ";
+		os << "]]";
 	}
 
 
@@ -309,13 +307,13 @@ retry:
 		dll = p.next(type::string);
 		p.expect(")");
 		p.expect("component");
-		if(p.accept("[[")) alist = {p, attribute_deprecated | attribute_nodiscard};
+		if(p.accept("[[")) alist = p;
 		name = p.next(type::name);
 		p.expect("{");
 		while(!p.consume("}")) {
 			comment_list clist{p};
 			std::optional<attribute_list> alist;
-			if(p.accept("[[")) alist = {p, attribute_deprecated | attribute_nodiscard};
+			if(p.accept("[[")) alist = p;
 			if(p.consume(name)) constructors.emplace_back(p, std::move(clist), std::move(alist));
 			else methods.emplace_back(p, std::move(clist), std::move(alist));
 			p.expect(";");
@@ -342,7 +340,10 @@ retry:
 		}()};
 		clist.generate(os);
 		os << "struct ";
-		if(alist) alist->generate(os);
+		if(alist) {
+			alist->generate(os);
+			os << " ";
+		}
 		os << name << " {\n";
 		os << "struct cwc_impl;\n";
 		os << "struct cwc_vtable final {\n";
@@ -389,7 +390,6 @@ retry:
 
 	namespace_::namespace_(parser & p) : clist{p} {
 		p.expect("namespace");
-		if(p.accept("[[")) alist = {p, attribute_deprecated};
 		name = p.next(type::nested);
 		p.expect("{");
 		while(!p.consume("}")) components.emplace_back(p);
@@ -397,9 +397,7 @@ retry:
 
 	void namespace_::generate(std::ostream & os) const {
 		clist.generate(os);
-		os << "namespace ";
-		if(alist) alist->generate(os);
-		os << name << " {\n";
+		os << "namespace " << name << " {\n";
 		auto first{true};
 		for(const auto & c : components) {
 			if(first) first = false;

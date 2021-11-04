@@ -12,7 +12,7 @@
 /* GRAMMAR
 
 CWC                  =      NAMESPACE*;
-NAMESPACE            =      COMMENT* "namespace" ATTRIBUTES* NESTED_NAME "{" COMPONENT* "}"
+NAMESPACE            =      COMMENT* "namespace" NESTED_NAME "{" COMPONENT* "}"
 COMPONENT            =      COMMENT* ANNOTATION "component" ATTRIBUTES* NAME "{" BODY* "}" ";"
 BODY                 =      COMMENT* ATTRIBUTES* (CONSTRUCTOR | METHOD | STATIC_METHOD) ";"
 CONSTRUCTOR          =      NAME ARG_LIST
@@ -29,7 +29,7 @@ CONST                =      "const"?
 NOEXCEPT             =      "noexcept"?
 COMMENT              =      "//" .* \n
 ATTRIBUTES           =      "[[" ATTRIBUTE % "," "]]" //TODO: [C++23] before C++23 duplicated attributes are forbidden...
-ATTRIBUTE            =      ("deprecated" | "nodiscard") ("(" STRING ")")? //TODO: not all attributes are supported in all locations
+ATTRIBUTE            =      ("deprecated" | "nodiscard") ("(" STRING ")")?
 ANNOTATION           =      "@library" "(" STRING ")"
 TYPE                 =      NAME TEMPLATE?
 TEMPLATE             =      '<' (TEMPLATE | [^>])* '>'

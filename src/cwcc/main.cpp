@@ -15,17 +15,20 @@ int main(int argc, char * argv[]) {
 	std::stringstream ss{R"(
 		namespace cwc::sample::fibonacci {
 			@library("sample-fibonacci")
-			component sequence {
+			component [[nodiscard]] sequence {
 				sequence();
+				[[deprecated("for visualization only")]]
 				sequence(const int & dummy);
 
 				//! @brief compute fibonacci number
 				//! @returns fibonacci number
+				[[nodiscard]]
 				auto calculate(
 					std::uint8_t no //!< [in] no
 				) const -> std::uint64_t;
 
 				//! @returns max supported fibonacci number that can be computed before result would overflow
+				[[nodiscard]]
 				static
 				auto max() noexcept -> std::uint8_t;
 			};

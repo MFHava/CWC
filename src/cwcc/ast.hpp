@@ -12,7 +12,6 @@
 namespace cwcc {
 	class parser;
 
-
 	class attribute_list final {
 		std::optional<std::string> deprecated, nodiscard;
 	public:
@@ -20,7 +19,6 @@ namespace cwcc {
 
 		void generate(std::ostream & os) const;
 	};
-
 
 	class param_list final {
 		enum class ref_t { none, lvalue, rvalue };
@@ -39,7 +37,6 @@ namespace cwcc {
 
 		std::vector<param> params;
 	public:
-		param_list() =default;
 		param_list(parser & p);
 
 		void generate_param_passing(std::ostream & os) const;
@@ -55,19 +52,18 @@ namespace cwcc {
 	class comment_list final {
 		std::vector<std::string> comments;
 	public:
-		comment_list() =default;
 		comment_list(parser & p);
 
 		void generate(std::ostream & os) const;
 	};
 
 	class constructor final {
-		comment_list clist;
+		std::optional<comment_list> clist;
 		std::optional<attribute_list> alist;
-		param_list plist;
+		std::optional<param_list> plist;
 	public:
 		constructor() =default;
-		constructor(parser & p, comment_list clist, std::optional<attribute_list> alist);
+		constructor(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist);
 
 		void generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const;
 
@@ -77,15 +73,15 @@ namespace cwcc {
 
 	class method final {
 		bool static_;
-		comment_list clist;
+		std::optional<comment_list> clist;
 		std::optional<attribute_list> alist;
 		std::string name;
-		param_list plist;
+		std::optional<param_list> plist;
 		bool const_;
 		bool noexcept_;
 		std::optional<std::string> result;
 	public:
-		method(parser & p, comment_list clist, std::optional<attribute_list> alist);
+		method(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist);
 
 		void generate_definition(std::ostream & os, std::size_t no) const;
 
@@ -94,7 +90,7 @@ namespace cwcc {
 	};
 
 	class component final {
-		comment_list clist;
+		std::optional<comment_list> clist;
 		std::string dll;
 		std::optional<attribute_list> alist;
 		std::string name;
@@ -107,7 +103,7 @@ namespace cwcc {
 	};
 
 	class namespace_ final {
-		comment_list clist;
+		std::optional<comment_list> clist;
 		std::string name;
 		std::vector<component> components;
 	public:

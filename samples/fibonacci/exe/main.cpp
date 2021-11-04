@@ -9,7 +9,7 @@
 #include "../cwc.sample.fibonacci.cwch"
 
 int main() {
-	cwc::sample::fibonacci::sequence s{1};
+	cwc::sample::fibonacci::sequence s;
 
 	std::cout << "\n\n\n";
 
@@ -20,7 +20,7 @@ int main() {
 	try {
 		const auto max{s.max()};
 		std::cout << "MAX: " << static_cast<int>(max) << '\n';
-		s.calculate(max + 1);
+		(void)s.calculate(max + 1);
 	} catch(const std::exception & exc) {
 		std::cout << "ERROR(" << typeid(exc).name() << "): " << exc.what() << "\n";
 	}

@@ -4,7 +4,7 @@
 #include <cwc/cwc.hpp>
 
 namespace cwc::sample::fibonacci {
-	struct sequence {
+	struct [[nodiscard]] sequence {
 		struct cwc_impl;
 		struct cwc_vtable final {
 			void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;
@@ -23,10 +23,12 @@ namespace cwc::sample::fibonacci {
 
 		sequence() { cwc_dll().call<&cwc_vtable::cwc_1>(&cwc_self); }
 
+		[[deprecated("for visualization only")]]
 		sequence(const int & dummy) { cwc_dll().call<&cwc_vtable::cwc_2>(std::addressof(dummy), &cwc_self); }
 
 		//! @brief compute fibonacci number
 		//! @returns fibonacci number
+		[[nodiscard]]
 		auto calculate(
 			std::uint8_t no //!< [in] no
 		) const -> std::uint64_t {
@@ -36,6 +38,7 @@ namespace cwc::sample::fibonacci {
 		}
 
 		//! @returns max supported fibonacci number that can be computed before result would overflow
+		[[nodiscard]]
 		static
 		auto max() noexcept -> std::uint8_t {
 			std::uint8_t cwc_result;

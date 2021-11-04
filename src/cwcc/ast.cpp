@@ -76,13 +76,10 @@ retry:
 	}
 
 	param_list::param_list(parser & p) {
-		p.expect("(");
-		if(!p.consume(")")) {
+		params.emplace_back(p);
+		while(!p.accept(")")) {
+			p.expect(",");
 			params.emplace_back(p);
-			while(!p.consume(")")) {
-				p.expect(",");
-				params.emplace_back(p);
-			}
 		}
 	}
 
@@ -160,51 +157,63 @@ retry:
 	void comment_list::generate(std::ostream & os) const { for(const auto & c : comments) os << c << '\n'; }
 
 
-	constructor::constructor(parser & p, comment_list clist, std::optional<attribute_list> alist) : clist{std::move(clist)}, alist{std::move(alist)}, plist{p} {}
+	constructor::constructor(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist) : clist{std::move(clist)}, alist{std::move(alist)} {
+		p.expect("(");
+		if(!p.accept(")")) plist = p;
+		p.expect(")");
+	}
 
 	void constructor::generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const {
 		os << "\n";
-		clist.generate(os);
+		if(clist) clist->generate(os);
 		if(alist) {
 			alist->generate(os);
 			os << "\n";
 		}
 		os << class_ << "(";
-		plist.generate_param_list(os);
+		if(plist) plist->generate_param_list(os);
 		os << ") { cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
-		plist.generate_param_passing(os);
-		if(!plist.empty()) os << ", ";
+		if(plist) {
+			plist->generate_param_passing(os);
+			os << ", ";
+		}
 		os << "&cwc_self";
 		os << "); }\n";
 	}
 
 	void constructor::generate_vtable_declaration(std::ostream & os, std::size_t no) const {
 		os << "cwc::internal::error_callback(CWC_CALL * cwc_" << no << ")(";
-		plist.generate_vtable_declaration(os);
-		if(!plist.empty()) os << ", ";
+		if(plist) {
+			plist->generate_vtable_declaration(os);
+			os << ", ";
+		}
 		os << "cwc_impl **) noexcept;\n";
 	}
 
 	void constructor::generate_vtable_definition(std::ostream & os, std::string_view fqn, bool last) const {
 		os << "+[](";
-		plist.generate_vtable_definition(os);
-		if(!plist.empty()) os << ", ";
+		if(plist) {
+			plist->generate_vtable_definition(os);
+			os << ", ";
+		}
 		os << fqn << "::cwc_impl ** cwc_result";
 		os << ") noexcept { return cwc::internal::try_([&] { *cwc_result = new " << fqn << "::cwc_impl{";
-		plist.generate_vtable_definition_paramters(os);
+		if(plist) plist->generate_vtable_definition_paramters(os);
 		os << "}; }); }";
 		if(!last) os << ",";
 		os << "\\\n";
 	}
 
 
-	method::method(parser & p, comment_list clist, std::optional<attribute_list> alist) : clist{std::move(clist)}, alist{std::move(alist)} {
+	method::method(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist) : clist{std::move(clist)}, alist{std::move(alist)} {
 		static_ = p.consume("static");
 		const auto returning{p.consume("auto")};
 		if(!returning) p.expect("void");
 
 		name = p.next(type::name);
-		plist = p;
+		p.expect("(");
+		if(!p.accept(")")) plist = p;
+		p.expect(")");
 		if(static_) const_ = false;
 		else const_ = p.consume("const");
 		noexcept_ = p.consume("noexcept");
@@ -216,14 +225,14 @@ retry:
 
 	void method::generate_definition(std::ostream & os, std::size_t no) const {
 		os << "\n";
-		clist.generate(os);
+		if(clist) clist->generate(os);
 		if(alist) {
 			alist->generate(os);
 			os << "\n";
 		}
 		if(static_) os << "static\n";
 		os << (result ? "auto" : "void") << " " << name << "(";
-		plist.generate_param_list(os);
+		if(plist) plist->generate_param_list(os);
 		os << ") ";
 		if(const_) os << "const ";
 		if(noexcept_) os << "noexcept ";
@@ -234,11 +243,11 @@ retry:
 		os << "cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
 		if(!static_) {
 			os << "cwc_self";
-			if(!plist.empty() || result) os << ", ";
+			if(plist || result) os << ", ";
 		}
-		plist.generate_param_passing(os);
+		if(plist) plist->generate_param_passing(os);
 		if(result) {
-			if(!plist.empty()) os << ", ";
+			if(plist) os << ", ";
 			os << "std::addressof(cwc_result)";
 		}
 		os << ");";
@@ -254,11 +263,11 @@ retry:
 		if(!static_) {
 			if(const_) os << "const ";
 			os << "cwc_impl *";
-			if(!plist.empty() || result) os << ", ";
+			if(plist || result) os << ", ";
 		}
-		plist.generate_vtable_declaration(os);
+		if(plist) plist->generate_vtable_declaration(os);
 		if(result) {
-			if(!plist.empty()) os << ", ";
+			if(plist) os << ", ";
 			os << *result << " *";
 		}
 		os << ") noexcept;\n";
@@ -269,11 +278,11 @@ retry:
 		if(!static_) {
 			if(const_) os << "const ";
 			os << fqn << "::cwc_impl * cwc_self";
-			if(!plist.empty() || result) os << ", ";
+			if(plist || result) os << ", ";
 		}
-		plist.generate_vtable_definition(os);
+		if(plist) plist->generate_vtable_definition(os);
 		if(result) {
-			if(!plist.empty()) os << ", ";
+			if(plist) os << ", ";
 			os << *result << " * cwc_result";
 		}
 		os << ") noexcept { ";
@@ -282,7 +291,7 @@ retry:
 		if(static_) os << fqn << "::cwc_impl::";
 		else os << "cwc_self->";
 		os << name << "(";
-		plist.generate_vtable_definition_paramters(os);
+		if(plist) plist->generate_vtable_definition_paramters(os);
 		os << "); ";
 		if(!noexcept_) os << "}); ";
 		os << "}";
@@ -291,7 +300,8 @@ retry:
 	}
 
 
-	component::component(parser & p) : clist{p} {
+	component::component(parser & p) {
+		if(p.starts_with('/')) clist = p;
 		p.expect("@library");
 		p.expect("(");
 		dll = p.next(type::string);
@@ -301,7 +311,8 @@ retry:
 		name = p.next(type::name);
 		p.expect("{");
 		while(!p.consume("}")) {
-			comment_list clist{p};
+			std::optional<comment_list> clist;
+			if(p.starts_with('/')) clist = p;
 			std::optional<attribute_list> alist;
 			if(p.accept("[[")) alist = p;
 			if(p.consume(name)) constructors.emplace_back(p, std::move(clist), std::move(alist));
@@ -328,7 +339,7 @@ retry:
 			mangled_name += name;
 			return mangled_name;
 		}()};
-		clist.generate(os);
+		if(clist) clist->generate(os);
 		os << "struct ";
 		if(alist) {
 			alist->generate(os);
@@ -378,7 +389,8 @@ retry:
 	}
 
 
-	namespace_::namespace_(parser & p) : clist{p} {
+	namespace_::namespace_(parser & p) {
+		if(p.starts_with('/')) clist = p;
 		p.expect("namespace");
 		name = p.next(type::nested);
 		p.expect("{");
@@ -386,7 +398,7 @@ retry:
 	}
 
 	void namespace_::generate(std::ostream & os) const {
-		clist.generate(os);
+		if(clist) clist->generate(os);
 		os << "namespace " << name << " {\n";
 		auto first{true};
 		for(const auto & c : components) {

@@ -35,7 +35,6 @@ TYPE                 =      NAME TEMPLATE?
 TEMPLATE             =      '<' (TEMPLATE | [^>])* '>'
 NAME                 =      (a-zA-Z)(a-zA-Z0-9_)*
 NESTED_NAME          =      NAME("::"NAME)*
-LIB_NAME             =      (a-zA-Z0-9_-)+
 STRING               =      "\"" .* "\""
 */
 

@@ -13,7 +13,8 @@
 
 CWC                  =      NAMESPACE*;
 NAMESPACE            =      COMMENT* "namespace" NESTED_NAME "{" COMPONENT* "}"
-COMPONENT            =      COMMENT* ANNOTATION "component" ATTRIBUTES* NAME "{" BODY* "}" ";"
+COMPONENT            =      COMMENT* ANNOTATION "component" ATTRIBUTES* NAME FINAL "{" BODY* "}" ";"
+FINAL                =      "final"?;
 BODY                 =      COMMENT* ATTRIBUTES* (CONSTRUCTOR | METHOD | STATIC_METHOD) ";"
 CONSTRUCTOR          =      NAME ARG_LIST
 STATIC_METHOD        =      "static" (STATIC_AUTO_METHOD | STATIC_VOID_METHOD)

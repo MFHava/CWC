@@ -4,7 +4,7 @@
 #include <cwc/cwc.hpp>
 
 namespace cwc::sample::fibonacci {
-	struct [[nodiscard]] sequence {
+	struct [[nodiscard]] sequence final {
 		struct cwc_impl;
 		struct cwc_vtable final {
 			void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;

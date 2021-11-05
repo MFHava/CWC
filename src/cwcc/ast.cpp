@@ -310,6 +310,7 @@ retry:
 		p.expect("component");
 		if(p.accept("[[")) alist = p;
 		name = p.next(type::name);
+		final_ = p.consume("final");
 		p.expect("{");
 		while(!p.consume("}")) {
 			std::optional<comment_list> clist;
@@ -346,7 +347,9 @@ retry:
 			alist->generate(os);
 			os << " ";
 		}
-		os << name << " {\n";
+		os << name << " ";
+		if(final_) os << "final ";
+		os << "{\n";
 		os << "struct cwc_impl;\n";
 		os << "struct cwc_vtable final {\n";
 		os << "void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;\n";

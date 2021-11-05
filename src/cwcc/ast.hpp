@@ -94,6 +94,7 @@ namespace cwcc {
 		std::string dll;
 		std::optional<attribute_list> alist;
 		std::string name;
+		bool final_;
 		std::vector<constructor> constructors;
 		std::vector<method> methods;
 	public:

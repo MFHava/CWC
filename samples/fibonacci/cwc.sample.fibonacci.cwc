@@ -1,6 +1,6 @@
 namespace cwc::sample::fibonacci {
 	@library("sample-fibonacci")
-	component [[nodiscard]] sequence {
+	component [[nodiscard]] sequence final {
 		sequence();
 		[[deprecated("for visualization only")]]
 		sequence(const int & dummy);

@@ -129,7 +129,7 @@ retry:
 			else os << ", ";
 			if(p.const_) os << "const ";
 			os << p.type;
-			if(p.ref != param_list::ref_t::none) os << " *";
+			if(p.ref != ref_t::none) os << " *";
 			if(definition) os << " " << p.name;
 		}
 	}
@@ -222,8 +222,15 @@ retry:
 		p.expect("(");
 		if(!p.accept(")")) plist = p;
 		p.expect(")");
-		if(static_) const_ = false;
-		else const_ = p.consume("const");
+		if(static_) {
+			const_ = false;
+			ref = ref_t::none;
+		} else {
+			const_ = p.consume("const");
+			if(p.consume("&")) ref = ref_t::lvalue;
+			else if(p.consume("&&")) ref = ref_t::rvalue;
+			else ref = ref_t::none;
+		}
 		noexcept_ = p.consume("noexcept");
 		if(returning) {
 			p.expect("->");
@@ -244,6 +251,10 @@ retry:
 		if(plist) plist->generate_param_list(os);
 		os << ") ";
 		if(const_) os << "const ";
+		switch(ref) {
+			case ref_t::lvalue: os << "& ";  break;
+			case ref_t::rvalue: os << "&& "; break;
+		}
 		if(noexcept_) os << "noexcept ";
 		if(result) os << "-> " << *result << " ";
 		if(delete_) os << "=delete;\n";
@@ -303,7 +314,10 @@ retry:
 		if(!noexcept_) os << "return cwc::internal::try_([&] { ";
 		if(result) os << "*cwc_result = ";
 		if(static_) os << fqn << "::cwc_impl::";
-		else os << "cwc_self->";
+		else {
+			if(ref == ref_t::rvalue) os << "std::move";
+			os << "(*cwc_self).";
+		}
 		os << name << "(";
 		if(plist) plist->generate_vtable_definition_paramters(os);
 		os << "); ";

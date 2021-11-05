@@ -20,9 +20,9 @@ namespace cwcc {
 		void generate(std::ostream & os) const;
 	};
 
-	class param_list final {
-		enum class ref_t { none, lvalue, rvalue };
+	enum class ref_t { none, lvalue, rvalue };
 
+	class param_list final {
 		struct param final {
 			bool const_;
 			ref_t ref;
@@ -79,6 +79,7 @@ namespace cwcc {
 		std::string name;
 		std::optional<param_list> plist;
 		bool const_;
+		ref_t ref;
 		bool noexcept_;
 		std::optional<std::string> result;
 		bool delete_;

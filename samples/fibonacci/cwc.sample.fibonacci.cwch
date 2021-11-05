@@ -59,7 +59,7 @@ namespace cwc::sample::fibonacci {
 	extern "C" CWC_EXPORT const cwc::sample::fibonacci::sequence::cwc_vtable cwc$sample$fibonacci$sequence{\
 		+[](cwc::sample::fibonacci::sequence::cwc_impl * cwc_self) noexcept { delete cwc_self; },\
 		+[](cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl{}; }); },\
-		+[](const cwc::sample::fibonacci::sequence::cwc_impl * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = cwc_self->calculate(std::move(no)); }); },\
+		+[](const cwc::sample::fibonacci::sequence::cwc_impl * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = (*cwc_self).calculate(std::move(no)); }); },\
 		+[](std::uint8_t * cwc_result) noexcept { *cwc_result = cwc::sample::fibonacci::sequence::cwc_impl::max(); }\
 	}
 }

@@ -162,6 +162,7 @@ retry:
 		p.expect("(");
 		if(!p.accept(")")) plist = p;
 		p.expect(")");
+		if(delete_ = p.consume("=")) p.expect("delete");
 	}
 
 	void constructor::generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const {
@@ -173,16 +174,21 @@ retry:
 		}
 		os << class_ << "(";
 		if(plist) plist->generate_param_list(os);
-		os << ") { cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
-		if(plist) {
-			plist->generate_param_passing(os);
-			os << ", ";
+		os << ") ";
+		if(delete_) os << "=delete;\n";
+		else {
+			os << "{ cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
+			if(plist) {
+				plist->generate_param_passing(os);
+				os << ", ";
+			}
+			os << "&cwc_self";
+			os << "); }\n";
 		}
-		os << "&cwc_self";
-		os << "); }\n";
 	}
 
 	void constructor::generate_vtable_declaration(std::ostream & os, std::size_t no) const {
+		if(delete_) return;
 		os << "cwc::internal::error_callback(CWC_CALL * cwc_" << no << ")(";
 		if(plist) {
 			plist->generate_vtable_declaration(os);
@@ -192,6 +198,7 @@ retry:
 	}
 
 	void constructor::generate_vtable_definition(std::ostream & os, std::string_view fqn, bool last) const {
+		if(delete_) return;
 		os << "+[](";
 		if(plist) {
 			plist->generate_vtable_definition(os);
@@ -222,6 +229,7 @@ retry:
 			p.expect("->");
 			result = p.next(type::type);
 		}
+		if(delete_ = p.consume("=")) p.expect("delete");
 	}
 
 	void method::generate_definition(std::ostream & os, std::size_t no) const {
@@ -238,26 +246,30 @@ retry:
 		if(const_) os << "const ";
 		if(noexcept_) os << "noexcept ";
 		if(result) os << "-> " << *result << " ";
-		os << "{";
-		if(result) os << "\n" << *result << " cwc_result;\n";
-		else os << " ";
-		os << "cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
-		if(!static_) {
-			os << "cwc_self";
-			if(plist || result) os << ", ";
+		if(delete_) os << "=delete;\n";
+		else {
+			os << "{";
+			if(result) os << "\n" << *result << " cwc_result;\n";
+			else os << " ";
+			os << "cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
+			if(!static_) {
+				os << "cwc_self";
+				if(plist || result) os << ", ";
+			}
+			if(plist) plist->generate_param_passing(os);
+			if(result) {
+				if(plist) os << ", ";
+				os << "std::addressof(cwc_result)";
+			}
+			os << ");";
+			if(result) os << "\nreturn cwc_result;\n";
+			else os << " ";
+			os << "}\n";
 		}
-		if(plist) plist->generate_param_passing(os);
-		if(result) {
-			if(plist) os << ", ";
-			os << "std::addressof(cwc_result)";
-		}
-		os << ");";
-		if(result) os << "\nreturn cwc_result;\n";
-		else os << " ";
-		os << "}\n";
 	}
 
 	void method::generate_vtable_declaration(std::ostream & os, std::size_t no) const {
+		if(delete_) return;
 		if(noexcept_) os << "void";
 		else os << "cwc::internal::error_callback";
 		os << "(CWC_CALL * cwc_" << no << ")(";
@@ -275,6 +287,7 @@ retry:
 	}
 
 	void method::generate_vtable_definition(std::ostream & os, std::string_view fqn, bool last) const {
+		if(delete_) return;
 		os << "+[](";
 		if(!static_) {
 			if(const_) os << "const ";

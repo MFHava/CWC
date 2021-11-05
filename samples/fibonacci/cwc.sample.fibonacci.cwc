@@ -3,7 +3,7 @@ namespace cwc::sample::fibonacci {
 	component [[nodiscard]] sequence final {
 		sequence();
 		[[deprecated("for visualization only")]]
-		sequence(const int & dummy);
+		sequence(const int & dummy) =delete;
 
 		//! @brief compute fibonacci number
 		//! @returns fibonacci number
@@ -11,6 +11,8 @@ namespace cwc::sample::fibonacci {
 		auto calculate(
 			std::uint8_t no //!< [in] no
 		) const -> std::uint64_t;
+
+		void calculate() =delete;
 
 		//! @returns max supported fibonacci number that can be computed before result would overflow
 		[[nodiscard]]

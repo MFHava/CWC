@@ -61,6 +61,7 @@ namespace cwcc {
 		std::optional<comment_list> clist;
 		std::optional<attribute_list> alist;
 		std::optional<param_list> plist;
+		bool delete_;
 	public:
 		constructor() =default;
 		constructor(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist);
@@ -80,6 +81,7 @@ namespace cwcc {
 		bool const_;
 		bool noexcept_;
 		std::optional<std::string> result;
+		bool delete_;
 	public:
 		method(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist);
 

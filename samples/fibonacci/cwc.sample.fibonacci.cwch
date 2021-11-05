@@ -9,9 +9,8 @@ namespace cwc::sample::fibonacci {
 		struct cwc_vtable final {
 			void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;
 			cwc::internal::error_callback(CWC_CALL * cwc_1)(cwc_impl **) noexcept;
-			cwc::internal::error_callback(CWC_CALL * cwc_2)(const int *, cwc_impl **) noexcept;
 			cwc::internal::error_callback(CWC_CALL * cwc_3)(const cwc_impl *, std::uint8_t, std::uint64_t *) noexcept;
-			void(CWC_CALL * cwc_4)(std::uint8_t *) noexcept;
+			void(CWC_CALL * cwc_5)(std::uint8_t *) noexcept;
 		};
 
 		sequence(const sequence &) =delete;
@@ -24,7 +23,7 @@ namespace cwc::sample::fibonacci {
 		sequence() { cwc_dll().call<&cwc_vtable::cwc_1>(&cwc_self); }
 
 		[[deprecated("for visualization only")]]
-		sequence(const int & dummy) { cwc_dll().call<&cwc_vtable::cwc_2>(std::addressof(dummy), &cwc_self); }
+		sequence(const int & dummy) =delete;
 
 		//! @brief compute fibonacci number
 		//! @returns fibonacci number
@@ -37,12 +36,14 @@ namespace cwc::sample::fibonacci {
 			return cwc_result;
 		}
 
+		void calculate() =delete;
+
 		//! @returns max supported fibonacci number that can be computed before result would overflow
 		[[nodiscard]]
 		static
 		auto max() noexcept -> std::uint8_t {
 			std::uint8_t cwc_result;
-			cwc_dll().call<&cwc_vtable::cwc_4>(std::addressof(cwc_result));
+			cwc_dll().call<&cwc_vtable::cwc_5>(std::addressof(cwc_result));
 			return cwc_result;
 		}
 	private:
@@ -58,7 +59,6 @@ namespace cwc::sample::fibonacci {
 	extern "C" CWC_EXPORT const cwc::sample::fibonacci::sequence::cwc_vtable cwc$sample$fibonacci$sequence{\
 		+[](cwc::sample::fibonacci::sequence::cwc_impl * cwc_self) noexcept { delete cwc_self; },\
 		+[](cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl{}; }); },\
-		+[](const int * dummy, cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl{*dummy}; }); },\
 		+[](const cwc::sample::fibonacci::sequence::cwc_impl * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = cwc_self->calculate(std::move(no)); }); },\
 		+[](std::uint8_t * cwc_result) noexcept { *cwc_result = cwc::sample::fibonacci::sequence::cwc_impl::max(); }\
 	}

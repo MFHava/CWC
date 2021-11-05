@@ -10,7 +10,6 @@
 namespace cwc::sample::fibonacci {
 	struct sequence::cwc_impl {
 		cwc_impl() noexcept { printf("%s()\n", __func__); }
-		cwc_impl(int) noexcept { printf("%s(int)\n", __func__); }
 
 		~cwc_impl() noexcept { printf("%s()\n", __func__); }
 

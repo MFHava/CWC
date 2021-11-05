@@ -218,7 +218,11 @@ retry:
 		const auto returning{p.consume("auto")};
 		if(!returning) p.expect("void");
 
-		name = p.next(type::name);
+		if(p.consume("operator")) {
+			p.expect("(");
+			p.expect(")");
+			name = "operator()";
+		} else name = p.next(type::name);
 		p.expect("(");
 		if(!p.accept(")")) plist = p;
 		p.expect(")");

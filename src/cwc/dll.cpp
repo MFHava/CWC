@@ -10,6 +10,7 @@
 #include <filesystem>
 
 #ifdef _WIN32
+	#define UNICODE
 	#define WIN32_LEAN_AND_MEAN
 	#define NOSERVICE
 	#define NOMCX
@@ -20,16 +21,15 @@
 	#endif
 	#include <Windows.h>
 
-	//TODO: all Windows-related code must be updated to support wchar_t => can impl::impl still be a shared implementation?!
 	namespace cwc::internal {
 		using handle = HMODULE;
 	
 		inline
-		auto executable_name() -> std::string {
+		auto executable_name() -> std::filesystem::path {
 			static_assert(sizeof(DWORD) == 4);
-			for(std::string result(MAX_PATH, '\0');; result.resize(result.size() * 2)) {
+			for(std::wstring result(MAX_PATH, '\0');; result.resize(result.size() * 2)) {
 				if(result.size() > std::numeric_limits<DWORD>::max()) throw std::runtime_error{"exceeding DWORD for path size"};
-				if(const auto size{GetModuleFileName(nullptr, result.data(), static_cast<DWORD>(result.size()))}; size < result.size()) {
+				if(const auto size{GetModuleFileNameW(nullptr, result.data(), static_cast<DWORD>(result.size()))}; size < result.size()) {
 					result.resize(size);
 					return result;
 				}
@@ -53,7 +53,7 @@
 		using handle = void *;
 	
 		inline
-		auto executable_name() -> std::string {
+		auto executable_name() -> std::filesystem::path {
 			for(std::string result(PATH_MAX, '\0');; result.resize(result.size() * 2)) {
 				if(const auto size{readlink("/proc/self/exe", result.data(), result.size())}; size < static_cast<ssize_t>(result.size())) {
 					if(size == -1) throw std::runtime_error{"readlink failed"};
@@ -81,7 +81,7 @@
 		using handle = image_id;
 	
 		inline
-		auto executable_name() -> std::string {
+		auto executable_name() -> std::filesystem::path {
 			image_info info;
 			info.name[0] = '\0';
 			for(int32 cookie{0}; get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK && info.type != B_APP_IMAGE;);
@@ -101,11 +101,7 @@
 
 namespace cwc::internal {
 	namespace {
-		const auto base_path{[] {
-			auto exe{executable_name()};
-			if(const auto it{std::find(std::rbegin(exe), std::rend(exe), std::filesystem::path::preferred_separator)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
-			return exe;
-		}()};
+		const auto base_path{executable_name().remove_filename()};
 	}
 
 	struct dll::native_handle final {

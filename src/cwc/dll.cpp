@@ -18,7 +18,7 @@
 	#ifndef NOMINMAX
 		#define NOMINMAX
 	#endif
-	#include <Windows.h> //TODO: can this include be minimized?
+	#include <Windows.h>
 
 	//TODO: all Windows-related code must be updated to support wchar_t => can impl::impl still be a shared implementation?!
 	namespace cwc::internal {
@@ -85,7 +85,7 @@
 			image_info info;
 			info.name[0] = '\0';
 			for(int32 cookie{0}; get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK && info.type != B_APP_IMAGE;);
-			//TODO: error handling?!
+			if(info.type != B_APP_IMAGE) throw std::runtime_error{"could not find APP_IMAGE"};
 			return info.name;
 		}
 

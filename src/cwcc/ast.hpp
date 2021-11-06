@@ -69,7 +69,7 @@ namespace cwcc {
 		void generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const;
 
 		void generate_vtable_declaration(std::ostream & os, std::size_t no) const;
-		void generate_vtable_definition(std::ostream & os, std::string_view fqn, bool last) const;
+		void generate_vtable_definition(std::ostream & os, bool last) const;
 	};
 
 	class method final {
@@ -89,7 +89,7 @@ namespace cwcc {
 		void generate_definition(std::ostream & os, std::size_t no) const;
 
 		void generate_vtable_declaration(std::ostream & os, std::size_t no) const;
-		void generate_vtable_definition(std::ostream & os, std::string_view fqn, bool last) const;
+		void generate_vtable_definition(std::ostream & os, bool last) const;
 	};
 
 	class component final {

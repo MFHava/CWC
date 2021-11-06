@@ -5,8 +5,6 @@
 
 namespace cwc::sample::fibonacci {
 	struct [[nodiscard]] sequence final {
-		struct cwc_impl;
-
 		sequence(const sequence &) =delete;
 		sequence(sequence && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}
 		auto operator=(const sequence &) -> sequence & =delete;
@@ -45,9 +43,9 @@ namespace cwc::sample::fibonacci {
 		cwc::internal::vtable_access<sequence>;
 
 		struct cwc_vtable final {
-			void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;
-			cwc::internal::error_callback(CWC_CALL * cwc_1)(cwc_impl **) noexcept;
-			cwc::internal::error_callback(CWC_CALL * cwc_3)(const cwc_impl *, std::uint8_t, std::uint64_t *) noexcept;
+			void(CWC_CALL * cwc_0)(void *) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_1)(void **) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_3)(const void *, std::uint8_t, std::uint64_t *) noexcept;
 			void(CWC_CALL * cwc_5)(std::uint8_t *) noexcept;
 		};
 
@@ -57,13 +55,13 @@ namespace cwc::sample::fibonacci {
 			return instance;
 		}
 
-		cwc_impl * cwc_self;
+		void * cwc_self;
 	};
-#define CWC_EXPORT_cwc$sample$fibonacci$sequence \
+#define CWC_EXPORT_cwc$sample$fibonacci$sequence(cwc_impl)\
 	extern "C" CWC_EXPORT const typename cwc::internal::vtable_access<cwc::sample::fibonacci::sequence>::type cwc$sample$fibonacci$sequence{\
-		+[](cwc::sample::fibonacci::sequence::cwc_impl * cwc_self) noexcept { delete cwc_self; },\
-		+[](cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl{}; }); },\
-		+[](const cwc::sample::fibonacci::sequence::cwc_impl * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = (*cwc_self).calculate(std::move(no)); }); },\
-		+[](std::uint8_t * cwc_result) noexcept { *cwc_result = cwc::sample::fibonacci::sequence::cwc_impl::max(); }\
+		+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\
+		+[](void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{}; }); },\
+		+[](const void * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = reinterpret_cast<const cwc_impl *>(cwc_self)->calculate(std::move(no)); }); },\
+		+[](std::uint8_t * cwc_result) noexcept { *cwc_result = cwc_impl::max(); }\
 	}
 }

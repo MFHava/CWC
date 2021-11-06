@@ -194,18 +194,17 @@ retry:
 			plist->generate_vtable_declaration(os);
 			os << ", ";
 		}
-		os << "cwc_impl **) noexcept;\n";
+		os << "void **) noexcept;\n";
 	}
 
-	void constructor::generate_vtable_definition(std::ostream & os, std::string_view fqn, bool last) const {
+	void constructor::generate_vtable_definition(std::ostream & os, bool last) const {
 		if(delete_) return;
 		os << "+[](";
 		if(plist) {
 			plist->generate_vtable_definition(os);
 			os << ", ";
 		}
-		os << fqn << "::cwc_impl ** cwc_result";
-		os << ") noexcept { return cwc::internal::try_([&] { *cwc_result = new " << fqn << "::cwc_impl{";
+		os << "void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{";
 		if(plist) plist->generate_vtable_definition_paramters(os);
 		os << "}; }); }";
 		if(!last) os << ",";
@@ -290,7 +289,7 @@ retry:
 		os << "(CWC_CALL * cwc_" << no << ")(";
 		if(!static_) {
 			if(const_) os << "const ";
-			os << "cwc_impl *";
+			os << "void *";
 			if(plist || result) os << ", ";
 		}
 		if(plist) plist->generate_vtable_declaration(os);
@@ -301,12 +300,12 @@ retry:
 		os << ") noexcept;\n";
 	}
 
-	void method::generate_vtable_definition(std::ostream & os, std::string_view fqn, bool last) const {
+	void method::generate_vtable_definition(std::ostream & os, bool last) const {
 		if(delete_) return;
 		os << "+[](";
 		if(!static_) {
 			if(const_) os << "const ";
-			os << fqn << "::cwc_impl * cwc_self";
+			os << "void * cwc_self";
 			if(plist || result) os << ", ";
 		}
 		if(plist) plist->generate_vtable_definition(os);
@@ -317,10 +316,12 @@ retry:
 		os << ") noexcept { ";
 		if(!noexcept_) os << "return cwc::internal::try_([&] { ";
 		if(result) os << "*cwc_result = ";
-		if(static_) os << fqn << "::cwc_impl::";
+		if(static_) os << "cwc_impl::";
 		else {
 			if(ref == ref_t::rvalue) os << "std::move";
-			os << "(*cwc_self).";
+			os << "reinterpret_cast<";
+			if(const_) os << "const ";
+			os << "cwc_impl *>(cwc_self)->";
 		}
 		os << name << "(";
 		if(plist) plist->generate_vtable_definition_paramters(os);
@@ -358,7 +359,6 @@ retry:
 	}
 
 	void component::generate(std::ostream & os, const std::string & namespace_) const {
-		const auto fqn{namespace_ + "::" + name};
 		const auto mangled_name{[&] {
 			std::string mangled_name;
 			std::istringstream is{namespace_};
@@ -381,8 +381,6 @@ retry:
 		os << name << " ";
 		if(final_) os << "final ";
 		os << "{\n";
-		os << "struct cwc_impl;\n";
-		os << "\n";
 		os << name << "(const " << name << " &) =delete;\n";
 		os << name << "(" << name << " && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}\n";
 		os << "auto operator=(const " << name << " &) -> " << name << " & =delete;\n";
@@ -399,7 +397,7 @@ retry:
 		os << "cwc::internal::vtable_access<" << name << ">;\n";
 		os << "\n";
 		os << "struct cwc_vtable final {\n";
-		os << "void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;\n";
+		os << "void(CWC_CALL * cwc_0)(void *) noexcept;\n";
 		{
 			std::size_t no{1};
 			for(const auto & c : constructors) c.generate_vtable_declaration(os, no++);
@@ -413,16 +411,16 @@ retry:
 		os << "return instance;\n";
 		os << "}\n";
 		os << "\n";
-		os << "cwc_impl * cwc_self;\n";
+		os << "void * cwc_self;\n";
 		os << "};\n";
-		os << "#define CWC_EXPORT_" << mangled_name << " \\\n";
-		os << "extern \"C\" CWC_EXPORT const typename cwc::internal::vtable_access<" << fqn << ">::type " << mangled_name << "{\\\n";
-		os << "+[](" << fqn << "::cwc_impl * cwc_self) noexcept { delete cwc_self; },\\\n";
+		os << "#define CWC_EXPORT_" << mangled_name << "(cwc_impl)\\\n";
+		os << "extern \"C\" CWC_EXPORT const typename cwc::internal::vtable_access<" << namespace_ << "::" << name << ">::type " << mangled_name << "{\\\n";
+		os << "+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\\\n";
 		{
 			const auto count{constructors.size() + methods.size()};
 			std::size_t no{0};
-			for(const auto & c : constructors) c.generate_vtable_definition(os, fqn, ++no == count);
-			for(const auto & m : methods) m.generate_vtable_definition(os, fqn, ++no == count);
+			for(const auto & c : constructors) c.generate_vtable_definition(os, ++no == count);
+			for(const auto & m : methods) m.generate_vtable_definition(os, ++no == count);
 		}
 		os << "}\n";
 	}

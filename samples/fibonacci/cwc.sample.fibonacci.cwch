@@ -6,12 +6,6 @@
 namespace cwc::sample::fibonacci {
 	struct [[nodiscard]] sequence final {
 		struct cwc_impl;
-		struct cwc_vtable final {
-			void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;
-			cwc::internal::error_callback(CWC_CALL * cwc_1)(cwc_impl **) noexcept;
-			cwc::internal::error_callback(CWC_CALL * cwc_3)(const cwc_impl *, std::uint8_t, std::uint64_t *) noexcept;
-			void(CWC_CALL * cwc_5)(std::uint8_t *) noexcept;
-		};
 
 		sequence(const sequence &) =delete;
 		sequence(sequence && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}
@@ -47,6 +41,16 @@ namespace cwc::sample::fibonacci {
 			return cwc_result;
 		}
 	private:
+		friend
+		cwc::internal::vtable_access<sequence>;
+
+		struct cwc_vtable final {
+			void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_1)(cwc_impl **) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_3)(const cwc_impl *, std::uint8_t, std::uint64_t *) noexcept;
+			void(CWC_CALL * cwc_5)(std::uint8_t *) noexcept;
+		};
+
 		static
 		auto cwc_dll() -> const cwc::internal::dll & {
 			static const cwc::internal::dll instance{"sample-fibonacci", "cwc$sample$fibonacci$sequence"};
@@ -56,7 +60,7 @@ namespace cwc::sample::fibonacci {
 		cwc_impl * cwc_self;
 	};
 #define CWC_EXPORT_cwc$sample$fibonacci$sequence \
-	extern "C" CWC_EXPORT const cwc::sample::fibonacci::sequence::cwc_vtable cwc$sample$fibonacci$sequence{\
+	extern "C" CWC_EXPORT const typename cwc::internal::vtable_access<cwc::sample::fibonacci::sequence>::type cwc$sample$fibonacci$sequence{\
 		+[](cwc::sample::fibonacci::sequence::cwc_impl * cwc_self) noexcept { delete cwc_self; },\
 		+[](cwc::sample::fibonacci::sequence::cwc_impl ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc::sample::fibonacci::sequence::cwc_impl{}; }); },\
 		+[](const cwc::sample::fibonacci::sequence::cwc_impl * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = (*cwc_self).calculate(std::move(no)); }); },\

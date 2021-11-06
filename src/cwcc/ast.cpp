@@ -382,14 +382,6 @@ retry:
 		if(final_) os << "final ";
 		os << "{\n";
 		os << "struct cwc_impl;\n";
-		os << "struct cwc_vtable final {\n";
-		os << "void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;\n";
-		{
-			std::size_t no{1};
-			for(const auto & c : constructors) c.generate_vtable_declaration(os, no++);
-			for(const auto & m : methods) m.generate_vtable_declaration(os, no++);
-		}
-		os << "};\n";
 		os << "\n";
 		os << name << "(const " << name << " &) =delete;\n";
 		os << name << "(" << name << " && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}\n";
@@ -403,6 +395,18 @@ retry:
 			for(const auto & m : methods) m.generate_definition(os, no++);
 		}
 		os << "private:\n";
+		os << "friend\n";
+		os << "cwc::internal::vtable_access<" << name << ">;\n";
+		os << "\n";
+		os << "struct cwc_vtable final {\n";
+		os << "void(CWC_CALL * cwc_0)(cwc_impl *) noexcept;\n";
+		{
+			std::size_t no{1};
+			for(const auto & c : constructors) c.generate_vtable_declaration(os, no++);
+			for(const auto & m : methods) m.generate_vtable_declaration(os, no++);
+		}
+		os << "};\n";
+		os << "\n";
 		os << "static\n";
 		os << "auto cwc_dll() -> const cwc::internal::dll & {\n";
 		os << "static const cwc::internal::dll instance{" << dll << ", \"" << mangled_name << "\"};\n";
@@ -412,7 +416,7 @@ retry:
 		os << "cwc_impl * cwc_self;\n";
 		os << "};\n";
 		os << "#define CWC_EXPORT_" << mangled_name << " \\\n";
-		os << "extern \"C\" CWC_EXPORT const " << fqn << "::cwc_vtable " << mangled_name << "{\\\n";
+		os << "extern \"C\" CWC_EXPORT const typename cwc::internal::vtable_access<" << fqn << ">::type " << mangled_name << "{\\\n";
 		os << "+[](" << fqn << "::cwc_impl * cwc_self) noexcept { delete cwc_self; },\\\n";
 		{
 			const auto count{constructors.size() + methods.size()};

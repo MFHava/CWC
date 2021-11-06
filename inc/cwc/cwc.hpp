@@ -45,11 +45,15 @@ namespace cwc::internal {
 	void throw_(error_callback callback); //TODO: [C++??] precondition(callback);
 
 
+	template<typename T>
+	struct vtable_access final { using type = typename T::cwc_vtable; };
+
+
 	template<typename VFunc>
-	struct vtable;
+	struct extract_vtable;
 
 	template<typename Class, typename T>
-	struct vtable<T Class::*> { using type = Class; };
+	struct extract_vtable<T Class::*> { using type = Class; };
 
 
 	class dll final { //TODO: name is not ideal as this not just a reference to the DLL but also to the respective entry-point...
@@ -65,7 +69,7 @@ namespace cwc::internal {
 		void call(Args &&... args) const {
 			static_assert(std::is_member_object_pointer_v<decltype(VFunc)>); //TODO: [C++20] make requirement
 
-			using Vtable = typename vtable<decltype(VFunc)>::type;
+			using Vtable = typename extract_vtable<decltype(VFunc)>::type;
 			const auto vtable{reinterpret_cast<const Vtable *>(vptr)};
 			const auto call_{[&] { return (vtable->*VFunc)(std::forward<Args>(args)...); }};
 			using Result = decltype(call_());

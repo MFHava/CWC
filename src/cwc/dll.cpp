@@ -100,12 +100,19 @@
 #include <cwc/cwc.hpp>
 
 namespace cwc::internal {
+	namespace {
+		const auto base_path{[] {
+			auto exe{executable_name()};
+			if(const auto it{std::find(std::rbegin(exe), std::rend(exe), std::filesystem::path::preferred_separator)}; it != std::rend(exe)) exe.erase(it.base(), std::end(exe));
+			return exe;
+		}()};
+	}
+
 	struct dll::native_handle final {
 		handle lib;
 
 		native_handle(const char * dll) {
-			auto fullpath{executable_name()};
-			if(const auto it{std::find(std::rbegin(fullpath), std::rend(fullpath), std::filesystem::path::preferred_separator)}; it != std::rend(fullpath)) fullpath.erase(it.base(), std::end(fullpath));
+			auto fullpath{base_path};
 			fullpath += dll_prefix;
 			fullpath += dll;
 			fullpath += dll_suffix;

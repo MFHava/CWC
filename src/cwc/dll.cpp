@@ -83,10 +83,10 @@
 		inline
 		auto executable_name() -> std::string {
 			image_info info;
-			info.name[0] = '\0';
-			for(int32 cookie{0}; get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK && info.type != B_APP_IMAGE;);
-			//TODO: error handling?!
-			return info.name;
+			for(int32 cookie{0}; get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK;)
+				if(info.type == B_APP_IMAGE)
+					return info.name;
+			throw std::runtime_error{"get_next_image_info failed"};
 		}
 
 		inline

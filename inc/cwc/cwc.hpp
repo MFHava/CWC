@@ -47,7 +47,7 @@ namespace cwc::internal {
 
 
 	template<typename T>
-	struct vtable_access final { using type = typename T::cwc_vtable; };
+	struct access final { using vtable = typename T::cwc_vtable; };
 
 
 	template<typename VFunc>

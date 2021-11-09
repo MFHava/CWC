@@ -394,7 +394,7 @@ retry:
 		}
 		os << "private:\n";
 		os << "friend\n";
-		os << "cwc::internal::vtable_access<" << name << ">;\n";
+		os << "cwc::internal::access<" << name << ">;\n";
 		os << "\n";
 		os << "struct cwc_vtable final {\n";
 		os << "void(CWC_CALL * cwc_0)(void *) noexcept;\n";
@@ -414,7 +414,7 @@ retry:
 		os << "void * cwc_self;\n";
 		os << "};\n";
 		os << "#define CWC_EXPORT_" << mangled_name << "(cwc_impl)\\\n";
-		os << "extern \"C\" CWC_EXPORT const typename cwc::internal::vtable_access<" << namespace_ << "::" << name << ">::type " << mangled_name << "{\\\n";
+		os << "extern \"C\" CWC_EXPORT const typename cwc::internal::access<" << namespace_ << "::" << name << ">::vtable " << mangled_name << "{\\\n";
 		os << "+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\\\n";
 		{
 			const auto count{constructors.size() + methods.size()};

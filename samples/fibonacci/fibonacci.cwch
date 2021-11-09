@@ -40,7 +40,7 @@ namespace cwc::sample::fibonacci {
 		}
 	private:
 		friend
-		cwc::internal::vtable_access<sequence>;
+		cwc::internal::access<sequence>;
 
 		struct cwc_vtable final {
 			void(CWC_CALL * cwc_0)(void *) noexcept;
@@ -58,7 +58,7 @@ namespace cwc::sample::fibonacci {
 		void * cwc_self;
 	};
 #define CWC_EXPORT_cwc$sample$fibonacci$sequence(cwc_impl)\
-	extern "C" CWC_EXPORT const typename cwc::internal::vtable_access<cwc::sample::fibonacci::sequence>::type cwc$sample$fibonacci$sequence{\
+	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::sample::fibonacci::sequence>::vtable cwc$sample$fibonacci$sequence{\
 		+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\
 		+[](void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{}; }); },\
 		+[](const void * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = reinterpret_cast<const cwc_impl *>(cwc_self)->calculate(std::move(no)); }); },\

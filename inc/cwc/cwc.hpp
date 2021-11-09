@@ -28,6 +28,7 @@
 
 #include <memory>
 #include <cstdint>
+#include <type_traits>
 
 namespace cwc::internal {
 	enum class error_selector : std::uint32_t;
@@ -56,14 +57,14 @@ namespace cwc::internal {
 	struct extract_vtable<T Class::*> { using type = Class; };
 
 
-	class dll final { //TODO: name is not ideal as this not just a reference to the DLL but also to the respective entry-point...
+	class context final {
 		struct native_handle;
-		const std::unique_ptr<const native_handle> ref;
+		const std::unique_ptr<const native_handle> dll;
 
 		const void * vptr;
 	public:
-		dll(const char * dll, const char * class_);
-		~dll() noexcept;
+		context(const char * dll, const char * entry);
+		~context() noexcept;
 
 		template<auto VFunc, typename... Args>
 		void call(Args &&... args) const {

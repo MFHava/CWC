@@ -23,8 +23,7 @@
 
 	namespace cwc::internal {
 		using handle = HMODULE;
-	
-		inline
+
 		auto executable_name() -> std::filesystem::path {
 			static_assert(sizeof(DWORD) == 4);
 			for(std::wstring result(MAX_PATH, '\0');; result.resize(result.size() * 2)) {
@@ -36,7 +35,6 @@
 			}
 		}
 
-		inline
 		constexpr
 		std::string_view dll_prefix{""}, dll_suffix{".dll"};
 	}
@@ -51,8 +49,7 @@
 
 	namespace cwc::internal {
 		using handle = void *;
-	
-		inline
+
 		auto executable_name() -> std::filesystem::path {
 			for(std::string result(PATH_MAX, '\0');; result.resize(result.size() * 2)) {
 				if(const auto size{readlink("/proc/self/exe", result.data(), result.size())}; size < static_cast<ssize_t>(result.size())) {
@@ -63,7 +60,6 @@
 			}
 		}
 
-		inline
 		constexpr
 		std::string_view dll_prefix{"lib"}, dll_suffix{".so"};
 	}
@@ -79,8 +75,7 @@
 
 	namespace cwc::internal {
 		using handle = image_id;
-	
-		inline
+
 		auto executable_name() -> std::filesystem::path {
 			image_info info;
 			info.name[0] = '\0';
@@ -89,7 +84,6 @@
 			return info.name;
 		}
 
-		inline
 		constexpr
 		std::string_view dll_prefix{"lib"}, dll_suffix{".so"};
 	}
@@ -104,7 +98,7 @@ namespace cwc::internal {
 		const auto base_path{executable_name().remove_filename()};
 	}
 
-	struct dll::native_handle final {
+	struct context::native_handle final {
 		handle lib;
 
 		native_handle(const char * dll) {
@@ -122,10 +116,10 @@ namespace cwc::internal {
 		~native_handle() noexcept { FreeLibrary(lib); }
 	};
 
-	dll::dll(const char * dll, const char * class_) : ref{std::make_unique<const native_handle>(dll)} {
-		vptr = reinterpret_cast<const void *>(GetProcAddress(ref->lib, class_));
+	context::context(const char * dll, const char * entry) : dll{std::make_unique<const native_handle>(dll)} {
+		vptr = reinterpret_cast<const void *>(GetProcAddress(this->dll->lib, entry));
 		if(!vptr) throw std::runtime_error{"could not find entry point"};
 	}
 
-	dll::~dll() noexcept =default;
+	context::~context() noexcept =default;
 }

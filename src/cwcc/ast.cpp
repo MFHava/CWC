@@ -177,7 +177,7 @@ retry:
 		os << ") ";
 		if(delete_) os << "=delete;\n";
 		else {
-			os << "{ cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
+			os << "{ cwc_context().call<&cwc_vtable::cwc_" << no << ">(";
 			if(plist) {
 				plist->generate_param_passing(os);
 				os << ", ";
@@ -265,7 +265,7 @@ retry:
 			os << "{";
 			if(result) os << "\n" << *result << " cwc_result;\n";
 			else os << " ";
-			os << "cwc_dll().call<&cwc_vtable::cwc_" << no << ">(";
+			os << "cwc_context().call<&cwc_vtable::cwc_" << no << ">(";
 			if(!static_) {
 				os << "cwc_self";
 				if(plist || result) os << ", ";
@@ -385,7 +385,7 @@ retry:
 		os << name << "(" << name << " && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}\n";
 		os << "auto operator=(const " << name << " &) -> " << name << " & =delete;\n";
 		os << "auto operator=(" << name << " && cwc_other) noexcept -> " << name << " & { std::swap(cwc_self, cwc_other.cwc_self); return *this; }\n";
-		os << "~" << name << "() noexcept { cwc_dll().call<&cwc_vtable::cwc_0>(cwc_self); }\n";
+		os << "~" << name << "() noexcept { cwc_context().call<&cwc_vtable::cwc_0>(cwc_self); }\n";
 		os << "\n";
 		{
 			std::size_t no{1};
@@ -406,8 +406,8 @@ retry:
 		os << "};\n";
 		os << "\n";
 		os << "static\n";
-		os << "auto cwc_dll() -> const cwc::internal::dll & {\n";
-		os << "static const cwc::internal::dll instance{" << dll << ", \"" << mangled_name << "\"};\n";
+		os << "auto cwc_context() -> const cwc::internal::context & {\n";
+		os << "static const cwc::internal::context instance{" << dll << ", \"" << mangled_name << "\"};\n";
 		os << "return instance;\n";
 		os << "}\n";
 		os << "\n";

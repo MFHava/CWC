@@ -9,10 +9,10 @@ namespace cwc::sample::fibonacci {
 		sequence(sequence && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}
 		auto operator=(const sequence &) -> sequence & =delete;
 		auto operator=(sequence && cwc_other) noexcept -> sequence & { std::swap(cwc_self, cwc_other.cwc_self); return *this; }
-		~sequence() noexcept { cwc_dll().call<&cwc_vtable::cwc_0>(cwc_self); }
+		~sequence() noexcept { cwc_context().call<&cwc_vtable::cwc_0>(cwc_self); }
 
 
-		sequence() { cwc_dll().call<&cwc_vtable::cwc_1>(&cwc_self); }
+		sequence() { cwc_context().call<&cwc_vtable::cwc_1>(&cwc_self); }
 
 		[[deprecated("for visualization only")]]
 		sequence(const int & dummy) =delete;
@@ -24,7 +24,7 @@ namespace cwc::sample::fibonacci {
 			std::uint8_t no //!< [in] no
 		) const -> std::uint64_t {
 			std::uint64_t cwc_result;
-			cwc_dll().call<&cwc_vtable::cwc_3>(cwc_self, std::move(no), std::addressof(cwc_result));
+			cwc_context().call<&cwc_vtable::cwc_3>(cwc_self, std::move(no), std::addressof(cwc_result));
 			return cwc_result;
 		}
 
@@ -35,7 +35,7 @@ namespace cwc::sample::fibonacci {
 		static
 		auto max() noexcept -> std::uint8_t {
 			std::uint8_t cwc_result;
-			cwc_dll().call<&cwc_vtable::cwc_5>(std::addressof(cwc_result));
+			cwc_context().call<&cwc_vtable::cwc_5>(std::addressof(cwc_result));
 			return cwc_result;
 		}
 	private:
@@ -50,8 +50,8 @@ namespace cwc::sample::fibonacci {
 		};
 
 		static
-		auto cwc_dll() -> const cwc::internal::dll & {
-			static const cwc::internal::dll instance{"sample-fibonacci", "cwc$sample$fibonacci$sequence"};
+		auto cwc_context() -> const cwc::internal::context & {
+			static const cwc::internal::context instance{"sample-fibonacci", "cwc$sample$fibonacci$sequence"};
 			return instance;
 		}
 

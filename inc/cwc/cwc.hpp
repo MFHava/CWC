@@ -47,7 +47,15 @@ namespace cwc::internal {
 
 
 	template<typename T>
-	struct access final { using vtable = typename T::cwc_vtable; };
+	struct access final {
+		using vtable = typename T::cwc_vtable;
+
+		static
+		auto available() noexcept -> bool {
+			try { T::cwc_context(); return true; }
+			catch(...) { return false; }
+		}
+	};
 
 
 	template<typename VFunc>
@@ -82,4 +90,14 @@ namespace cwc::internal {
 			}
 		}
 	};
+}
+
+//! @brief C++ with Components API
+namespace cwc {
+	//! @brief check that type is available
+	//! @tparam T type to check availability for
+	//! @returns true iff the component is available
+	//! @note unless the component is already loaded before, this operations implicitly loads it
+	template<typename T>
+	auto available() noexcept -> bool { return internal::access<T>::available(); }
 }

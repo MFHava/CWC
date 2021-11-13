@@ -11,6 +11,8 @@
 #include <iostream>
 
 int main() {
+	std::cout << "sequence is available: " << std::boolalpha << cwc::available<cwc::sample::fibonacci::sequence>() << std::noboolalpha << "\n";
+
 	cwc::sample::fibonacci::sequence s;
 
 	std::cout << "\n\n\n";

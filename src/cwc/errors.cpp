@@ -18,6 +18,8 @@
 //TODO: add new C++20 exceptions
 namespace cwc::internal {
 	namespace {
+		namespace fs = std::filesystem;
+
 		using error_code = std::uint64_t;
 
 		struct unknown_exception final : std::exception {
@@ -175,13 +177,13 @@ namespace cwc::internal {
 							const auto code{build_code()};
 							if(!code) continue;
 
-							using path_type = const std::filesystem::path::value_type *;
+							using path_type = const fs::path::value_type *;
 							const auto path1{reinterpret_cast<path_type>(callback(error_selector::filesystem_path1))};
 							const auto path2{reinterpret_cast<path_type>(callback(error_selector::filesystem_path2))};
 
-							path1 ? path2 ? throw std::filesystem::filesystem_error{msg, path1, path2, *code}
-							              : throw std::filesystem::filesystem_error{msg, path1, *code}
-							      : throw std::filesystem::filesystem_error{msg, *code};
+							path1 ? path2 ? throw fs::filesystem_error{msg, path1, path2, *code}
+							              : throw fs::filesystem_error{msg, path1, *code}
+							      : throw fs::filesystem_error{msg, *code};
 							continue; //unknown error code => handle as runtime_error
 						}
 				if(error == std98_bad_typeid) throw std::bad_typeid{};
@@ -251,7 +253,7 @@ namespace cwc::internal {
 			}
 			return &std11_ios_base_failure;
 		}
-		auto to_error_code(const std::filesystem::filesystem_error &) -> const error_code * { return &std17_filesystem_error; }
+		auto to_error_code(const fs::filesystem_error &) -> const error_code * { return &std17_filesystem_error; }
 		auto to_error_code(const std::bad_typeid &) -> const error_code * { return &std98_bad_typeid; }
 		auto to_error_code(const std::bad_cast &) -> const error_code * { return &std98_bad_cast; }
 		auto to_error_code(const std::bad_any_cast &) -> const error_code * { return &std17_bad_any_cast; }
@@ -274,7 +276,7 @@ namespace cwc::internal {
 
 		template<>
 		constexpr
-		bool has_error_code<std::filesystem::filesystem_error>{true};
+		bool has_error_code<fs::filesystem_error>{true};
 
 
 		template<typename>
@@ -283,12 +285,40 @@ namespace cwc::internal {
 
 		template<>
 		constexpr
-		bool has_paths<std::filesystem::filesystem_error>{true};
+		bool has_paths<fs::filesystem_error>{true};
 
 
 		thread_local
 		struct {
-			std::variant<std::monostate, std::bad_optional_access, std::bad_variant_access, std::bad_function_call, std::bad_weak_ptr, std::bad_exception, std::bad_array_new_length, std::bad_alloc, std::bad_any_cast, std::bad_cast, std::bad_typeid, std::filesystem::filesystem_error, std::ios_base::failure, std::system_error, std::regex_error, std::underflow_error, std::overflow_error, std::range_error, std::runtime_error, std::future_error, std::out_of_range, std::length_error, std::domain_error, std::invalid_argument, std::logic_error, std::exception, unknown_exception> exc;
+			std::variant<
+				std::monostate,
+				std::bad_optional_access,
+				std::bad_variant_access,
+				std::bad_function_call,
+				std::bad_weak_ptr,
+				std::bad_exception,
+				std::bad_array_new_length,
+				std::bad_alloc,
+				std::bad_any_cast,
+				std::bad_cast,
+				std::bad_typeid,
+				fs::filesystem_error,
+				std::ios_base::failure,
+				std::system_error,
+				std::regex_error,
+				std::underflow_error,
+				std::overflow_error,
+				std::range_error,
+				std::runtime_error,
+				std::future_error,
+				std::out_of_range,
+				std::length_error,
+				std::domain_error,
+				std::invalid_argument,
+				std::logic_error,
+				std::exception,
+				unknown_exception
+			> exc;
 			error_callback func{nullptr};
 		} last_error;
 
@@ -297,7 +327,7 @@ namespace cwc::internal {
 		void store_error(const Exception & exc) noexcept {
 			last_error.exc = exc;
 			last_error.func = [](error_selector selector) noexcept -> const void * {
-				//TODO: breaks currently on MSVC static_assert(std::is_nothrow_copy_constructible_v<Exception>);
+				static_assert(std::is_nothrow_copy_constructible_v<Exception>);
 				const auto & exc{std::get<Exception>(last_error.exc)};
 				switch(selector) {
 					case error_selector::type:
@@ -334,7 +364,10 @@ namespace cwc::internal {
 				catch(const std::bad_any_cast & exc) { store_error(exc); }
 			catch(const std::bad_cast & exc) { store_error(exc); }
 			catch(const std::bad_typeid & exc) { store_error(exc); }
-					catch(const std::filesystem::filesystem_error & exc) { store_error(exc); }
+					catch(const fs::filesystem_error & exc) {
+						if constexpr(std::is_nothrow_copy_constructible_v<fs::filesystem_error>) store_error(exc); //TODO: MSVC doesn't support this...
+						else store_error(static_cast<const std::system_error &>(exc));
+					}
 					catch(const std::ios_base::failure & exc) { store_error(exc); }
 				catch(const std::system_error & exc) { store_error(exc); }
 				catch(const std::regex_error & exc) { store_error(exc); }

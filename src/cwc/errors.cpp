@@ -5,6 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <any>
+#include <ios>
 #include <regex>
 #include <future>
 #include <cassert>

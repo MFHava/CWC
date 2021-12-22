@@ -63,6 +63,30 @@
 		constexpr
 		std::string_view dll_prefix{"lib"}, dll_suffix{".so"};
 	}
+#elif __APPLE__
+	#include <dlfcn.h>
+	#include <unistd.h>
+	#include <libproc.h>
+
+	#define LoadLibrary(file) dlopen(file, RTLD_NOW)
+	#define GetProcAddress(dll, function) dlsym(dll, function)
+	#define FreeLibrary(dll) dlclose(dll)
+
+	namespace cwc::internal {
+		using handle = void *;
+
+		auto executable_name() -> std::filesystem::path {
+			const auto pid{getpid()};
+			char tmp[PROC_PIDPATHINFO_MAXSIZE];
+			if(proc_pidpath(pid, tmp, sizeof(tmp)) == -1) throw std::runtime_error{"proc_pidpath failed"};	
+			return tmp;
+		}
+
+		constexpr
+		std::string_view dll_prefix{"lib"}, dll_suffix{".dylib"};
+	}
+
+	
 #elif defined(__HAIKU__)
 	#include <image.h>
 	#define LoadLibrary(file) std::max(load_add_on(file), image_id{0})

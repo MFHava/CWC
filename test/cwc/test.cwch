@@ -1,0 +1,75 @@
+//generated with CWCC
+
+#pragma once
+#include <cwc/cwc.hpp>
+
+namespace cwc::test {
+	struct unavailable final {
+		unavailable(const unavailable &) =delete;
+		unavailable(unavailable && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}
+		auto operator=(const unavailable &) -> unavailable & =delete;
+		auto operator=(unavailable && cwc_other) noexcept -> unavailable & { std::swap(cwc_self, cwc_other.cwc_self); return *this; }
+		~unavailable() noexcept { cwc_context().call<&cwc_vtable::cwc_0>(cwc_self); }
+
+
+		unavailable() { cwc_context().call<&cwc_vtable::cwc_1>(&cwc_self); }
+	private:
+		friend
+		cwc::internal::access<unavailable>;
+
+		struct cwc_vtable final {
+			void(CWC_CALL * cwc_0)(void *) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_1)(void **) noexcept;
+		};
+
+		static
+		auto cwc_context() -> const cwc::internal::context & {
+			static const cwc::internal::context instance{"test-cwc", "cwc$test$unavailable"};
+			return instance;
+		}
+
+		void * cwc_self;
+	};
+#define CWC_EXPORT_cwc$test$unavailable(cwc_impl)\
+	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::test::unavailable>::vtable cwc$test$unavailable{\
+		+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\
+		+[](void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{}; }); }\
+	}
+
+
+	struct available final {
+		available(const available &) =delete;
+		available(available && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}
+		auto operator=(const available &) -> available & =delete;
+		auto operator=(available && cwc_other) noexcept -> available & { std::swap(cwc_self, cwc_other.cwc_self); return *this; }
+		~available() noexcept { cwc_context().call<&cwc_vtable::cwc_0>(cwc_self); }
+
+
+		available() { cwc_context().call<&cwc_vtable::cwc_1>(&cwc_self); }
+
+		void operator()(int val) { cwc_context().call<&cwc_vtable::cwc_2>(cwc_self, std::move(val)); }
+	private:
+		friend
+		cwc::internal::access<available>;
+
+		struct cwc_vtable final {
+			void(CWC_CALL * cwc_0)(void *) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_1)(void **) noexcept;
+			cwc::internal::error_callback(CWC_CALL * cwc_2)(void *, int) noexcept;
+		};
+
+		static
+		auto cwc_context() -> const cwc::internal::context & {
+			static const cwc::internal::context instance{"test-cwc", "cwc$test$available"};
+			return instance;
+		}
+
+		void * cwc_self;
+	};
+#define CWC_EXPORT_cwc$test$available(cwc_impl)\
+	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::test::available>::vtable cwc$test$available{\
+		+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\
+		+[](void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{}; }); },\
+		+[](void * cwc_self, int val) noexcept { return cwc::internal::try_([&] { reinterpret_cast<cwc_impl *>(cwc_self)->operator()(std::move(val)); }); }\
+	}
+}

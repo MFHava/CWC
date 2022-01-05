@@ -80,7 +80,7 @@ if(CWC_BUILD_TESTS)
 
 	add_executable(test-cwc-exe ${CWC_TEST})
 	target_link_libraries(test-cwc-exe PRIVATE cwc Catch2::Catch2)
-	set_target_properties(test-cwc-exe PROPERTIES FOLDER "C++ with Components/Tests")
+	set_target_properties(test-cwc-exe PROPERTIES OUTPUT_NAME test-cwc FOLDER "C++ with Components/Tests")
 
 
 	file(GLOB_RECURSE CWCC_TEST "test/cwcc/*")

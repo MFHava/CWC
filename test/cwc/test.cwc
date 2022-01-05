@@ -1,0 +1,9 @@
+namespace cwc::test {
+	@library("test-cwc")
+	component unavailable final {};
+
+	@library("test-cwc")
+	component available final {
+		void operator()(int val);
+	};
+}

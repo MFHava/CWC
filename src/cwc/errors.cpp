@@ -109,8 +109,8 @@ namespace cwc::internal {
 
 		auto build_code{[&]() -> std::optional<std::error_code> {
 			const auto category{reinterpret_cast<const char *>(callback(error_selector::system_error_category))};
+			if(!category) return std::nullopt; //skip obvious error
 			const auto code{static_cast<int>(reinterpret_cast<std::intptr_t>(callback(error_selector::system_error_code)))};
-			if(!code || !category) return std::nullopt; //skip obvious error
 			for(const auto & cat : {&std::generic_category(), &std::system_category()}) //test for categories with assumed stable error codes
 				if(!std::strcmp(category, cat->name())) //assume that nobody will re-use category-name
 					return std::error_code{code, *cat};

@@ -8,6 +8,7 @@ cmake_minimum_required(VERSION 3.13)
 project(CWC)
 
 option(CWC_BUILD_SAMPLES "Build samples" OFF)
+option(CWC_BUILD_TESTS "Build unit tests" OFF)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -54,6 +55,7 @@ if(CWC_BUILD_SAMPLES)
 	foreach(sample fibonacci)
 		file(GLOB_RECURSE CWC_SAMPLE "samples/${sample}/*")
 		source_group("" FILES ${CWC_SAMPLE})
+
 		add_library(sample-${sample}-dll SHARED ${CWC_SAMPLE})
 		target_compile_definitions(sample-${sample}-dll PRIVATE CWC_SAMPLE_DLL)
 		target_link_libraries(sample-${sample}-dll PRIVATE cwc)
@@ -63,4 +65,27 @@ if(CWC_BUILD_SAMPLES)
 		target_link_libraries(sample-${sample}-exe PRIVATE cwc)
 		set_target_properties(sample-${sample}-exe PROPERTIES OUTPUT_NAME sample-${sample} FOLDER "C++ with Components/Samples")
 	endforeach(sample)
+endif()
+
+if(CWC_BUILD_TESTS)
+	find_package(Catch2 CONFIG REQUIRED)
+
+	file(GLOB_RECURSE CWC_TEST "test/cwc/*")
+	source_group("" FILES ${CWC_TEST})
+
+	add_library(test-cwc-dll SHARED ${CWC_TEST})
+	target_compile_definitions(test-cwc-dll PRIVATE CWC_TEST_DLL)
+	target_link_libraries(test-cwc-dll PRIVATE cwc Catch2::Catch2)
+	set_target_properties(test-cwc-dll PROPERTIES OUTPUT_NAME test-cwc FOLDER "C++ with Components/Tests" CXX_VISIBILITY_PRESET hidden)
+
+	add_executable(test-cwc-exe ${CWC_TEST})
+	target_link_libraries(test-cwc-exe PRIVATE cwc Catch2::Catch2)
+	set_target_properties(test-cwc-exe PROPERTIES FOLDER "C++ with Components/Tests")
+
+
+	file(GLOB_RECURSE CWCC_TEST "test/cwcc/*")
+	source_group("" FILES ${CWCC_TEST})
+	add_executable(test-cwcc ${CWCC_TEST})
+	target_link_libraries(test-cwcc PRIVATE Catch2::Catch2)
+	set_target_properties(test-cwcc PROPERTIES FOLDER "C++ with Components/Tests")
 endif()

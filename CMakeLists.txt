@@ -7,9 +7,6 @@
 cmake_minimum_required(VERSION 3.13)
 project(CWC)
 
-option(CWC_BUILD_SAMPLES "Build samples" OFF)
-option(CWC_BUILD_TESTS "Build unit tests" OFF)
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/static)
@@ -20,6 +17,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
 file(GLOB_RECURSE CWC_HDR "inc/cwc/*")
 source_group("inc" FILES ${CWC_HDR})
 file(GLOB_RECURSE CWC_SRC "src/cwc/*")
@@ -29,10 +27,20 @@ target_include_directories(cwc PUBLIC "inc")
 target_link_libraries(cwc PUBLIC ${CMAKE_DL_LIBS})
 set_target_properties(cwc PROPERTIES FOLDER "C++ with Components" POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden)
 
+
+file(GLOB_RECURSE CWCC_LIB "src/libcwcc/*")
+source_group("" FILES ${CWCC_LIB})
+add_library(libcwcc OBJECT ${CWCC_LIB})
+target_include_directories(libcwcc PUBLIC "src/libcwcc")
+set_target_properties(libcwcc PROPERTIES FOLDER "C++ with Components")
+
+
 file(GLOB_RECURSE CWCC "src/cwcc/*")
 source_group("" FILES ${CWCC})
 add_executable(cwcc ${CWCC})
+target_link_libraries(cwcc PRIVATE libcwcc)
 set_target_properties(cwcc PROPERTIES FOLDER "C++ with Components")
+
 
 find_package(Doxygen 1.8.2) #Doxygen 1.8.2 is the first version to support C++11
 if(Doxygen_FOUND)
@@ -51,6 +59,8 @@ if(Doxygen_FOUND)
 	set_target_properties(CWC-Documentation PROPERTIES FOLDER "C++ with Components")
 endif()
 
+
+option(CWC_BUILD_SAMPLES "Build samples" OFF)
 if(CWC_BUILD_SAMPLES)
 	foreach(sample fibonacci)
 		file(GLOB_RECURSE CWC_SAMPLE "samples/${sample}/*")
@@ -67,6 +77,8 @@ if(CWC_BUILD_SAMPLES)
 	endforeach(sample)
 endif()
 
+
+option(CWC_BUILD_TESTS "Build unit tests" OFF)
 if(CWC_BUILD_TESTS)
 	find_package(Catch2 CONFIG REQUIRED)
 
@@ -85,7 +97,8 @@ if(CWC_BUILD_TESTS)
 
 	file(GLOB_RECURSE CWCC_TEST "test/cwcc/*")
 	source_group("" FILES ${CWCC_TEST})
+
 	add_executable(test-cwcc ${CWCC_TEST})
-	target_link_libraries(test-cwcc PRIVATE Catch2::Catch2)
+	target_link_libraries(test-cwcc PRIVATE libcwcc Catch2::Catch2)
 	set_target_properties(test-cwcc PROPERTIES FOLDER "C++ with Components/Tests")
 endif()

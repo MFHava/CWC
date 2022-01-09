@@ -63,6 +63,7 @@ namespace cwcc {
 
 		for(char c; in >> c;) {
 retry:
+			if(!in) break;
 			if(std::isspace(c)) continue;
 			switch(c) {
 				case '/': {
@@ -92,8 +93,7 @@ retry:
 					else throw_stray(']');
 				} break;
 				case '&': {
-					in >> c;
-					if(c == '&') tokens.push("&&");
+					if(in >> c && c == '&') tokens.push("&&");
 					else {
 						tokens.push("&");
 						goto retry;
@@ -136,11 +136,10 @@ retry:
 									}
 									token += c;
 								}
-							} else {
-								tokens.push(std::move(token));
-								goto retry;
-							}
+							} else break;
 						}
+						tokens.push(std::move(token));
+						goto retry;
 					} else throw_stray(c);
 				} break;
 			}

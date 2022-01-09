@@ -51,7 +51,7 @@ retry:
 	}
 
 
-	param_list::param::param(parser & p) {
+	param::param(parser & p) {
 		const_ = p.consume("const");
 		type = p.next(type::type);
 		if(const_) {
@@ -66,7 +66,7 @@ retry:
 		if(p.starts_with('/')) trailing_comment = p.next(type::comment);
 	}
 
-	void param_list::param::generate_param(std::ostream & os) const {
+	void param::generate_param(std::ostream & os) const {
 		if(const_) os << "const ";
 		os << type << " ";
 		switch(ref) {
@@ -78,10 +78,7 @@ retry:
 
 	param_list::param_list(parser & p) {
 		params.emplace_back(p);
-		while(!p.accept(")")) {
-			p.expect(",");
-			params.emplace_back(p);
-		}
+		while(p.consume(",")) params.emplace_back(p);
 	}
 
 	void param_list::generate_param_passing(std::ostream & os) const {

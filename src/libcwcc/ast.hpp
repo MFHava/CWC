@@ -28,22 +28,23 @@ namespace cwcc {
 
 	enum class ref_t { none, lvalue, rvalue };
 
+	struct param final {
+		bool const_;
+		std::string type;
+		ref_t ref;
+		std::string name, trailing_comment;
+
+		param(parser & p);
+		param(bool const_, std::string type, ref_t ref, std::string name, std::string trailing_comment) noexcept : const_{const_}, type{std::move(type)}, ref{ref}, name{std::move(name)}, trailing_comment{std::move(trailing_comment)} {}
+
+		void generate_param(std::ostream & os) const;
+	private:
+		auto view() const noexcept { return std::tie(const_, type, ref, name, trailing_comment); } //TODO: [C++20] remove as operator== will be defaulted
+		friend
+		auto operator==(const param & lhs, const param & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
+	};
+
 	class param_list final {
-		struct param final {
-			bool const_;
-			ref_t ref;
-			std::string type, name, trailing_comment;
-
-			param(parser & p);
-			param(bool const_, ref_t ref, std::string type, std::string name, std::string trailing_comment) noexcept : const_{const_}, ref{ref}, type{std::move(type)}, name{std::move(name)}, trailing_comment{std::move(trailing_comment)} {}
-
-			void generate_param(std::ostream & os) const;
-		private:
-			auto view() const noexcept { return std::tie(const_, ref, type, name, trailing_comment); } //TODO: [C++20] remove as operator== will be defaulted
-			friend
-			auto operator==(const param & lhs, const param & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-		};
-
 		void generate_vtable(std::ostream & os, bool definition) const;
 
 		std::vector<param> params;
@@ -90,7 +91,7 @@ namespace cwcc {
 	public:
 		constructor() =default;
 		constructor(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist);
-		constructor(std::optional<comment_list> clist, std::optional<attribute_list> alist, std::optional<param_list> plist, bool delete_) noexcept : clist{std::move(clist)}, alist{std::move(alist)}, plist{std::move(plist)}, delete_{delete_} {}
+		constructor(std::optional<param_list> plist, bool delete_) noexcept : plist{std::move(plist)}, delete_{delete_} {}
 
 		void generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const;
 
@@ -115,7 +116,7 @@ namespace cwcc {
 		auto operator==(const method & lhs, const method & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
 	public:
 		method(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist);
-		method(bool static_, std::optional<comment_list> clist, std::optional<attribute_list> alist, std::string name, std::optional<param_list> plist, bool const_, ref_t ref, bool noexcept_, std::optional<std::string> result, bool delete_) noexcept : static_{static_}, clist{std::move(clist)}, alist{std::move(alist)}, name{std::move(name)}, plist{std::move(plist)}, const_{const_}, ref{ref}, noexcept_{noexcept_}, result{std::move(result)}, delete_{delete_} {}
+		method(bool static_, std::string name, std::optional<param_list> plist, bool const_, ref_t ref, bool noexcept_, std::optional<std::string> result, bool delete_) noexcept : static_{static_}, name{std::move(name)}, plist{std::move(plist)}, const_{const_}, ref{ref}, noexcept_{noexcept_}, result{std::move(result)}, delete_{delete_} {}
 
 		void generate_definition(std::ostream & os, std::size_t no) const;
 
@@ -137,7 +138,7 @@ namespace cwcc {
 		auto operator==(const component & lhs, const component & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
 	public:
 		component(parser & p);
-		component(std::optional<comment_list> clist, std::string dll, std::optional<attribute_list> alist, std::string name, bool final_, std::vector<constructor> constructors, std::vector<method> methods) noexcept : clist{std::move(clist)}, dll{std::move(dll)}, alist{std::move(alist)}, name{std::move(name)}, final_{final_}, constructors{std::move(constructors)}, methods{std::move(methods)} {}
+		component(std::string dll, std::string name, bool final_, std::vector<constructor> constructors, std::vector<method> methods) noexcept : clist{std::move(clist)}, dll{std::move(dll)}, alist{std::move(alist)}, name{std::move(name)}, final_{final_}, constructors{std::move(constructors)}, methods{std::move(methods)} {}
 
 		void generate(std::ostream & os, const std::string & namespace_) const;
 	};
@@ -152,7 +153,7 @@ namespace cwcc {
 		auto operator==(const namespace_ & lhs, const namespace_ & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
 	public:
 		namespace_(parser & p);
-		namespace_(std::optional<comment_list> clist, std::string name, std::vector<component> components) noexcept : clist{std::move(clist)}, name{std::move(name)}, components{std::move(components)} {}
+		namespace_(std::string name, std::vector<component> components) noexcept : clist{std::move(clist)}, name{std::move(name)}, components{std::move(components)} {}
 
 		void generate(std::ostream & os) const;
 	};

@@ -359,13 +359,18 @@ retry:
 		const auto mangled_name{[&] {
 			std::string mangled_name;
 			std::istringstream is{namespace_};
+			std::string tmp;
 			for(char c; is >> c;) {
 				if(c == ':') {
 					is >> c;
-					mangled_name += '$';
-				} else mangled_name += c;
+					mangled_name += std::to_string(tmp.size());
+					mangled_name += tmp;
+					tmp.clear();
+				} else tmp += c;
 			}
-			mangled_name += '$';
+			mangled_name += std::to_string(tmp.size());
+			mangled_name += tmp;
+			mangled_name += std::to_string(name.size());
 			mangled_name += name;
 			return mangled_name;
 		}()};
@@ -404,14 +409,14 @@ retry:
 		os << "\n";
 		os << "static\n";
 		os << "auto cwc_context() -> const cwc::internal::context & {\n";
-		os << "static const cwc::internal::context instance{" << dll << ", \"" << mangled_name << "\"};\n";
+		os << "static const cwc::internal::context instance{" << dll << ", \"cwc_export_" << mangled_name << "\"};\n";
 		os << "return instance;\n";
 		os << "}\n";
 		os << "\n";
 		os << "void * cwc_self;\n";
 		os << "};\n";
 		os << "#define CWC_EXPORT_" << mangled_name << "(cwc_impl)\\\n";
-		os << "extern \"C\" CWC_EXPORT const typename cwc::internal::access<" << namespace_ << "::" << name << ">::vtable " << mangled_name << "{\\\n";
+		os << "extern \"C\" CWC_EXPORT const typename cwc::internal::access<" << namespace_ << "::" << name << ">::vtable cwc_export_" << mangled_name << "{\\\n";
 		os << "+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\\\n";
 		{
 			const auto count{constructors.size() + methods.size()};

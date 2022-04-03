@@ -99,5 +99,5 @@ namespace {
 	};
 }
 
-CWC_EXPORT_cwc$test$available(impl);
+CWC_EXPORT_3cwc4test9available(impl);
 #endif

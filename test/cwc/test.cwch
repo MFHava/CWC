@@ -24,14 +24,14 @@ namespace cwc::test {
 
 		static
 		auto cwc_context() -> const cwc::internal::context & {
-			static const cwc::internal::context instance{"test-cwc", "cwc$test$unavailable"};
+			static const cwc::internal::context instance{"test-cwc", "cwc_export_3cwc4test11unavailable"};
 			return instance;
 		}
 
 		void * cwc_self;
 	};
-#define CWC_EXPORT_cwc$test$unavailable(cwc_impl)\
-	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::test::unavailable>::vtable cwc$test$unavailable{\
+#define CWC_EXPORT_3cwc4test11unavailable(cwc_impl)\
+	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::test::unavailable>::vtable cwc_export_3cwc4test11unavailable{\
 		+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\
 		+[](void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{}; }); }\
 	}
@@ -60,14 +60,14 @@ namespace cwc::test {
 
 		static
 		auto cwc_context() -> const cwc::internal::context & {
-			static const cwc::internal::context instance{"test-cwc", "cwc$test$available"};
+			static const cwc::internal::context instance{"test-cwc", "cwc_export_3cwc4test9available"};
 			return instance;
 		}
 
 		void * cwc_self;
 	};
-#define CWC_EXPORT_cwc$test$available(cwc_impl)\
-	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::test::available>::vtable cwc$test$available{\
+#define CWC_EXPORT_3cwc4test9available(cwc_impl)\
+	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::test::available>::vtable cwc_export_3cwc4test9available{\
 		+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\
 		+[](void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{}; }); },\
 		+[](void * cwc_self, int val) noexcept { return cwc::internal::try_([&] { reinterpret_cast<cwc_impl *>(cwc_self)->operator()(std::move(val)); }); }\

@@ -51,14 +51,14 @@ namespace cwc::sample::fibonacci {
 
 		static
 		auto cwc_context() -> const cwc::internal::context & {
-			static const cwc::internal::context instance{"sample-fibonacci", "cwc$sample$fibonacci$sequence"};
+			static const cwc::internal::context instance{"sample-fibonacci", "cwc_export_3cwc6sample9fibonacci8sequence"};
 			return instance;
 		}
 
 		void * cwc_self;
 	};
-#define CWC_EXPORT_cwc$sample$fibonacci$sequence(cwc_impl)\
-	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::sample::fibonacci::sequence>::vtable cwc$sample$fibonacci$sequence{\
+#define CWC_EXPORT_3cwc6sample9fibonacci8sequence(cwc_impl)\
+	extern "C" CWC_EXPORT const typename cwc::internal::access<cwc::sample::fibonacci::sequence>::vtable cwc_export_3cwc6sample9fibonacci8sequence{\
 		+[](void * cwc_self) noexcept { delete reinterpret_cast<cwc_impl *>(cwc_self); },\
 		+[](void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{}; }); },\
 		+[](const void * cwc_self, std::uint8_t no, std::uint64_t * cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = reinterpret_cast<const cwc_impl *>(cwc_self)->calculate(std::move(no)); }); },\

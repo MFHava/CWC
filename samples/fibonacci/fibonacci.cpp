@@ -54,5 +54,5 @@ namespace {
 	};
 }
 
-CWC_EXPORT_cwc$sample$fibonacci$sequence(fibonacci_sequence);
+CWC_EXPORT_3cwc6sample9fibonacci8sequence(fibonacci_sequence);
 #endif

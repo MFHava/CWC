@@ -42,6 +42,11 @@ target_link_libraries(cwcc PRIVATE libcwcc)
 set_target_properties(cwcc PROPERTIES FOLDER "C++ with Components")
 
 
+function(invoke_cwcc cwc_file cwch_file)
+	add_custom_command(OUTPUT ${cwch_file} COMMAND cwcc ARGS ${cwc_file} ${cwch_file} DEPENDS ${cwc_file} cwcc VERBATIM)
+endfunction()
+
+
 find_package(Doxygen 1.8.2) #Doxygen 1.8.2 is the first version to support C++11
 if(Doxygen_FOUND)
 	set(DOXYGEN_PROJECT_NAME "C++ with Components")
@@ -66,12 +71,16 @@ if(CWC_BUILD_SAMPLES)
 		file(GLOB_RECURSE CWC_SAMPLE "samples/${sample}/*")
 		source_group("" FILES ${CWC_SAMPLE})
 
-		add_library(sample-${sample}-dll SHARED ${CWC_SAMPLE})
+		invoke_cwcc("${CMAKE_CURRENT_SOURCE_DIR}/samples/${sample}/${sample}.cwc" "${sample}.cwch")
+
+		add_library(sample-${sample}-dll SHARED ${CWC_SAMPLE} "${sample}.cwch")
 		target_compile_definitions(sample-${sample}-dll PRIVATE CWC_SAMPLE_DLL)
+		target_include_directories(sample-${sample}-dll PRIVATE ${CMAKE_BINARY_DIR})
 		target_link_libraries(sample-${sample}-dll PRIVATE cwc)
 		set_target_properties(sample-${sample}-dll PROPERTIES OUTPUT_NAME sample-${sample} FOLDER "C++ with Components/Samples" CXX_VISIBILITY_PRESET hidden)
 
-		add_executable(sample-${sample}-exe ${CWC_SAMPLE})
+		add_executable(sample-${sample}-exe ${CWC_SAMPLE} "${sample}.cwch")
+		target_include_directories(sample-${sample}-exe PRIVATE ${CMAKE_BINARY_DIR})
 		target_link_libraries(sample-${sample}-exe PRIVATE cwc)
 		set_target_properties(sample-${sample}-exe PROPERTIES OUTPUT_NAME sample-${sample} FOLDER "C++ with Components/Samples")
 	endforeach(sample)
@@ -85,12 +94,16 @@ if(CWC_BUILD_TESTS)
 	file(GLOB_RECURSE CWC_TEST "test/cwc/*")
 	source_group("" FILES ${CWC_TEST})
 
-	add_library(test-cwc-dll SHARED ${CWC_TEST})
+	invoke_cwcc("${CMAKE_CURRENT_SOURCE_DIR}/test/cwc/test.cwc" "test.cwch")
+
+	add_library(test-cwc-dll SHARED ${CWC_TEST} "test.cwch")
 	target_compile_definitions(test-cwc-dll PRIVATE CWC_TEST_DLL)
+	target_include_directories(test-cwc-dll PRIVATE ${CMAKE_BINARY_DIR})
 	target_link_libraries(test-cwc-dll PRIVATE cwc Catch2::Catch2)
 	set_target_properties(test-cwc-dll PROPERTIES OUTPUT_NAME test-cwc FOLDER "C++ with Components/Tests" CXX_VISIBILITY_PRESET hidden)
 
-	add_executable(test-cwc-exe ${CWC_TEST})
+	add_executable(test-cwc-exe ${CWC_TEST} "test.cwch")
+	target_include_directories(test-cwc-exe PRIVATE ${CMAKE_BINARY_DIR})
 	target_link_libraries(test-cwc-exe PRIVATE cwc Catch2::Catch2)
 	set_target_properties(test-cwc-exe PROPERTIES OUTPUT_NAME test-cwc FOLDER "C++ with Components/Tests")
 

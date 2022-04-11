@@ -10,7 +10,7 @@
 #include <string>
 
 namespace cwcc {
-	enum class type { name, nested, comment, type, string, };
+	enum class type { name, nested, comment, type, string, system_header, };
 
 	class parser final {
 		std::queue<std::string> tokens;

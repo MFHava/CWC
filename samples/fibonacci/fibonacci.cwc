@@ -1,3 +1,5 @@
+#include <cstdint>
+
 namespace cwc::sample::fibonacci {
 	@library("sample-fibonacci")
 	component [[nodiscard]] sequence final {

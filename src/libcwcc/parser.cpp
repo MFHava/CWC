@@ -11,7 +11,8 @@
 //TODO: move grammar to doxygen files
 /* GRAMMAR
 
-CWC                  =      NAMESPACE*;
+CWC                  =      INCLUDE* NAMESPACE*;
+INCLUDE              =      "#" "include" STRING
 NAMESPACE            =      COMMENT* "namespace" NESTED_NAME "{" COMPONENT* "}"
 COMPONENT            =      COMMENT* ANNOTATION "component" ATTRIBUTES* NAME FINAL "{" BODY* "}" ";"
 FINAL                =      "final"?;
@@ -107,6 +108,15 @@ retry:
 					} while(c != '"');
 					tokens.push(std::move(token));
 				} break;
+				case '<': {
+					std::string token{"<"};
+					do {
+						in >> c;
+						token += c;
+					} while(c != '>');
+					tokens.push(std::move(token));
+				} break;
+				case '#':
 				case '(':
 				case ')':
 				case '{':
@@ -189,7 +199,10 @@ retry:
 			case type::type:
 				break;
 			case type::string:
-				if(tmp.front() != '"') throw std::logic_error{"expected string - found something else"};
+				if(tmp.front() != '"' || tmp.back() != '"') throw std::logic_error{"expected string - found something else"};
+				break;
+			case type::system_header:
+				if(tmp.front() != '<' || tmp.back() != '>') throw std::logic_error{"expected system_header - found something else"};
 				break;
 			default:
 				std::abort(); //unreachable

@@ -449,12 +449,22 @@ retry:
 	}
 
 
-	cwcc::cwcc(parser & p) { while(p.has_tokens()) namespaces.emplace_back(p); }
+	cwcc::cwcc(parser & p) { //TODO: [C++20] support for header units?
+		while(p.consume("#")) {
+			p.expect("include");
+			if(p.starts_with('"')) includes.emplace_back(p.next(type::string));
+			else includes.emplace_back(p.next(type::system_header));
+		}
+		while(p.has_tokens()) namespaces.emplace_back(p);
+	}
 
 	void cwcc::generate(std::ostream & os) const {
 		os << "//generated with CWCC\n\n";
 		os << "#pragma once\n";
-		os << "#include <cwc/cwc.hpp>\n\n";
+		os << "#include <cwc/cwc.hpp>\n";
+
+		for(const auto & include : includes) os << "#include " << include << "\n";
+		os << "\n";
 
 		auto first{true};
 		for(const auto & n : namespaces) {

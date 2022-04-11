@@ -159,14 +159,15 @@ namespace cwcc {
 	};
 
 	class cwcc final {
+		std::vector<std::string> includes;
 		std::vector<namespace_> namespaces;
 
-		auto view() const noexcept { return std::tie(namespaces); } //TODO: [C++20] remove as operator== will be defaulted
+		auto view() const noexcept { return std::tie(includes, namespaces); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
 		auto operator==(const cwcc & lhs, const cwcc & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
 	public:
 		cwcc(parser & p);
-		cwcc(std::vector<namespace_> namespaces) noexcept : namespaces{std::move(namespaces)} {}
+		cwcc(std::vector<std::string> includes, std::vector<namespace_> namespaces) noexcept : includes{std::move(includes)}, namespaces{std::move(namespaces)} {}
 
 		void generate(std::ostream & os) const;
 	};

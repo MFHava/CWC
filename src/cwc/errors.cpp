@@ -7,6 +7,8 @@
 #include <any>
 #include <ios>
 #include <regex>
+//TODO: [C++20] #include <chrono>
+//TODO: [C++20] #include <format>
 #include <future>
 #include <cassert>
 #include <cstring>
@@ -16,10 +18,10 @@
 #include <filesystem>
 #include <cwc/cwc.hpp>
 
-//TODO: add new C++20 exceptions
 namespace cwc::internal {
 	namespace {
 		namespace fs = std::filesystem;
+		//TODO: [C++20] namespace chrono = std::chrono;
 
 		using error_code = std::uint64_t;
 
@@ -78,6 +80,9 @@ namespace cwc::internal {
 		     				//encoding known io_errc as derived exceptions: https://en.cppreference.com/w/cpp/io/io_errc
 		     					std11_ios_base_failure_$_io_errc_$_stream{error_code_v<2, 5, 1, 0, 1>},
 		     			std17_filesystem_error{error_code_v<2, 5, 2>}, //TODO: comment
+		     		std20_chrono_nonexistent_local_time{error_code_v<2, 6>},
+		     		std20_chrono_ambiguous_local_time{error_code_v<2, 7>},
+		     		std20_format_error{error_code_v<2, 8>},
 		     	std98_bad_typeid{error_code_v<3>},
 		     	std98_bad_cast{error_code_v<4>},
 		     		std17_bad_any_cast{error_code_v<4, 1>},
@@ -187,6 +192,9 @@ namespace cwc::internal {
 							      : throw fs::filesystem_error{msg, *code};
 							continue; //unknown error code => handle as runtime_error
 						}
+					if(error == std20_chrono_nonexistent_local_time) continue; //can't be constructed from message
+					if(error == std20_chrono_ambiguous_local_time) continue; //can't be constructed from message
+					//TODO: [C++20] if(error == std20_format_error) throw std::format_error{msg};
 				if(error == std98_bad_typeid) throw std::bad_typeid{};
 				if(error == std98_bad_cast) throw std::bad_cast{};
 				if(error == std17_bad_any_cast) throw std::bad_any_cast{};
@@ -265,6 +273,9 @@ namespace cwc::internal {
 		auto to_error_code(const std::bad_function_call &) -> const error_code * { return &std11_bad_function_call; }
 		auto to_error_code(const std::bad_variant_access &) -> const error_code * { return &std17_bad_variant_access; }
 		auto to_error_code(const std::bad_optional_access &) -> const error_code * { return &std17_bad_optional_access; }
+		//TODO: [C++20] auto to_error_code(const chrono::nonexistent_local_time &) -> const error_code * { return &std20_chrono_nonexistent_local_time; }
+		//TODO: [C++20] auto to_error_code(const chrono::ambiguous_local_time &) -> const error_code * { return &std20_chrono_ambiguous_local_time; }
+		//TODO: [C++20] auto to_error_code(const std::format_error &) -> const error_code * { return &std20_format_error; }
 
 
 		template<typename>
@@ -303,6 +314,9 @@ namespace cwc::internal {
 				std::bad_any_cast,
 				std::bad_cast,
 				std::bad_typeid,
+				//TODO: [C++20] chrono::nonexistent_local_time,
+				//TODO: [C++20] chrono::ambiguous_local_time,
+				//TODO: [C++20] std::format_error,
 				fs::filesystem_error,
 				std::ios_base::failure,
 				std::system_error,
@@ -365,6 +379,9 @@ namespace cwc::internal {
 				catch(const std::bad_any_cast & exc) { store_error(exc); }
 			catch(const std::bad_cast & exc) { store_error(exc); }
 			catch(const std::bad_typeid & exc) { store_error(exc); }
+				//TODO: [C++20] catch(const std::format_error & exc) { store_error(exc); }
+				//TODO: [C++20] catch(const std::chrono::ambiguous_local_time & exc) { store_error(exc); }
+				//TODO: [C++20] catch(const std::chrono::nonexistent_local_time & exc) { store_error(exc); }
 					catch(const fs::filesystem_error & exc) {
 						if constexpr(std::is_nothrow_copy_constructible_v<fs::filesystem_error>) store_error(exc); //TODO: MSVC doesn't support this...
 						else store_error(static_cast<const std::system_error &>(exc));

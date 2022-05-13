@@ -301,49 +301,29 @@ namespace cwc::internal {
 
 
 		thread_local
-		struct {
-			std::variant<
-				std::monostate,
-				std::bad_optional_access,
-				std::bad_variant_access,
-				std::bad_function_call,
-				std::bad_weak_ptr,
-				std::bad_exception,
-				std::bad_array_new_length,
-				std::bad_alloc,
-				std::bad_any_cast,
-				std::bad_cast,
-				std::bad_typeid,
-				//TODO: [C++20] chrono::nonexistent_local_time,
-				//TODO: [C++20] chrono::ambiguous_local_time,
-				//TODO: [C++20] std::format_error,
-				fs::filesystem_error,
-				std::ios_base::failure,
-				std::system_error,
-				std::regex_error,
-				std::underflow_error,
-				std::overflow_error,
-				std::range_error,
-				std::runtime_error,
-				std::future_error,
-				std::out_of_range,
-				std::length_error,
-				std::domain_error,
-				std::invalid_argument,
-				std::logic_error,
-				std::exception,
-				unknown_exception
-			> exc;
+		struct last_error_t final {
+			char buffer[128];
+			void(*dtor)(const void *) noexcept{nullptr};
 			error_callback func{nullptr};
+
+			last_error_t() noexcept =default;
+			last_error_t(const last_error_t &) =delete;
+			auto operator=(const last_error_t &) -> last_error_t & =delete;
+			~last_error_t() noexcept { if(dtor) dtor(buffer); }
 		} last_error;
 
 
 		template<typename Exception>
 		void store_error(const Exception & exc) noexcept {
-			last_error.exc = exc;
-			last_error.func = [](error_selector selector) noexcept -> const void * {
-				static_assert(std::is_nothrow_copy_constructible_v<Exception>);
-				const auto & exc{std::get<Exception>(last_error.exc)};
+			static_assert(sizeof(Exception) <= sizeof(last_error_t::buffer));
+			static_assert(std::is_nothrow_copy_constructible_v<Exception>);
+
+			if(last_error.dtor) last_error.dtor(last_error.buffer);
+			new(last_error.buffer) Exception{exc};
+
+			last_error.dtor = +[](const void * ptr) noexcept { reinterpret_cast<const Exception *>(ptr)->~Exception(); };
+			last_error.func = +[](error_selector selector) noexcept -> const void * {
+				const auto & exc{*reinterpret_cast<const Exception *>(last_error.buffer)};
 				switch(selector) {
 					case error_selector::type:
 						return to_error_code(exc);
@@ -380,8 +360,8 @@ namespace cwc::internal {
 			catch(const std::bad_cast & exc) { store_error(exc); }
 			catch(const std::bad_typeid & exc) { store_error(exc); }
 				//TODO: [C++20] catch(const std::format_error & exc) { store_error(exc); }
-				//TODO: [C++20] catch(const std::chrono::ambiguous_local_time & exc) { store_error(exc); }
-				//TODO: [C++20] catch(const std::chrono::nonexistent_local_time & exc) { store_error(exc); }
+				//TODO: [C++20] catch(const chrono::ambiguous_local_time & exc) { store_error(exc); }
+				//TODO: [C++20] catch(const chrono::nonexistent_local_time & exc) { store_error(exc); }
 					catch(const fs::filesystem_error & exc) {
 						if constexpr(std::is_nothrow_copy_constructible_v<fs::filesystem_error>) store_error(exc); //TODO: MSVC doesn't support this...
 						else store_error(static_cast<const std::system_error &>(exc));

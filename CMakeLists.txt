@@ -99,12 +99,12 @@ if(CWC_BUILD_TESTS)
 	add_library(test-cwc-dll SHARED ${CWC_TEST} "test.cwch")
 	target_compile_definitions(test-cwc-dll PRIVATE CWC_TEST_DLL)
 	target_include_directories(test-cwc-dll PRIVATE ${CMAKE_BINARY_DIR})
-	target_link_libraries(test-cwc-dll PRIVATE cwc Catch2::Catch2)
+	target_link_libraries(test-cwc-dll PRIVATE cwc Catch2::Catch2 Catch2::Catch2WithMain)
 	set_target_properties(test-cwc-dll PROPERTIES OUTPUT_NAME test-cwc FOLDER "C++ with Components/Tests" CXX_VISIBILITY_PRESET hidden)
 
 	add_executable(test-cwc-exe ${CWC_TEST} "test.cwch")
 	target_include_directories(test-cwc-exe PRIVATE ${CMAKE_BINARY_DIR})
-	target_link_libraries(test-cwc-exe PRIVATE cwc Catch2::Catch2)
+	target_link_libraries(test-cwc-exe PRIVATE cwc Catch2::Catch2 Catch2::Catch2WithMain)
 	set_target_properties(test-cwc-exe PROPERTIES OUTPUT_NAME test-cwc FOLDER "C++ with Components/Tests")
 
 
@@ -112,6 +112,6 @@ if(CWC_BUILD_TESTS)
 	source_group("" FILES ${CWCC_TEST})
 
 	add_executable(test-cwcc ${CWCC_TEST})
-	target_link_libraries(test-cwcc PRIVATE libcwcc Catch2::Catch2)
+	target_link_libraries(test-cwcc PRIVATE libcwcc Catch2::Catch2 Catch2::Catch2WithMain)
 	set_target_properties(test-cwcc PROPERTIES FOLDER "C++ with Components/Tests")
 endif()

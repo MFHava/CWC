@@ -5,7 +5,7 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #include <sstream>
-#include <catch2/catch.hpp>
+#include <catch.hpp>
 #include "ast.hpp"
 #include "parser.hpp"
 

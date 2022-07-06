@@ -31,21 +31,6 @@
 #include <type_traits>
 
 namespace cwc::internal {
-	enum class error_selector : std::uint32_t;
-
-	using error_callback = const void * (CWC_CALL *)(error_selector) noexcept;
-
-	auto catch_() noexcept -> error_callback;
-
-	template<typename Functor>
-	auto try_(Functor func) noexcept -> error_callback {
-		try { func(); return nullptr; }
-		catch(...) { return catch_(); }
-	}
-
-	void throw_(error_callback callback); //TODO: [C++??] precondition(callback);
-
-
 	template<typename T>
 	struct access final {
 		using vtable = typename T::cwc_vtable;
@@ -58,11 +43,53 @@ namespace cwc::internal {
 	};
 
 
-	template<typename VFunc>
+	class exception final {
+		unsigned char buffer[128]; //TODO: determine size, can't fallback to heap as this operation may NEVER fail!
+		struct vtable;
+		const vtable * vptr;
+
+		template<typename T>
+		void store(const T & exc) noexcept;
+
+		void catch_() noexcept;
+	public:
+		exception() noexcept;
+		exception(const exception &) =delete;
+		auto operator=(const exception &) -> exception & =delete;
+		~exception() noexcept;
+
+		template<typename Func>
+		void try_(Func func) noexcept
+			try { func(); }
+			catch(...) { catch_(); }
+
+		void throw_() const;
+	};
+
+
+	template<typename>
 	struct extract_vtable;
 
 	template<typename Class, typename T>
 	struct extract_vtable<T Class::*> { using type = Class; };
+
+	template<typename VFunc>
+	using extract_vtable_t = typename extract_vtable<VFunc>::type;
+
+
+	template<typename>
+	struct is_nothrow;
+
+	template<typename Class, typename... Args>
+	struct is_nothrow<void(* Class::*)(Args...) noexcept> : std::true_type {};
+
+	template<typename Class, typename... Args>
+	struct is_nothrow<void(* Class::*)(exception *, Args...) noexcept> : std::false_type {};
+
+	template<typename VFunc>
+	inline
+	constexpr
+	bool is_nothrow_v{is_nothrow<VFunc>::value};
 
 
 	class context final {
@@ -76,24 +103,28 @@ namespace cwc::internal {
 
 		template<auto VFunc, typename... Args>
 		void call(Args &&... args) const {
-			static_assert(std::is_member_object_pointer_v<decltype(VFunc)>); //TODO: [C++20] make requirement
-
-			using Vtable = typename extract_vtable<decltype(VFunc)>::type;
-			const auto vtable{reinterpret_cast<const Vtable *>(vptr)};
-			const auto call_{[&] { return (vtable->*VFunc)(std::forward<Args>(args)...); }};
-			using Result = decltype(call_());
-
-			if constexpr(std::is_same_v<Result, void>) call_();
+			using VFuncT = decltype(VFunc);
+			static_assert(std::is_member_object_pointer_v<VFuncT>);
+			const auto vtable{reinterpret_cast<const extract_vtable_t<VFuncT> *>(vptr)};
+			if constexpr(is_nothrow_v<VFuncT>) (vtable->*VFunc)(std::forward<Args>(args)...);
 			else {
-				static_assert(std::is_same_v<Result, error_callback>);
-				if(const auto error{call_()}) throw_(error);
+				exception exc;
+				(vtable->*VFunc)(&exc, std::forward<Args>(args)...);
+				exc.throw_();
 			}
 		}
 	};
 }
 
+
 //! @brief C++ with Components API
 namespace cwc {
+	//! @brief exception thrown when type not derived from std::exception was caught at ABI boundary
+	struct unknown_exception final : std::exception {
+		auto what() const noexcept -> const char * override;
+	};
+
+
 	//! @brief check that type is available
 	//! @tparam T type to check availability for
 	//! @returns true iff the component is available

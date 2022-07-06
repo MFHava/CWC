@@ -186,7 +186,7 @@ retry:
 
 	void constructor::generate_vtable_declaration(std::ostream & os, std::size_t no) const {
 		if(delete_) return;
-		os << "cwc::internal::error_callback(CWC_CALL * cwc_" << no << ")(";
+		os << "void(CWC_CALL * cwc_" << no << ")(cwc::internal::exception *, ";
 		if(plist) {
 			plist->generate_vtable_declaration(os);
 			os << ", ";
@@ -196,12 +196,12 @@ retry:
 
 	void constructor::generate_vtable_definition(std::ostream & os, bool last) const {
 		if(delete_) return;
-		os << "+[](";
+		os << "+[](cwc::internal::exception * cwc_error, ";
 		if(plist) {
 			plist->generate_vtable_definition(os);
 			os << ", ";
 		}
-		os << "void ** cwc_result) noexcept { return cwc::internal::try_([&] { *cwc_result = new cwc_impl{";
+		os << "void ** cwc_result) noexcept { cwc_error->try_([&] { *cwc_result = new cwc_impl{";
 		if(plist) plist->generate_vtable_definition_paramters(os);
 		os << "}; }); }";
 		if(!last) os << ",";
@@ -281,9 +281,11 @@ retry:
 
 	void method::generate_vtable_declaration(std::ostream & os, std::size_t no) const {
 		if(delete_) return;
-		if(noexcept_) os << "void";
-		else os << "cwc::internal::error_callback";
-		os << "(CWC_CALL * cwc_" << no << ")(";
+		os << "void(CWC_CALL * cwc_" << no << ")(";
+		if(!noexcept_) {
+			os << "cwc::internal::exception *";
+			if(!static_ || plist || result) os << ", ";
+		}
 		if(!static_) {
 			if(const_) os << "const ";
 			os << "void *";
@@ -300,6 +302,10 @@ retry:
 	void method::generate_vtable_definition(std::ostream & os, bool last) const {
 		if(delete_) return;
 		os << "+[](";
+		if(!noexcept_) {
+			os << "cwc::internal::exception * cwc_error";
+			if(!static_ || plist || result) os << ", ";
+		}
 		if(!static_) {
 			if(const_) os << "const ";
 			os << "void * cwc_self";
@@ -311,7 +317,7 @@ retry:
 			os << *result << " * cwc_result";
 		}
 		os << ") noexcept { ";
-		if(!noexcept_) os << "return cwc::internal::try_([&] { ";
+		if(!noexcept_) os << "cwc_error->try_([&] { ";
 		if(result) os << "*cwc_result = ";
 		if(static_) os << "cwc_impl::";
 		else {

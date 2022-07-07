@@ -28,7 +28,7 @@ TEST_CASE("cwc available", "[context]") {
 	REQUIRE_NOTHROW(cwc::test::available{});
 }
 
-TEST_CASE("cwc exceptions", "[exceptions]") {
+TEST_CASE("cwc exceptions", "[exceptions]") { //TODO: future_error, regex_error, ios::failure___stream
 	cwc::test::available a;
 	REQUIRE_NOTHROW(a(0));
 	REQUIRE_THROWS_AS(a(1), std::bad_optional_access);

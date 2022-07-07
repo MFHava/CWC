@@ -6,6 +6,7 @@
 
 #include <any>
 #include <ios>
+//TODO: [C++20] #include <format>
 #include <cassert>
 #include <cstring>
 #include <variant>
@@ -20,12 +21,6 @@ namespace cwc {
 }
 
 namespace cwc::internal {
-	struct exception::vtable final { //TODO: rethink layout?
-		void(*dtor)(const unsigned char *) noexcept;
-		const char *(*what)(const unsigned char *) noexcept;
-		std::uint64_t type{0};
-	};
-
 	namespace {
 		template<std::uint8_t Level0 = 0, std::uint8_t Level1 = 0, std::uint8_t Level2 = 0, std::uint8_t Level3 = 0, std::uint8_t Level4 = 0, std::uint8_t Level5 = 0, std::uint8_t Level6 = 0, std::uint8_t Level7 = 0>
 		constexpr
@@ -52,6 +47,7 @@ namespace cwc::internal {
 		              		std98_overflow_error{error_code_v<1, 2, 2>},
 		              		std98_underflow_error{error_code_v<1, 2, 3>},
 		              		std11_ios_base_failure{error_code_v<1, 2, 4>},
+		//TODO: [C++20]              		std20_format_error{error_code_v<1, 2, 5>},
 		              	std98_bad_typeid{error_code_v<1, 3>},
 		              	std98_bad_cast{error_code_v<1, 4>},
 		              		std17_bad_any_cast{error_code_v<1, 4, 1>},
@@ -83,6 +79,7 @@ namespace cwc::internal {
 			else if constexpr(std::is_same_v<std::overflow_error, Exception>) return std98_overflow_error;
 			else if constexpr(std::is_same_v<std::underflow_error, Exception>) return std98_underflow_error;
 			else if constexpr(std::is_same_v<std::ios_base::failure, Exception>) return std11_ios_base_failure;
+			//TODO: [C++20] else if constexpr(std::is_same_v<std::format_error, Exception>) return std20_format_error;
 			else if constexpr(std::is_same_v<std::bad_typeid, Exception>) return std98_bad_typeid;
 			else if constexpr(std::is_same_v<std::bad_cast, Exception>) return std98_bad_cast;
 			else if constexpr(std::is_same_v<std::bad_any_cast, Exception>) return std17_bad_any_cast;
@@ -96,6 +93,12 @@ namespace cwc::internal {
 			else static_assert(dependent_false_v<Exception>);
 		}
 	}
+
+	struct exception::vtable final { //TODO: rethink layout?
+		void(*dtor)(const unsigned char *) noexcept;
+		const char *(*what)(const unsigned char *) noexcept;
+		std::uint64_t type{0};
+	};
 
 	template<typename T>
 	void exception::store(const T & exc) noexcept {
@@ -124,6 +127,7 @@ namespace cwc::internal {
 				catch(const std::bad_any_cast & exc) { store(exc); }
 			catch(const std::bad_cast & exc) { store(exc); }
 			catch(const std::bad_typeid & exc) { store(exc); }
+				//TODO: [C++20] catch(const std::format_error & exc) { store(exc); }
 				catch(const std::ios_base::failure & exc) { store(exc); }
 				catch(const std::underflow_error & exc) { store(exc); }
 				catch(const std::overflow_error & exc) { store(exc); }
@@ -168,6 +172,7 @@ namespace cwc::internal {
 			{std98_overflow_error, throw_<std::overflow_error>},
 			{std98_underflow_error, throw_<std::underflow_error>},
 			{std11_ios_base_failure, throw_<std::ios::failure>},
+			//TODO: [C++20] {std20_format_error, throw_<std::format_error>},
 			{std98_bad_typeid, throw_<std::bad_typeid>},
 			{std98_bad_cast, throw_<std::bad_cast>},
 			{std17_bad_any_cast, throw_<std::bad_any_cast>},
@@ -208,4 +213,3 @@ namespace cwc::internal {
 		std::abort(); //unreachable
 	}
 }
-

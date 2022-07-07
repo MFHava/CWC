@@ -186,7 +186,7 @@ retry:
 
 	void constructor::generate_vtable_declaration(std::ostream & os, std::size_t no) const {
 		if(delete_) return;
-		os << "void(CWC_CALL * cwc_" << no << ")(cwc::internal::exception *, ";
+		os << "void(*cwc_" << no << ")(cwc::internal::exception *, ";
 		if(plist) {
 			plist->generate_vtable_declaration(os);
 			os << ", ";
@@ -281,7 +281,7 @@ retry:
 
 	void method::generate_vtable_declaration(std::ostream & os, std::size_t no) const {
 		if(delete_) return;
-		os << "void(CWC_CALL * cwc_" << no << ")(";
+		os << "void(*cwc_" << no << ")(";
 		if(!noexcept_) {
 			os << "cwc::internal::exception *";
 			if(!static_ || plist || result) os << ", ";
@@ -405,7 +405,7 @@ retry:
 		os << "cwc::internal::access<" << name << ">;\n";
 		os << "\n";
 		os << "struct cwc_vtable final {\n";
-		os << "void(CWC_CALL * cwc_0)(void *) noexcept;\n";
+		os << "void(*cwc_0)(void *) noexcept;\n";
 		{
 			std::size_t no{1};
 			for(const auto & c : constructors) c.generate_vtable_declaration(os, no++);

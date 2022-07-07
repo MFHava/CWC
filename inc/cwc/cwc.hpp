@@ -8,20 +8,8 @@
 
 #if defined(__GNUG__)
 	#define CWC_EXPORT __attribute__((visibility("default")))
-
-	#ifdef __x86_64__
-		#define CWC_CALL
-	#else
-		#define CWC_CALL __attribute__((__cdecl__))
-	#endif
 #elif defined(_MSC_VER)
 	#define CWC_EXPORT __declspec(dllexport)
-
-	#ifdef _M_X64
-		#define CWC_CALL
-	#else
-		#define CWC_CALL __cdecl
-	#endif
 #else
 	#error unknown compiler
 #endif
@@ -128,7 +116,7 @@ namespace cwc {
 	//! @brief check that type is available
 	//! @tparam T type to check availability for
 	//! @returns true iff the component is available
-	//! @note unless the component is already loaded before, this operations implicitly loads it
+	//! @note unless the component is already loaded before, this operation tries to implicitly load it
 	template<typename T>
 	auto available() noexcept -> bool { return internal::access<T>::available(); }
 }

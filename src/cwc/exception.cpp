@@ -92,12 +92,24 @@ namespace cwc::internal {
 			else if constexpr(std::is_same_v<std::bad_optional_access, Exception>) return std17_bad_optional_access;
 			else static_assert(dependent_false_v<Exception>);
 		}
+
+		enum class operation { dtor, what, type, };
 	}
 
-	struct exception::vtable final { //TODO: rethink layout?
-		void(*dtor)(const unsigned char *) noexcept;
-		const char *(*what)(const unsigned char *) noexcept;
-		std::uint64_t type{0};
+	struct exception::vtable final { //TODO: rethink layout? (double indirection is actually unnecessary as we don't really need a vtable...)
+		void(*func)(operation, const unsigned char *, void *) noexcept;
+
+		void dtor(const unsigned char * self) const noexcept { func(operation::dtor, self, nullptr); }
+		auto what(const unsigned char * self) const noexcept -> const char * {
+			const char * result;
+			func(operation::what, self, &result);
+			return result;
+		}
+		auto type(const unsigned char * self) const noexcept -> std::uint64_t {
+			std::uint64_t result;
+			func(operation::type, self, &result);
+			return result;
+		}
 	};
 
 	template<typename T>
@@ -107,9 +119,20 @@ namespace cwc::internal {
 		static_assert(std::is_nothrow_destructible_v<T>);
 
 		static constexpr vtable vtable{
-			+[](const unsigned char * self) noexcept { reinterpret_cast<const T *>(self)->~T(); },
-			+[](const unsigned char * self) noexcept { return reinterpret_cast<const T *>(self)->what(); },
-			error_code<T>()
+			+[](operation op, const unsigned char * obj, void * param) noexcept {
+				const auto & self{*reinterpret_cast<const T *>(obj)};
+				switch(op) {
+					case operation::dtor:
+						self.~T();
+						break;
+					case operation::what:
+						*reinterpret_cast<const char **>(param) = self.what();
+						break;
+					case operation::type:
+						*reinterpret_cast<std::uint64_t *>(param) = error_code<T>();
+						break;
+				}
+			}
 		};
 		vptr = &vtable;
 		new(buffer) T{exc};
@@ -145,8 +168,9 @@ namespace cwc::internal {
 
 	exception::exception() noexcept {
 		static constexpr vtable vtable{
-			+[](const unsigned char *) noexcept {},
-			+[](const unsigned char *) noexcept -> const char * { return nullptr; }
+			+[](operation op, const unsigned char *, void * param) noexcept {
+				if(op == operation::type) *reinterpret_cast<std::uint64_t *>(param) = 0;
+			}
 		};
 		vptr = &vtable;
 	}
@@ -156,8 +180,10 @@ namespace cwc::internal {
 	namespace {
 		template<typename Exception>
 		void throw_(const char * msg) {
-			if constexpr(std::is_constructible_v<Exception, const char *>) throw Exception{msg};
-			else throw Exception{};
+			if constexpr(std::is_constructible_v<Exception, const char *>) {
+				assert(msg);
+				throw Exception{msg};
+			} else throw Exception{};
 		}
 
 		const std::unordered_map<std::uint64_t, void(*)(const char *)> exceptions{
@@ -201,15 +227,13 @@ namespace cwc::internal {
 	}
 
 	void exception::throw_() const {
-		if(!vptr->type) return; //no exception stored...
-		const auto msg{vptr->what(buffer)};
-		assert(msg);
+		auto error{vptr->type(buffer)};
+		if(!error) return; //no exception stored...
 
-		auto error{vptr->type};
-		for(auto mask : masks) {
-			error &= mask; //slice inheritance level
-			if(const auto it{exceptions.find(error)}; it != exceptions.end()) it->second(msg);
-		}
+		for(auto mask : masks)
+			if(const auto it{exceptions.find(error &= mask)}; it != exceptions.end())
+				it->second(vptr->what(buffer));
+
 		std::abort(); //unreachable
 	}
 }

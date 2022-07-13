@@ -4,215 +4,178 @@
 //    (See accompanying file ../../LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include <sstream>
+#include <string>
+#include <cassert>
+#include <iterator>
 #include <stdexcept>
+#include <algorithm>
 #include "parser.hpp"
 
 //TODO: move grammar to doxygen files
-/* GRAMMAR
+/* CWC GRAMMAR
 
-CWC                  =      INCLUDE* NAMESPACE*;
-INCLUDE              =      "#" "include" STRING
-NAMESPACE            =      COMMENT* "namespace" NESTED_NAME "{" COMPONENT* "}"
-COMPONENT            =      COMMENT* ANNOTATION "component" ATTRIBUTES* NAME FINAL "{" BODY* "}" ";"
-FINAL                =      "final"?;
-BODY                 =      COMMENT* ATTRIBUTES* (CONSTRUCTOR | METHOD | STATIC_METHOD) ";"
-CONSTRUCTOR          =      NAME ARG_LIST
-STATIC_METHOD        =      "static" (STATIC_AUTO_METHOD | STATIC_VOID_METHOD)
-STATIC_VOID_METHOD   =      "void" NAME ARG_LIST NOEXCEPT
-STATIC_AUTO_METHOD   =      "auto" NAME ARG_LIST NOEXCEPT "->" TYPE
-METHOD               =      (AUTO_METHOD | VOID_METHOD)
-AUTO_METHOD          =      "auto" METHOD_NAME ARG_LIST CONST REF NOEXCEPT "->" TYPE
-VOID_METHOD          =      "void" METHOD_NAME ARG_LIST CONST REF NOEXCEPT
-ARG_LIST             =      "(" ARG % "," ")"
-ARG                  =      ("const" TYPE "&" NAME | TYPE REF NAME) COMMENT
-REF                  =      ("&" | "&&")?
-CONST                =      "const"?
-NOEXCEPT             =      "noexcept"?
-COMMENT              =      "//" .* \n
-ATTRIBUTES           =      "[[" ATTRIBUTE % "," "]]" //TODO: [C++23] before C++23 duplicated attributes are forbidden...
-ATTRIBUTE            =      ("deprecated" | "nodiscard") ("(" STRING ")")?
-ANNOTATION           =      "@library" "(" STRING ")"
-TYPE                 =      NAME TEMPLATE?
-TEMPLATE             =      '<' (TEMPLATE | [^>])* '>'
-METHOD_NAME          =      ("operator" "(" ")" | NAME)
-NAME                 =      (a-zA-Z)(a-zA-Z0-9_)*
-NESTED_NAME          =      NAME("::"NAME)*
-STRING               =      "\"" .* "\""
+CWCC ::= (INCLUDE | COMMENT | NAMESPACE)*
+INCLUDE ::= '#' 'include' (STRING | SYS_STRING)
+COMMENT ::= '//' .* EOF
+NAMESPACE ::= namespace NS_IDENT '{' (COMMENT | LIBRARY | TEMPLATE)* '}'
+LIBRARY ::= '@library' '(' STRING ')' (EXTERN | COMPONENT)
+EXTERN ::= 'extern' 'template' 'component' IDENT '<' TYPE % ',' '>' ';'
+TEMPLATE ::= 'template' '<' ('typename' IDENT ) % ',' '>' COMPONENT
+COMPONENT ::= 'component' ATTRIBUTE* IDENT ['final'] '{' (ATTRIBUTE | COMMENT | CONSTRUCTOR | METHOD)* '}' ';'
+CONSTRUCTOR ::= IDENT '(' PARAM % ',' ')' ['=' 'delete'] ';'
+METHOD ::= ['static' ('auto' | 'void') ('operator' '(' ')' | IDENT) '(' PARAM % ',' ')' ['const'] [('&' | '&&')] ['noexcept'] ['->' TYPE] ['=' 'delete'] ';'
+PARAM ::= ((const TYPE '&') | ('const' TYPE ('&' | '&&'))) IDENT
+ATTRIBUTE ::= '[[' IDENT ['(' STRING ')'] ']]'
+TYPE ::= NS_IDENT ['<' ?* '>']
+NS_IDENT ::= [NS_IDENT '::'] IDENT
+IDENT ::= (a-zA-Z)(a-zA-Z0-9_)*
+STRING ::= '"' [^"]* '"'
+SYS_STRING ::= '<' [^>]* '>'
 */
 
 namespace cwcc {
-	namespace {
-		void throw_stray(char c) {
-			std::string msg{"detected stray '"};
-			msg += c;
-			msg += '\'';
-			throw std::logic_error{msg};
-		}
-	}
+	using namespace std::string_literals;
 
-	auto parser::next() -> std::string {
-		std::string result;
-		result = std::move(tokens.front());
-		tokens.pop();
+	void parser::skip_ws() noexcept { pos = std::find_if_not(pos, std::cend(content), [](char c) { return std::isspace(c); }); }
+
+	auto parser::expect_delimited(char first, char last) -> std::string_view { //TODO: does not support escaping...
+		if(!*this) throw std::invalid_argument{"EOF when expecting delimited"};
+		if(*pos != first) throw std::invalid_argument{"expected_delimited does not start with '"s + first + "'"};
+
+		auto it{std::find(pos + 1, std::cend(content), last)};
+		if(it == std::cend(content)) throw std::invalid_argument{"expected_delimited does not end with '"s + last + "'"};
+
+		++it;
+		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
+		pos = it;
+		skip_ws();
 		return result;
 	}
 
-	parser::parser(std::istream & in) {
-		in >> std::noskipws;
-		//TODO: error handling
+	auto parser::accept(std::string_view str) const noexcept -> bool {
+		const auto [sit, cit]{std::mismatch(std::cbegin(str), std::cend(str), pos, std::cend(content))};
+		return sit == std::cend(str);
+	}
 
-		for(char c; in >> c;) {
-retry:
-			if(!in) break;
-			if(std::isspace(c)) continue;
-			switch(c) {
-				case '/': {
-					in >> c;
-					if(c == '/') {
-						std::string line{"//"};
-						while(in >> c) {
-							if(c == '\n') break;
-							line += c;
-						}
-						tokens.push(std::move(line));
-					} else throw_stray('/');
-				} break;
-				case '-': {
-					in >> c;
-					if(c == '>') tokens.push("->");
-					else throw_stray('-');
-				} break;
-				case '[': {
-					in >> c;
-					if(c == '[') tokens.push("[[");
-					else throw_stray('[');
-				} break;
-				case ']': {
-					in >> c;
-					if(c == ']') tokens.push("]]");
-					else throw_stray(']');
-				} break;
-				case '&': {
-					if(in >> c && c == '&') tokens.push("&&");
-					else {
-						tokens.push("&");
-						goto retry;
-					}
-				} break;
-				case '"': {
-					std::string token{"\""};
-					do {
-						in >> c;
-						token += c;
-					} while(c != '"');
-					tokens.push(std::move(token));
-				} break;
-				case '<': {
-					std::string token{"<"};
-					do {
-						in >> c;
-						token += c;
-					} while(c != '>');
-					tokens.push(std::move(token));
-				} break;
-				case '#':
-				case '(':
-				case ')':
-				case '{':
-				case '}':
-				case ',':
-				case ';':
-				case '=':
-					tokens.push(std::string(1, c));
-					break;
-				default: {
-					if(std::isalpha(c) || c == '@') {
-						std::string token(1, c);
-						while(in >> c) {
-							if(c == '_' || c == '-' || c == '@' || std::isalnum(c)) token += c;
-							else if(c == ':') {
-								in >> c;
-								if(c == ':') token += "::";
-								else throw_stray(':');
-							} else if(c == '<') {
-								auto nested{1};
-								token += '<';
-								while(nested) {
-									in >> c;
-									switch(c) {
-										case '<': ++nested; break;
-										case '>': --nested; break;
-									}
-									token += c;
-								}
-							} else break;
-						}
-						tokens.push(std::move(token));
-						goto retry;
-					} else throw_stray(c);
-				} break;
-			}
-		}
+	auto parser::consume(std::string_view str) noexcept -> bool {
+		assert(!str.empty());
+
+		const auto [sit, cit]{std::mismatch(std::cbegin(str), std::cend(str), pos, std::cend(content))};
+		if(sit != std::cend(str)) return false;
+
+		pos = cit;
+		skip_ws();
+		return true;
 	}
 
 	void parser::expect(std::string_view str) {
-		if(accept(str)) tokens.pop();
-		else {
-			std::ostringstream os;
-			os << "expected \"" << str << "\" - ";
-			if(tokens.empty()) os << "EOF reached";
-			else os << "encountered \"" << tokens.front() << "\"";
-			throw std::invalid_argument{os.str()};
-		}
+		assert(!str.empty());
+
+		const auto [sit, cit]{std::mismatch(std::cbegin(str), std::cend(str), pos, std::cend(content))};
+		if(sit != std::cend(str)) throw std::invalid_argument{"expected(" + std::string{str} +") failed"};
+
+		pos = cit;
+		skip_ws();
 	}
 
-	auto parser::accept(std::string_view str) const -> bool {
-		if(tokens.empty()) return false;
-		return tokens.front() == str;
+	auto parser::expect_namespace() -> std::string_view {
+		if(!*this) throw std::invalid_argument{"EOF when namespace_id was required"};
+
+		auto it{pos};
+		do {
+			if(!std::isalpha(*it)) throw std::invalid_argument{"invalid start of namespace_id segment"};
+			for(++it; it != std::cend(content) && (*it == '_' || std::isalnum(*it)); ++it);
+			if(it == std::cend(content) || *it != ':') break;
+			++it;
+			if(it == std::cend(content) || *it != ':') throw std::invalid_argument{"found trailing ':' when parsing namespace_id"};
+			++it;
+		} while(true);
+		assert(it != pos);
+
+		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
+
+		pos = it;
+		skip_ws();
+		return result;
 	}
 
-	auto parser::consume(std::string_view str) -> bool {
-		if(accept(str)) {
-			tokens.pop();
-			return true;
-		} else return false;
+	auto parser::expect_comment() -> std::string_view {
+		if(!*this) throw std::invalid_argument{"EOF when comment was required"};
+		if(*pos != '/') throw std::invalid_argument{"invalid start of comment"};
+
+		auto it{pos + 1};
+		if(it == std::cend(content) || *it != '/') throw std::invalid_argument{"found trailing '/' when parsing comment"};
+		it = std::find(it + 1, std::cend(content), '\n');
+
+		if(it != std::cend(content)) ++it;
+		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
+
+		pos = it;
+		skip_ws();
+		return result;
+	}
+	
+	auto parser::expect_string_literal() -> std::string_view { return expect_delimited('"', '"'); }
+
+	auto parser::expect_system_header() -> std::string_view { return expect_delimited('<', '>'); }
+
+	auto parser::expect_name() -> std::string_view {
+		if(!*this) throw std::invalid_argument{"EOF when name was required"};
+		if(!std::isalpha(*pos)) throw std::invalid_argument{"invalid start of name"};
+
+		const auto it{std::find_if_not(pos + 1, std::cend(content) ,[](char ch) { return std::isalnum(ch) || ch == '_'; })};
+
+		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
+		assert(!std::isspace(result.back()));
+
+		pos = it;
+		skip_ws();
+		return result;
 	}
 
-	auto parser::next(type type) -> std::string {
-		auto tmp{next()};
-		switch(type) {
-			case type::name:
-				if(tmp.find('@') != tmp.npos) throw std::logic_error{"expected name - found annotation"};
-				if(tmp.find(':') != tmp.npos) throw std::logic_error{"expected name - found namespace_name"};
-				if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected name - found template_name"};
-				if(tmp.find('-') != tmp.npos) throw std::logic_error{"expected name - found lib_name"};
-				break;
-			case type::nested:
-				if(tmp.find('@') != tmp.npos) throw std::logic_error{"expected nested_name - found annotation"};
-				if(tmp.find('<') != tmp.npos) throw std::logic_error{"expected nested_name - found template_name"};
-				if(tmp.find('-') != tmp.npos) throw std::logic_error{"expected nested_name - found lib_name"};
-				break;
-			case type::comment:
-				if(tmp.front() != '/') throw std::logic_error{"expected comment - found something else"};
-				break;
-			case type::type:
-				break;
-			case type::string:
-				if(tmp.front() != '"' || tmp.back() != '"') throw std::logic_error{"expected string - found something else"};
-				break;
-			case type::system_header:
-				if(tmp.front() != '<' || tmp.back() != '>') throw std::logic_error{"expected system_header - found something else"};
-				break;
-			default:
-				std::abort(); //unreachable
-				break;
-		}
-		return tmp;
-	}
+	auto parser::expect_type() -> std::string_view {
+		if(!*this) throw std::invalid_argument{"EOF when type was required"};
 
-	auto parser::starts_with(char ch) const -> bool {
-		if(tokens.empty()) return false;
-		return tokens.front()[0] == ch;
+		auto it{pos};
+		std::size_t nesting{0};
+		do {
+			if(!nesting && !std::isalpha(*it)) throw std::invalid_argument{"invalid start of type segment"};
+			for(; it != std::cend(content) && (*it == '_' || std::isalnum(*it)); ++it);
+			if(it == std::cend(content)) break;
+retry:
+			switch(*it) {
+				case ':': {
+					++it;
+					if(it == std::cend(content) || *it != ':') throw std::invalid_argument{"found trailing ':' when parsing type"};
+					++it;
+					if(it == std::cend(content)) throw std::invalid_argument{"found trailing \"::\" when parsing type"};
+				} break;
+				case ',': {
+					if(!nesting) goto done;
+					for(++it; it != std::cend(content) && std::isspace(*it); ++it);
+				} break;
+				case '<': ++nesting; ++it; break;
+				case '>':
+					if(!nesting) goto done;
+					--nesting;
+					++it;
+					if(nesting) for(; it != std::cend(content) && std::isspace(*it); ++it);
+					if(it == std::cend(content)) goto done;
+					if(*it == '>' || *it == ':' || *it == ',' || *it == ':') goto retry;
+					break;
+				default:
+					if(!nesting) goto done;
+					++it;
+					break;
+			}
+		} while(true);
+done:
+		assert(it != pos);
+		if(nesting) throw std::invalid_argument{"could not extract type, had unbalanced <>"};
+		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
+		while(std::isspace(result.back())) result.remove_suffix(1);
+		pos = it;
+		skip_ws();
+		return result;
 	}
 }

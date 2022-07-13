@@ -22,6 +22,25 @@ set(CWCC_GENERATED_DIRECTORY "${CMAKE_BINARY_DIR}/generated")
 file(MAKE_DIRECTORY ${CWCC_GENERATED_DIRECTORY})
 
 
+#add_library(ptl INTERFACE)
+#	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+#		target_compile_options(ptl INTERFACE -Wall -Wextra -Wpedantic -Wconversion)
+#	elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+#		target_compile_definitions(ptl INTERFACE _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS _CRT_SECURE_NO_WARNINGS _SCL_SECURE_NO_WARNINGS _SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING)
+#		target_compile_options(ptl INTERFACE
+#			/W4 /JMC /MP /permissive- /bigobj
+#			/wd4003 # ignore not enough parameters for function macro
+#			/wd4456 # ignore local shadowing
+#			/wd4457 # ignore function parameter shadowing
+#			/wd4458 # ignore class member shadowing
+#			/wd4459 # ignore global shadowing
+#		)
+#		target_link_options(ptl INTERFACE
+#			/ignore:4099 # ignore mixing struct and class keyword for same type
+#		)
+#	endif()
+
+
 add_library(cwc STATIC)
 	file(GLOB_RECURSE CWC_HDR "inc/cwc/*")
 		source_group("inc" FILES ${CWC_HDR})
@@ -38,6 +57,7 @@ add_library(libcwcc OBJECT)
 		source_group("" FILES ${CWCC_LIB})
 	target_sources(libcwcc PRIVATE ${CWCC_LIB})
 	target_include_directories(libcwcc PUBLIC "src/libcwcc")
+	set_target_properties(libcwcc PROPERTIES FOLDER "CWCC")
 
 
 add_executable(cwcc)
@@ -45,6 +65,7 @@ add_executable(cwcc)
 		source_group("" FILES ${CWCC})
 	target_sources(cwcc PRIVATE ${CWCC})
 	target_link_libraries(cwcc PRIVATE libcwcc)
+	set_target_properties(cwcc PROPERTIES FOLDER "CWCC")
 
 
 function(invoke_cwcc cwc_file cwch_file)

@@ -5,29 +5,33 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#include <queue>
 #include <iosfwd>
-#include <string>
+#include <optional>
+#include <string_view>
 
 namespace cwcc {
-	enum class type { name, nested, comment, type, string, system_header, };
-
 	class parser final {
-		std::queue<std::string> tokens;
+		std::string_view content; //TODO: actually keeping a pointer to end would be sufficient...
+		std::string_view::const_iterator pos{content.cbegin()};
 
-		auto next() -> std::string;
+		void skip_ws() noexcept;
+
+		auto expect_delimited(char first, char last) -> std::string_view;
 	public:
-		parser(std::istream & in);
+		parser(std::string_view str) noexcept : content{str} { skip_ws(); }
 
+		auto accept(std::string_view str) const noexcept -> bool;
+		auto consume(std::string_view str) noexcept -> bool;
 		void expect(std::string_view str);
 
-		auto accept(std::string_view str) const -> bool;
-		auto consume(std::string_view str) -> bool;
+		auto expect_namespace() -> std::string_view;
+		auto expect_comment() -> std::string_view;
+		auto expect_string_literal() -> std::string_view;
+		auto expect_system_header() -> std::string_view;
+		auto expect_name() -> std::string_view;
+		auto expect_type() -> std::string_view;
 
-		auto next(type type) -> std::string;
-
-		auto starts_with(char ch) const -> bool;
-
-		auto has_tokens() const noexcept -> bool { return !tokens.empty(); }
+		explicit
+		operator bool() const noexcept { return pos != content.cend(); }
 	};
 }

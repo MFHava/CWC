@@ -11,9 +11,9 @@
 #include <iostream>
 
 int main() {
-	std::cout << "sequence is available: " << std::boolalpha << cwc::available<cwc::sample::fibonacci::sequence>() << std::noboolalpha << "\n";
+	std::cout << "sequence is available: " << std::boolalpha << cwc::available<cwc::sample::fibonacci::sequence<std::uint8_t>>() << std::noboolalpha << "\n";
 
-	cwc::sample::fibonacci::sequence s;
+	cwc::sample::fibonacci::sequence<std::uint8_t> s;
 
 	std::cout << "\n\n\n";
 
@@ -54,5 +54,5 @@ namespace {
 	};
 }
 
-CWC_EXPORT_3cwc6sample9fibonacci8sequence(fibonacci_sequence);
+CWC_EXPORT_3cwc6sample9fibonacci8sequenceT3std7uint8_tE(fibonacci_sequence);
 #endif

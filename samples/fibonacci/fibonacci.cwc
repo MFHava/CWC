@@ -1,24 +1,26 @@
 #include <cstdint>
 
 namespace cwc::sample::fibonacci {
-	@library("sample-fibonacci")
+	template<typename T>
 	component [[nodiscard]] sequence final {
 		sequence();
 		[[deprecated("for visualization only")]]
 		sequence(const int & dummy) =delete;
 
 		//! @brief compute fibonacci number
+		//! @param[in] no fibonacci number to compute
 		//! @returns fibonacci number
-		[[nodiscard]]
-		auto calculate(
-			std::uint8_t no //!< [in] no
-		) const -> std::uint64_t;
+		[[nodiscard("result of computation")]]
+		auto calculate(T no) const -> std::uint64_t;
 
 		void calculate() =delete;
 
 		//! @returns max supported fibonacci number that can be computed before result would overflow
-		[[nodiscard]]
+		[[nodiscard("max valid parameter for calculate")]]
 		static
-		auto max() noexcept -> std::uint8_t;
+		auto max() noexcept -> T;
 	};
+
+	@library("sample-fibonacci")
+	extern template component sequence<std::uint8_t>;
 }

@@ -10,6 +10,7 @@
 #include "ast.hpp"
 #include "parser.hpp"
 #include "indent.hpp"
+#include "generator.hpp"
 
 int main(int argc, char * argv[]) try {
 	if(argc == 1) {
@@ -23,10 +24,12 @@ int main(int argc, char * argv[]) try {
 	std::ofstream os{argv[2], std::ios::binary};
 	if(!os) throw std::runtime_error{"could not open output file"};
 
-	cwcc::parser p{is};
+	const std::string cwc(std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{});
+	cwcc::parser p{cwc};
 	std::stringstream ss;
-	cwcc::cwcc c{p};
-	c.generate(ss);
+	cwcc::cwc c;
+	c.parse(p);
+	cwcc::generate(ss, c);
 	cwcc::indent(ss, os);
 } catch(const std::exception & exc) {
 	std::cerr << "ERROR: " << exc.what() << std::endl;

@@ -5,170 +5,151 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 
 #pragma once
-#include <tuple>
-#include <string>
+#include <tuple> //TODO: [C++20] remove as view-hack is no longer needed
 #include <vector>
+#include <variant>
 #include <optional>
+#include <string_view>
 
 namespace cwcc {
 	class parser;
 
-	class attribute_list final {
-		std::optional<std::string> deprecated, nodiscard;
+	struct attribute final {
+		std::string_view name;
+		std::optional<std::string_view> reason;
 
-		auto view() const noexcept { return std::tie(deprecated, nodiscard); } //TODO: [C++20] remove as operator== will be defaulted
+		void parse(parser & p);
+		
+		auto view() const noexcept { return std::tie(name, reason); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
-		auto operator==(const attribute_list & lhs, const attribute_list & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-	public:
-		attribute_list(parser & p);
-		attribute_list(std::optional<std::string> deprecated, std::optional<std::string> nodiscard) noexcept : deprecated{std::move(deprecated)}, nodiscard{std::move(nodiscard)} {}
-
-		void generate(std::ostream & os) const;
+		auto operator==(const attribute & lhs, const attribute & rhs) noexcept -> bool { return lhs.view() == rhs.view(); }
 	};
 
 	enum class ref_t { none, lvalue, rvalue };
 
 	struct param final {
-		bool const_;
-		std::string type;
-		ref_t ref;
-		std::string name, trailing_comment;
+		bool const_{false};
+		std::string_view type;
+		ref_t ref{ref_t::none};
+		std::string_view name;
 
-		param(parser & p);
-		param(bool const_, std::string type, ref_t ref, std::string name, std::string trailing_comment) noexcept : const_{const_}, type{std::move(type)}, ref{ref}, name{std::move(name)}, trailing_comment{std::move(trailing_comment)} {}
+		void parse(parser & p);
 
-		void generate_param(std::ostream & os) const;
-	private:
-		auto view() const noexcept { return std::tie(const_, type, ref, name, trailing_comment); } //TODO: [C++20] remove as operator== will be defaulted
+		auto view() const noexcept { return std::tie(const_, type, ref, name); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
 		auto operator==(const param & lhs, const param & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
 	};
 
-	class param_list final {
-		void generate_vtable(std::ostream & os, bool definition) const;
+	struct comment final {
+		std::string_view line;
 
+		void parse(parser & p);
+
+		friend
+		auto operator==(const comment & lhs, const comment & rhs) noexcept -> bool { return lhs.line == rhs.line; } //TODO: [C++20] mark defaulted
+	};
+
+	struct constructor final {
+		std::string_view name;
 		std::vector<param> params;
+		bool delete_{false};
 
-		auto view() const noexcept { return std::tie(params); } //TODO: [C++20] remove as operator== will be defaulted
-		friend
-		auto operator==(const param_list & lhs, const param_list & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-	public:
-		param_list(parser & p);
-		param_list(std::vector<param> params) noexcept : params{std::move(params)} {}
+		void parse(parser & p);
 
-		void generate_param_passing(std::ostream & os) const;
-		void generate_param_list(std::ostream & os) const;
-
-		void generate_vtable_declaration(std::ostream & os) const;
-		void generate_vtable_definition(std::ostream & os) const;
-		void generate_vtable_definition_paramters(std::ostream & os) const;
-
-		auto empty() const noexcept -> bool { return params.empty(); }
-	};
-
-	class comment_list final {
-		std::vector<std::string> comments;
-
-		auto view() const noexcept { return std::tie(comments); } //TODO: [C++20] remove as operator== will be defaulted
-		friend
-		auto operator==(const comment_list & lhs, const comment_list & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-	public:
-		comment_list(parser & p);
-		comment_list(std::vector<std::string> comments) noexcept : comments{std::move(comments)} {}
-
-		void generate(std::ostream & os) const;
-	};
-
-	class constructor final {
-		std::optional<comment_list> clist;
-		std::optional<attribute_list> alist;
-		std::optional<param_list> plist;
-		bool delete_;
-
-		auto view() const noexcept { return std::tie(clist, alist, plist, delete_); } //TODO: [C++20] remove as operator== will be defaulted
+		auto view() const noexcept { return std::tie(name, params, delete_); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
 		auto operator==(const constructor & lhs, const constructor & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-	public:
-		constructor() =default;
-		constructor(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist);
-		constructor(std::optional<param_list> plist, bool delete_) noexcept : plist{std::move(plist)}, delete_{delete_} {}
-
-		void generate_definition(std::ostream & os, std::string_view class_, std::size_t no) const;
-
-		void generate_vtable_declaration(std::ostream & os, std::size_t no) const;
-		void generate_vtable_definition(std::ostream & os, bool last) const;
 	};
 
-	class method final {
-		bool static_;
-		std::optional<comment_list> clist;
-		std::optional<attribute_list> alist;
-		std::string name;
-		std::optional<param_list> plist;
-		bool const_;
-		ref_t ref;
-		bool noexcept_;
-		std::optional<std::string> result;
-		bool delete_;
+	struct method final {
+		bool static_{false};
+		std::string_view name;
+		std::vector<param> params;
+		bool const_{false};
+		ref_t ref{ref_t::none};
+		bool noexcept_{false};
+		std::optional<std::string_view> result;
+		bool delete_{false};
 
-		auto view() const noexcept { return std::tie(static_, clist, alist, name, plist, const_, ref, noexcept_, result, delete_); } //TODO: [C++20] remove as operator== will be defaulted
+		void parse(parser & p);
+
+		auto view() const noexcept { return std::tie(static_, name, params, const_, ref, noexcept_, result, delete_); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
 		auto operator==(const method & lhs, const method & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-	public:
-		method(parser & p, std::optional<comment_list> clist, std::optional<attribute_list> alist);
-		method(bool static_, std::string name, std::optional<param_list> plist, bool const_, ref_t ref, bool noexcept_, std::optional<std::string> result, bool delete_) noexcept : static_{static_}, name{std::move(name)}, plist{std::move(plist)}, const_{const_}, ref{ref}, noexcept_{noexcept_}, result{std::move(result)}, delete_{delete_} {}
-
-		void generate_definition(std::ostream & os, std::size_t no) const;
-
-		void generate_vtable_declaration(std::ostream & os, std::size_t no) const;
-		void generate_vtable_definition(std::ostream & os, bool last) const;
 	};
 
-	class component final {
-		std::optional<comment_list> clist;
-		std::string dll;
-		std::optional<attribute_list> alist;
-		std::string name;
-		bool final_;
-		std::vector<constructor> constructors;
-		std::vector<method> methods;
+	struct component final {
+		std::vector<attribute> attributes;
+		std::string_view name;
+		bool final{false};
+		std::vector<std::variant<comment, constructor, method, attribute>> content;
 
-		auto view() const noexcept { return std::tie(clist, dll, alist, name, final_, constructors, methods); } //TODO: [C++20] remove as operator== will be defaulted
+		void parse(parser & p);
+
+		auto view() const noexcept { return std::tie(attributes, name, final, content); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
 		auto operator==(const component & lhs, const component & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-	public:
-		component(parser & p);
-		component(std::string dll, std::string name, bool final_, std::vector<constructor> constructors, std::vector<method> methods) noexcept : clist{std::move(clist)}, dll{std::move(dll)}, alist{std::move(alist)}, name{std::move(name)}, final_{final_}, constructors{std::move(constructors)}, methods{std::move(methods)} {}
-
-		void generate(std::ostream & os, const std::string & namespace_) const;
 	};
 
-	class namespace_ final {
-		std::optional<comment_list> clist;
-		std::string name;
-		std::vector<component> components;
+	struct template_ final {
+		std::vector<std::string_view> tparams;
+		component component_;
 
-		auto view() const noexcept { return std::tie(clist, name, components); } //TODO: [C++20] remove as operator== will be defaulted
+		void parse(parser & p);
+
+		auto view() const noexcept { return std::tie(tparams, component_); } //TODO: [C++20] remove as operator== will be defaulted
+		friend
+		auto operator==(const template_ & lhs, const template_ & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
+	};
+
+	struct extern_ final {
+		std::string_view component;
+		std::vector<std::string_view> tparams;
+
+		void parse(parser & p);
+
+		auto view() const noexcept { return std::tie(component, tparams); } //TODO: [C++20] remove as operator== will be defaulted
+		friend
+		auto operator==(const extern_ & lhs, const extern_ & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
+	};
+
+	struct library final {
+		std::string_view name;
+		std::variant<component, extern_> content;
+
+		void parse(parser & p);
+
+		auto view() const noexcept { return std::tie(name, content); } //TODO: [C++20] remove as operator== will be defaulted
+		friend
+		auto operator==(const library & lhs, const library & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
+	};
+
+	struct namespace_ final {
+		std::string_view name;
+		std::vector<std::variant<comment, template_, library>> content;
+
+		void parse(parser & p);
+
+		auto view() const noexcept { return std::tie(name, content); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
 		auto operator==(const namespace_ & lhs, const namespace_ & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-	public:
-		namespace_(parser & p);
-		namespace_(std::string name, std::vector<component> components) noexcept : clist{std::move(clist)}, name{std::move(name)}, components{std::move(components)} {}
-
-		void generate(std::ostream & os) const;
 	};
 
-	class cwcc final {
-		std::vector<std::string> includes;
-		std::vector<namespace_> namespaces;
+	struct include final {
+		std::string_view header;
 
-		auto view() const noexcept { return std::tie(includes, namespaces); } //TODO: [C++20] remove as operator== will be defaulted
+		void parse(parser & p);
+
 		friend
-		auto operator==(const cwcc & lhs, const cwcc & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
-	public:
-		cwcc(parser & p);
-		cwcc(std::vector<std::string> includes, std::vector<namespace_> namespaces) noexcept : includes{std::move(includes)}, namespaces{std::move(namespaces)} {}
+		auto operator==(const include & lhs, const include & rhs) noexcept -> bool { return lhs.header == rhs.header; } //TODO: [C++20] remove as operator== will be defaulted
+	};
 
-		void generate(std::ostream & os) const;
+	struct cwc final {
+		std::vector<std::variant<include, comment, namespace_>> content;
+
+		void parse(parser & p);
+
+		friend
+		auto operator==(const cwc & lhs, const cwc & rhs) noexcept -> bool { return lhs.content == rhs.content; } //TODO: [C++20] remove as operator== will be defaulted
 	};
 }

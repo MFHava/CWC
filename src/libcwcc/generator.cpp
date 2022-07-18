@@ -208,63 +208,65 @@ namespace cwcc {
 			if(!c.line.empty() && c.line.back() != '\n') os << '\n';
 		}
 
-		namespace {
-			//TODO: investigate rules of Itanium ABI mangling and apply to mangling logic...
-			auto mangle(std::string_view ns, std::string_view type, const std::vector<std::string_view> & tparams = {}) -> std::string { //TODO: [C++20] use span
-				//TODO: re-write without all these allocations
-				std::string mangled_name, tmp;
-				auto append{[&] {
-					mangled_name += std::to_string(tmp.size());
+		void generate_(std::ostream & os, const using_ & u) {
+			os << "using " << u.name << " = " << u.type << ";\n";
+		}
+
+		//TODO: investigate rules of Itanium ABI mangling and apply to mangling logic...
+		auto mangle(std::string_view ns, std::string_view type, const std::vector<std::string_view> & tparams = {}) -> std::string { //TODO: [C++20] use span
+			//TODO: re-write without all these allocations
+			std::string mangled_name, tmp;
+			auto append{[&] {
+				mangled_name += std::to_string(tmp.size());
+				mangled_name += tmp;
+				tmp.clear();
+			}};
+			std::istringstream is{std::string{ns}}; //TODO: [C++23] use ispanstream here
+			for(char c; is >> c;) {
+				if(c == ':') {
+					is >> c;
+					assert(c == ':');
+					append();
+				} else tmp += c;
+			}
+			append();
+			mangled_name += std::to_string(type.size());
+			mangled_name += type;
+
+			auto append_tparam{[&] {
+				const auto digit{std::isdigit(tmp.front())};
+				if(digit) {
+					mangled_name += '_';
 					mangled_name += tmp;
 					tmp.clear();
-				}};
-				std::istringstream is{std::string{ns}}; //TODO: [C++23] use ispanstream here
-				for(char c; is >> c;) {
-					if(c == ':') {
-						is >> c;
-						assert(c == ':');
-						append();
-					} else tmp += c;
-				}
-				append();
-				mangled_name += std::to_string(type.size());
-				mangled_name += type;
+				} else append();
+			}};
 
-				auto append_tparam{[&] {
-					const auto digit{std::isdigit(tmp.front())};
-					if(digit) {
-						mangled_name += '_';
-						mangled_name += tmp;
-						tmp.clear();
-					} else append();
-				}};
-
-				if(!tparams.empty()) {
-					mangled_name += 'T';
-					for(const auto & t : tparams) {
-						std::istringstream is{std::string{t}}; //TODO: [C++23] use ispanstream here
-						for(char c; is >> c;) {
-							if(c == ':') {
-								is >> c;
-								assert(c == ':');
-								if(!tmp.empty()) append_tparam();
-							} else if(c == '<') {
-								append_tparam();
-								mangled_name += 'T';
-							} else if(c == ',') {
-								append_tparam();
-								mangled_name += 'N';
-							} else if(c == '>') {
-								append_tparam();
-								mangled_name += 'E';
-							} else if(!std::isspace(c)) tmp += c;
-						}
-						append_tparam();
+			if(!tparams.empty()) {
+				mangled_name += 'T';
+				for(const auto & t : tparams) {
+					std::istringstream is{std::string{t}}; //TODO: [C++23] use ispanstream here
+					for(char c; is >> c;) {
+						if(c == ':') {
+							is >> c;
+							assert(c == ':');
+							if(!tmp.empty()) append_tparam();
+						} else if(c == '<') {
+							append_tparam();
+							mangled_name += 'T';
+						} else if(c == ',') {
+							append_tparam();
+							mangled_name += 'N';
+						} else if(c == '>') {
+							append_tparam();
+							mangled_name += 'E';
+						} else if(!std::isspace(c)) tmp += c;
 					}
-					mangled_name += 'E';
+					append_tparam();
 				}
-				return mangled_name;
+				mangled_name += 'E';
 			}
+			return mangled_name;
 		}
 
 		void generate_(std::ostream & os, const component & c, std::string_view ns, std::variant<const library *, const template_ *> ctx) { //TODO: [C++20] us span
@@ -300,6 +302,7 @@ namespace cwcc {
 				std::visit(combined{
 					[&](const comment & c) { generate_(os, c); },
 					[&](const attribute  & a) { generate_(os, a); os << "\n"; },
+					[&](const using_ & u) { generate_(os, u); os << "\n"; },
 					[&](const auto & c) { vtable_entry{c}.wrapper(os, ++no); }
 				}, c);
 			os << "private:\n";
@@ -314,6 +317,7 @@ namespace cwcc {
 				std::visit(combined{
 					[](const comment &) {},
 					[](const attribute &) {},
+					[](const using_ &) {},
 					[&](const auto & c) { vtable_entry{c}.declaration(os, ++no); }
 				}, c);
 			os << "};\n";
@@ -329,6 +333,7 @@ namespace cwcc {
 				std::visit(combined{
 					[](const comment &) {},
 					[](const attribute &) {},
+					[](const using_ &) {},
 					[&](const auto & c) { if(!c.delete_) vtable_entry{c}.definiton(os << ",\n"); }
 				}, c);
 			os << "\n";

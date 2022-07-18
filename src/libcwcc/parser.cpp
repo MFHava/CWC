@@ -21,10 +21,11 @@ NAMESPACE ::= namespace NS_IDENT '{' (COMMENT | LIBRARY | TEMPLATE)* '}'
 LIBRARY ::= '@library' '(' STRING ')' (EXTERN | COMPONENT)
 EXTERN ::= 'extern' 'template' 'component' IDENT '<' TYPE % ',' '>' ';'
 TEMPLATE ::= 'template' '<' ('typename' IDENT ) % ',' '>' COMPONENT
-COMPONENT ::= 'component' ATTRIBUTE* IDENT ['final'] '{' (ATTRIBUTE | COMMENT | CONSTRUCTOR | METHOD)* '}' ';'
+COMPONENT ::= 'component' ATTRIBUTE* IDENT ['final'] '{' (ATTRIBUTE | COMMENT | CONSTRUCTOR | METHOD | USING)* '}' ';'
 CONSTRUCTOR ::= IDENT '(' PARAM % ',' ')' ['=' 'delete'] ';'
 METHOD ::= ['static' ('auto' | 'void') ('operator' '(' ')' | IDENT) '(' PARAM % ',' ')' ['const'] [('&' | '&&')] ['noexcept'] ['->' TYPE] ['=' 'delete'] ';'
 PARAM ::= ((const TYPE '&') | ('const' TYPE ('&' | '&&'))) IDENT
+USING ::= 'using' IDENT '=' TYPE ';'
 ATTRIBUTE ::= '[[' IDENT ['(' STRING ')'] ']]'
 TYPE ::= NS_IDENT ['<' ?* '>']
 NS_IDENT ::= [NS_IDENT '::'] IDENT
@@ -161,7 +162,7 @@ retry:
 					++it;
 					if(nesting) for(; it != std::cend(content) && std::isspace(*it); ++it);
 					if(it == std::cend(content)) goto done;
-					if(*it == '>' || *it == ':' || *it == ',' || *it == ':') goto retry;
+					if(*it == '>' || *it == ':' || *it == ',' || *it == ':' || *it == ';') goto retry; //TODO: this is essentially a hack
 					break;
 				default:
 					if(!nesting) goto done;

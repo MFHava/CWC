@@ -3,7 +3,10 @@
 namespace cwc::sample::fibonacci {
 	template<typename T>
 	component [[nodiscard]] sequence final {
+		using flag = std::conditional_t<std::is_integral_v<T>, std::true_type, std::false_type>;
+
 		sequence();
+
 		[[deprecated("for visualization only")]]
 		sequence(const int & dummy) =delete;
 

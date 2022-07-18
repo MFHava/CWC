@@ -80,6 +80,14 @@ namespace cwcc {
 		p.expect(";");
 	}
 
+	void using_::parse(parser & p) {
+		p.expect("using");
+		name = p.expect_name();
+		p.expect("=");
+		type = p.expect_type();
+		p.expect(";");
+	}
+
 	void component::parse(parser & p) {
 		p.expect("component");
 		while(p.accept("[")) attributes.emplace_back().parse(p);
@@ -97,6 +105,10 @@ namespace cwcc {
 				comment c;
 				c.parse(p);
 				content.emplace_back(std::move(c));
+			} else if(p.accept("using")) {
+				using_ u;
+				u.parse(p);
+				content.emplace_back(std::move(u));
 			} else if(p.accept(name)) {
 				constructor c;
 				c.parse(p);

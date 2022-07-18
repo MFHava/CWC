@@ -239,6 +239,20 @@ TEST_CASE("parsing_static method", "[parsing] [method]") {
 	REQUIRE_THROWS(method("static void operator()();"));
 }
 
+TEST_CASE("parsing_using", "[parsing] [using]") {
+	auto using_{[](const char * str) {
+		cwcc::using_ res;
+		cwcc::parser p{str};
+		res.parse(p);
+		return res;
+	}};
+
+	REQUIRE(using_("using x = int;") == cwcc::using_{"x", "int"});
+	REQUIRE(using_("using x = std::int8_t;") == cwcc::using_{"x", "std::int8_t"});
+	REQUIRE(using_("using x = std::array<int, 3>;") == cwcc::using_{"x", "std::array<int, 3>"});
+	REQUIRE(using_("using x = std::conditional_t<(sizeof(int) == 3), std::true_type, std::false_type>;") == cwcc::using_{"x", "std::conditional_t<(sizeof(int) == 3), std::true_type, std::false_type>"});
+}
+
 TEST_CASE("parsing_component", "[parsing] [component]") {
 	auto component{[](const char * str) {
 		cwcc::component res;

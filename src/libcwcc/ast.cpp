@@ -122,12 +122,18 @@ namespace cwcc {
 		p.expect(";");
 	}
 
+	void tparam::parse(parser & p) {
+		type = p.expect_type();
+		name = p.expect_name();
+	}
+
 	void template_::parse(parser & p) {
 		p.expect("template");
 		p.expect("<");
 		do {
-			p.expect("typename");
-			tparams.emplace_back(p.expect_name());
+			tparam t;
+			t.parse(p);;
+			tparams.emplace_back(std::move(t));
 		} while(p.consume(","));
 		p.expect(">");
 		component_.parse(p);
@@ -140,7 +146,7 @@ namespace cwcc {
 		component = p.expect_name();
 		p.expect("<");
 		do {
-			tparams.emplace_back(p.expect_type()); //TODO: NTTPs are currently not supported...
+			tparams.emplace_back(p.expect_tparam());
 		} while(p.consume(","));
 		p.expect(">");
 		p.expect(";");

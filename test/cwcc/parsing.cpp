@@ -268,6 +268,20 @@ TEST_CASE("parsing_component", "[parsing] [component]") {
 	REQUIRE(component("component comp final { comp(int val); };") == cwcc::component{{}, "comp", true, {cwcc::constructor{"comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
 }
 
+TEST_CASE("parsing_tparam", "[parsing] [tparam]") {
+	auto tparam{[](const char * str) {
+		cwcc::tparam res;
+		cwcc::parser p{str};
+		res.parse(p);
+		return res;
+	}};
+
+	REQUIRE(tparam("typename T") == cwcc::tparam{"typename", "T"});
+	REQUIRE(tparam("std::size_t N") == cwcc::tparam{"std::size_t", "N"});
+
+	REQUIRE_THROWS(tparam("typename"));
+}
+
 TEST_CASE("parsing_template", "[parsing] [template]") {
 	auto template_{[](const char * str) {
 		cwcc::template_ res;
@@ -276,9 +290,9 @@ TEST_CASE("parsing_template", "[parsing] [template]") {
 		return res;
 	}};
 
-	REQUIRE(template_("template<typename T> component comp {};") == cwcc::template_{{"T"}, {{}, "comp", false}});
-	REQUIRE(template_("template<typename T1, typename T2> component comp {};") == cwcc::template_{{"T1", "T2"}, {{}, "comp", false}});
-	REQUIRE(template_("template<typename T_1, typename T_2> component comp {};") == cwcc::template_{{"T_1", "T_2"}, {{}, "comp", false}});
+	REQUIRE(template_("template<typename T> component comp {};") == cwcc::template_{{{"typename", "T"}}, {{}, "comp", false}});
+	REQUIRE(template_("template<typename T1, typename T2> component comp {};") == cwcc::template_{{{"typename", "T1"}, {"typename", "T2"}}, {{}, "comp", false}});
+	REQUIRE(template_("template<typename T_1, typename T_2> component comp {};") == cwcc::template_{{{"typename", "T_1"}, {"typename", "T_2"}}, {{}, "comp", false}});
 
 	REQUIRE_THROWS(template_("template<> component comp {};"));
 }
@@ -293,7 +307,7 @@ TEST_CASE("parsing_extern", "[parsing] [extern]") {
 
 	REQUIRE(extern_("extern template component X<int>;") == cwcc::extern_{"X", {"int"}});
 	REQUIRE(extern_("extern template component X<int, float>;") == cwcc::extern_{"X", {"int", "float"}});
-	REQUIRE_THROWS(extern_("extern template component X<int, float, 3>;"));
+	REQUIRE(extern_("extern template component X<int, float, 3>;") ==cwcc::extern_{"X", {"int", "float", "3"}});
 }
 
 TEST_CASE("parsing_library", "[parsing] [library]") {

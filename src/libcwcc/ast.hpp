@@ -102,8 +102,19 @@ namespace cwcc {
 		auto operator==(const component & lhs, const component & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
 	};
 
+	struct tparam final {
+		std::string_view type;
+		std::string_view name;
+
+		void parse(parser & p);
+
+		auto view() const noexcept { return std::tie(type, name); } //TODO: [C++20] remove as operator== will be defaulted
+		friend
+		auto operator==(const tparam & lhs, const tparam & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
+	};
+
 	struct template_ final {
-		std::vector<std::string_view> tparams;
+		std::vector<tparam> tparams;
 		component component_;
 
 		void parse(parser & p);

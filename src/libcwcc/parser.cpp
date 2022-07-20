@@ -19,8 +19,8 @@ INCLUDE ::= '#' 'include' (STRING | SYS_STRING)
 COMMENT ::= '//' .* EOF
 NAMESPACE ::= namespace NS_IDENT '{' (COMMENT | LIBRARY | TEMPLATE)* '}'
 LIBRARY ::= '@library' '(' STRING ')' (EXTERN | COMPONENT)
-EXTERN ::= 'extern' 'template' 'component' IDENT '<' TYPE % ',' '>' ';'
-TEMPLATE ::= 'template' '<' ('typename' IDENT ) % ',' '>' COMPONENT
+EXTERN ::= 'extern' 'template' 'component' IDENT '<' TPARAM % ',' '>' ';'
+TEMPLATE ::= 'template' '<' (TYPE IDENT ) % ',' '>' COMPONENT
 COMPONENT ::= 'component' ATTRIBUTE* IDENT ['final'] '{' (ATTRIBUTE | COMMENT | CONSTRUCTOR | METHOD | USING)* '}' ';'
 CONSTRUCTOR ::= IDENT '(' PARAM % ',' ')' ['=' 'delete'] ';'
 METHOD ::= ['static' ('auto' | 'void') ('operator' '(' ')' | IDENT) '(' PARAM % ',' ')' ['const'] [('&' | '&&')] ['noexcept'] ['->' TYPE] ['=' 'delete'] ';'
@@ -28,6 +28,8 @@ PARAM ::= ((const TYPE '&') | ('const' TYPE ('&' | '&&'))) IDENT
 USING ::= 'using' IDENT '=' TYPE ';'
 ATTRIBUTE ::= '[[' IDENT ['(' STRING ')'] ']]'
 TYPE ::= NS_IDENT ['<' ?* '>']
+TPARAM ::= NUMBER | TYPE
+NUMBER ::= ['+' | '-'] 0 | (1-9)(0-9)*
 NS_IDENT ::= [NS_IDENT '::'] IDENT
 IDENT ::= (a-zA-Z)(a-zA-Z0-9_)*
 STRING ::= '"' [^"]* '"'
@@ -175,6 +177,27 @@ done:
 		if(nesting) throw std::invalid_argument{"could not extract type, had unbalanced <>"};
 		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
 		while(std::isspace(result.back())) result.remove_suffix(1);
+		pos = it;
+		skip_ws();
+		return result;
+	}
+
+	auto parser::expect_tparam() -> std::string_view {
+		if(!*this) throw std::invalid_argument{"EOF when tparam was required"};
+		return std::isalpha(*pos) ? expect_type() : expect_number();
+	}
+
+	auto parser::expect_number() -> std::string_view {
+		if(!*this) throw std::invalid_argument{"EOF when number was required"};
+
+		auto it{pos};
+		if(*it == '+' || *it == '-') ++it;
+		if(!std::isdigit(*it)) throw std::invalid_argument{"invalid start of number"};
+
+		for(; it != std::cend(content) && std::isdigit(*it); ++it);
+		if(*pos == '0' && it != pos + 1) throw std::invalid_argument{"octal numbers are not supported"};
+
+		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
 		pos = it;
 		skip_ws();
 		return result;

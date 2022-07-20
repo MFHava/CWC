@@ -1,7 +1,7 @@
 #include <cstdint>
 
 namespace cwc::sample::fibonacci {
-	template<typename T>
+	template<typename T, std::size_t N>
 	component [[nodiscard]] sequence final {
 		using flag = std::conditional_t<std::is_integral_v<T>, std::true_type, std::false_type>;
 
@@ -25,5 +25,5 @@ namespace cwc::sample::fibonacci {
 	};
 
 	@library("sample-fibonacci")
-	extern template component sequence<std::uint8_t>;
+	extern template component sequence<std::uint8_t, 1>;
 }

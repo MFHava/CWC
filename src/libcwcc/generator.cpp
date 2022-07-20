@@ -367,7 +367,7 @@ namespace cwcc {
 			for(const auto & tparam : t.tparams) {
 				if(first) first = false;
 				else os << ", ";
-				os << "typename " << tparam;
+				os << tparam.type << " " << tparam.name;
 			}
 			os <<">\n";
 			generate_(os, t.component_, ns, &t);

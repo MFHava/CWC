@@ -19,12 +19,6 @@
 #include <type_traits>
 
 namespace cwc::internal {
-	template<typename>
-	inline
-	constexpr
-	bool false_{false}; //TODO: [C++??] used to make static_assert dependent, could be standardized via P1830 or made redundant via P2593!
-
-
 	template<typename T>
 	struct access final {
 		using vtable_t = typename T::cwc_vtable_t;

@@ -46,9 +46,16 @@ namespace cwc::internal {
 		              		std98_overflow_error{error_code_v<1, 2, 2>},
 		              		std98_underflow_error{error_code_v<1, 2, 3>},
 		              		std11_system_error{error_code_v<1, 2, 4>}, //currently not supported
-		              			std11_ios_base_failure{error_code_v<1, 2, 4, 1>},
-		              				std11_ios_base_failure_stream{error_code_v<1, 2, 4, 1, 1>},
-		              			std11_filesystem_error{error_code_v<1, 2, 4, 2>}, //currently not supported
+		              			//TODO: in theory could be future_category or iostream_category...
+		              			std11_system_error_generic_error{error_code_v<1, 2, 4, 1>}, //currently not supported
+		              				//TODO: generic errors could theoretically be mapped (generic => POSIX)
+		              			std11_system_error_sytem_error{error_code_v<1, 2, 4, 2>}, //currently not supported
+		              				//TODO: system errors are harder to forward generically...
+		              			std11_ios_base_failure{error_code_v<1, 2, 4, 3>},
+		              				std11_ios_base_failure_iostream_error{error_code_v<1, 2, 4, 3, 1>}, //currently not supported
+		              					std11_ios_base_failure_iostream_error_stream{error_code_v<1, 2, 4, 3, 1, 1>},
+		              			std11_filesystem_error{error_code_v<1, 2, 4, 4>}, //currently not supported
+		              				//TODO: categories...
 		              		std11_regex_error{error_code_v<1, 2, 5>},
 		              			std11_regex_error_collate{error_code_v<1, 2, 5, 1>},
 		              			std11_regex_error_ctype{error_code_v<1, 2, 5, 2>},
@@ -108,7 +115,8 @@ namespace cwc::internal {
 			else if constexpr(std::is_same_v<std::ios_base::failure, Exception>) {
 				if(const auto & code{exc.code()}; code.category() == std::iostream_category())
 					switch(static_cast<std::io_errc>(code.value())) {
-						case std::io_errc::stream: return std11_ios_base_failure_stream;
+						case std::io_errc::stream: return std11_ios_base_failure_iostream_error_stream;
+						default: return std11_ios_base_failure_iostream_error;
 					}
 				return std11_ios_base_failure;
 			} else if constexpr(std::is_same_v<std::regex_error, Exception>) {
@@ -257,7 +265,7 @@ namespace cwc::internal {
 		struct regex_error_complexity : std::regex_error { regex_error_complexity() : std::regex_error{std::regex_constants::error_complexity} {} };
 		struct regex_error_stack : std::regex_error { regex_error_stack() : std::regex_error{std::regex_constants::error_stack} {} };
 
-		struct ios_base_failure_stream : std::ios::failure { ios_base_failure_stream(const char * msg) : std::ios::failure{msg, std::io_errc::stream} {} };
+		struct ios_base_failure_iostream_error_stream : std::ios::failure { ios_base_failure_iostream_error_stream(const char * msg) : std::ios::failure{msg, std::io_errc::stream} {} };
 
 		const std::unordered_map<std::uint64_t, void(*)(const char *)> exceptions{
 			{std98_exception, throw_<std::exception>},
@@ -275,7 +283,7 @@ namespace cwc::internal {
 			{std98_overflow_error, throw_<std::overflow_error>},
 			{std98_underflow_error, throw_<std::underflow_error>},
 			{std11_ios_base_failure, throw_<std::ios::failure>},
-			{std11_ios_base_failure_stream, throw_<ios_base_failure_stream>},
+			{std11_ios_base_failure_iostream_error_stream, throw_<ios_base_failure_iostream_error_stream>},
 			{std11_regex_error_collate, throw_<regex_error_collate>},
 			{std11_regex_error_ctype, throw_<regex_error_ctype>},
 			{std11_regex_error_escape, throw_<regex_error_escape>},

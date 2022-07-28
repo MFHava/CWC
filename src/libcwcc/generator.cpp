@@ -32,13 +32,13 @@ namespace cwcc {
 				}
 			}
 
-			const bool ctor{false}, const_{false}, delete_, noexcept_{false}, static_{true};
+			const bool ctor{false}, explicit_{false}, const_{false}, delete_, noexcept_{false}, static_{true};
 			const ref_t ref{ref_t::none};
 			const std::vector<param> & params; //TODO: [C++20] use span
 			const std::optional<std::string_view> result;
 			const std::string_view name;
 		public:
-			vtable_entry(const constructor & c) noexcept : ctor{true}, delete_{c.delete_}, params{c.params}, name{c.name} {}
+			vtable_entry(const constructor & c) noexcept : ctor{true}, explicit_{c.explicit_}, delete_{c.delete_}, params{c.params}, name{c.name} {}
 			vtable_entry(const method & m) noexcept : const_{m.const_}, delete_{m.delete_}, noexcept_{m.noexcept_}, static_{m.static_}, params{m.params}, result{m.result}, name{m.name}, ref{m.ref} {}
 
 			void declaration(std::ostream & os, std::size_t no) const {
@@ -129,7 +129,7 @@ namespace cwcc {
 				if(!ctor) {
 					if(static_) os << "static\n";
 					os << (result ? "auto" : "void") << " ";
-				}
+				} else if(explicit_) os << "explicit\n";
 				os << name << "(";
 				auto first{true}; //TODO: [C++20] merge into for-loop
 				for(const auto & p : params) {

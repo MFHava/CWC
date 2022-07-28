@@ -34,6 +34,7 @@ namespace cwcc {
 	void comment::parse(parser & p) { line = p.expect_comment(); }
 
 	void constructor::parse(parser & p) {
+		explicit_ = p.consume("explicit");
 		name = p.expect_name();
 		p.expect("(");
 		if(!p.consume(")")) {
@@ -109,7 +110,7 @@ namespace cwcc {
 				using_ u;
 				u.parse(p);
 				content.emplace_back(std::move(u));
-			} else if(p.accept(name)) {
+			} else if(p.accept("explicit") || p.accept(name)) {
 				constructor c;
 				c.parse(p);
 				content.emplace_back(std::move(c));

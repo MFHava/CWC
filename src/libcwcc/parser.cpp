@@ -22,7 +22,7 @@ LIBRARY ::= '@library' '(' STRING ')' (EXTERN | COMPONENT)
 EXTERN ::= 'extern' 'template' 'component' IDENT '<' TPARAM % ',' '>' ';'
 TEMPLATE ::= 'template' '<' (TYPE IDENT ) % ',' '>' COMPONENT
 COMPONENT ::= 'component' ATTRIBUTE* IDENT ['final'] '{' (ATTRIBUTE | COMMENT | CONSTRUCTOR | METHOD | USING)* '}' ';'
-CONSTRUCTOR ::= IDENT '(' PARAM % ',' ')' ['=' 'delete'] ';'
+CONSTRUCTOR ::= ['explicit'] IDENT '(' PARAM % ',' ')' ['=' 'delete'] ';'
 METHOD ::= ['static' ('auto' | 'void') ('operator' '(' ')' | IDENT) '(' PARAM % ',' ')' ['const'] [('&' | '&&')] ['noexcept'] ['->' TYPE] ['=' 'delete'] ';'
 PARAM ::= ((const TYPE '&') | ('const' TYPE ('&' | '&&'))) IDENT
 USING ::= 'using' IDENT '=' TYPE ';'

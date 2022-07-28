@@ -68,10 +68,15 @@ TEST_CASE("parsing_constructors", "[parsing] [constructors]") {
 		return res;
 	}};
 
-	REQUIRE(constructor("X();") == cwcc::constructor{"X", {}, false});
-	REQUIRE(constructor("X(int val);") == cwcc::constructor{"X", {{false, "int", cwcc::ref_t::none, "val"}}, false});
-	REQUIRE(constructor("X() =delete;") == cwcc::constructor{"X", {}, true});
-	REQUIRE(constructor("X(int val) =delete;") == cwcc::constructor{"X", {{false, "int", cwcc::ref_t::none, "val"}}, true});
+	REQUIRE(constructor("X();") == cwcc::constructor{false, "X", {}, false});
+	REQUIRE(constructor("X(int val);") == cwcc::constructor{false, "X", {{false, "int", cwcc::ref_t::none, "val"}}, false});
+	REQUIRE(constructor("X() =delete;") == cwcc::constructor{false, "X", {}, true});
+	REQUIRE(constructor("X(int val) =delete;") == cwcc::constructor{false, "X", {{false, "int", cwcc::ref_t::none, "val"}}, true});
+
+	REQUIRE(constructor("explicit X();") == cwcc::constructor{true, "X", {}, false});
+	REQUIRE(constructor("explicit X(int val);") == cwcc::constructor{true, "X", {{false, "int", cwcc::ref_t::none, "val"}}, false});
+	REQUIRE(constructor("explicit X() =delete;") == cwcc::constructor{true, "X", {}, true});
+	REQUIRE(constructor("explicit X(int val) =delete;") == cwcc::constructor{true, "X", {{false, "int", cwcc::ref_t::none, "val"}}, true});
 
 	REQUIRE_THROWS(constructor("X() =default;"));
 	REQUIRE_THROWS(constructor("X(int val) =default;"));
@@ -264,8 +269,8 @@ TEST_CASE("parsing_component", "[parsing] [component]") {
 	REQUIRE(component("component comp {};") == cwcc::component{{}, "comp", false});
 	REQUIRE(component("component comp final {};") == cwcc::component{{}, "comp", true});
 
-	REQUIRE(component("component comp { comp(int val); };") == cwcc::component{{}, "comp", false, {cwcc::constructor{"comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
-	REQUIRE(component("component comp final { comp(int val); };") == cwcc::component{{}, "comp", true, {cwcc::constructor{"comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
+	REQUIRE(component("component comp { comp(int val); };") == cwcc::component{{}, "comp", false, {cwcc::constructor{false, "comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
+	REQUIRE(component("component comp final { comp(int val); };") == cwcc::component{{}, "comp", true, {cwcc::constructor{false, "comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
 }
 
 TEST_CASE("parsing_tparam", "[parsing] [tparam]") {

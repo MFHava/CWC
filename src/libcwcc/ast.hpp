@@ -50,13 +50,14 @@ namespace cwcc {
 	};
 
 	struct constructor final {
+		bool explicit_{false};
 		std::string_view name;
 		std::vector<param> params;
 		bool delete_{false};
 
 		void parse(parser & p);
 
-		auto view() const noexcept { return std::tie(name, params, delete_); } //TODO: [C++20] remove as operator== will be defaulted
+		auto view() const noexcept { return std::tie(explicit_, name, params, delete_); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
 		auto operator==(const constructor & lhs, const constructor & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
 	};

@@ -309,7 +309,12 @@ namespace cwcc {
 			os << "friend\n";
 			os << "cwc::internal::access<" << c.name << ">;\n";
 			os << "\n";
+			os << "static\n";
+			os << "constexpr\n";
+			os << "cwc::internal::version cwc_version{" << c.version << "};\n";
+			os << "\n";
 			os << "struct cwc_vtable_t final {\n";
+			os << "cwc::internal::version cwc_version;\n";
 			os << "void(*cwc_0)(void *) noexcept;\n";
 			no = 0; //TODO: [C++20] merge into for-loop...
 			if(default_ctor) vtable_entry{*default_ctor}.declaration(os, ++no);
@@ -327,6 +332,7 @@ namespace cwcc {
 			os << "constexpr\n";
 			os << "auto cwc_vtable() noexcept -> cwc_vtable_t {\n";
 			os << "return {\n";
+			os << "cwc_version,\n";
 			os << "+[](void * cwc_self) noexcept { delete reinterpret_cast<CWCImpl *>(cwc_self); }";
 			if(default_ctor) vtable_entry{*default_ctor}.definiton(os << ",\n");
 			for(const auto & c : c.content)
@@ -347,7 +353,7 @@ namespace cwcc {
 				[&](const template_ *) { os << ";\n"; },
 				[&](const library * lib) {
 					os << " {\n";
-					os << "static const cwc::internal::context instance{" << lib->name << ", \"" << mangled << "\"};\n";
+					os << "static const cwc::internal::context instance{" << lib->name << ", \"" << mangled << "\", cwc_version};\n";
 					os << "return instance;\n";
 					os << "}\n";
 				}
@@ -392,7 +398,7 @@ namespace cwcc {
 				os << t;
 			}
 			os << ">::cwc_context() -> const cwc::internal::context & {\n";
-			os << "static const cwc::internal::context instance{" << l.name << ", \"" << mangled << "\"};\n";
+			os << "static const cwc::internal::context instance{" << l.name << ", \"" << mangled << "\", cwc_version};\n";
 			os << "return instance;\n";
 			os << "}\n";
 		}

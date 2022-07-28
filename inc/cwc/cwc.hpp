@@ -19,6 +19,9 @@
 #include <type_traits>
 
 namespace cwc::internal {
+	using version = std::uint64_t;
+
+
 	template<typename T>
 	struct access final {
 		using vtable_t = typename T::cwc_vtable_t;
@@ -91,7 +94,7 @@ namespace cwc::internal {
 
 		const void * vptr;
 	public:
-		context(const char * dll, const char * entry);
+		context(const char * dll, const char * entry, version version);
 		~context() noexcept;
 
 		template<auto VFunc, typename... Args>

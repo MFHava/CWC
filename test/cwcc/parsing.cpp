@@ -266,11 +266,17 @@ TEST_CASE("parsing_component", "[parsing] [component]") {
 		return res;
 	}};
 
-	REQUIRE(component("component comp {};") == cwcc::component{{}, "comp", false});
-	REQUIRE(component("component comp final {};") == cwcc::component{{}, "comp", true});
+	REQUIRE(component("@version(0) component comp {};") == cwcc::component{"0", {}, "comp", false});
+	REQUIRE(component("@version(1) component comp final {};") == cwcc::component{"1", {}, "comp", true});
 
-	REQUIRE(component("component comp { comp(int val); };") == cwcc::component{{}, "comp", false, {cwcc::constructor{false, "comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
-	REQUIRE(component("component comp final { comp(int val); };") == cwcc::component{{}, "comp", true, {cwcc::constructor{false, "comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
+	REQUIRE(component("@version(2) component comp { comp(int val); };") == cwcc::component{"2", {}, "comp", false, {cwcc::constructor{false, "comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
+	REQUIRE(component("@version(3) component comp final { comp(int val); };") == cwcc::component{"3", {}, "comp", true, {cwcc::constructor{false, "comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
+
+	REQUIRE_THROWS(component("@version(00) component comp {};"));
+	REQUIRE_THROWS(component("@version(a) component comp {};"));
+
+	REQUIRE_THROWS(component("@ version(0) component comp {};"));
+	REQUIRE_THROWS(component("@version() component comp {};"));
 }
 
 TEST_CASE("parsing_tparam", "[parsing] [tparam]") {
@@ -295,11 +301,11 @@ TEST_CASE("parsing_template", "[parsing] [template]") {
 		return res;
 	}};
 
-	REQUIRE(template_("template<typename T> component comp {};") == cwcc::template_{{{"typename", "T"}}, {{}, "comp", false}});
-	REQUIRE(template_("template<typename T1, typename T2> component comp {};") == cwcc::template_{{{"typename", "T1"}, {"typename", "T2"}}, {{}, "comp", false}});
-	REQUIRE(template_("template<typename T_1, typename T_2> component comp {};") == cwcc::template_{{{"typename", "T_1"}, {"typename", "T_2"}}, {{}, "comp", false}});
+	REQUIRE(template_("template<typename T> @version(0) component comp {};") == cwcc::template_{{{"typename", "T"}}, {"0", {}, "comp", false}});
+	REQUIRE(template_("template<typename T1, typename T2> @version(0) component comp {};") == cwcc::template_{{{"typename", "T1"}, {"typename", "T2"}}, {"0", {}, "comp", false}});
+	REQUIRE(template_("template<typename T_1, typename T_2> @version(0) component comp {};") == cwcc::template_{{{"typename", "T_1"}, {"typename", "T_2"}}, {"0", {}, "comp", false}});
 
-	REQUIRE_THROWS(template_("template<> component comp {};"));
+	REQUIRE_THROWS(template_("template<> @version(0) component comp {};"));
 }
 
 TEST_CASE("parsing_extern", "[parsing] [extern]") {
@@ -324,10 +330,10 @@ TEST_CASE("parsing_library", "[parsing] [library]") {
 	}};
 
 	REQUIRE(library("@library(\"test\") extern template component X<int>;") == cwcc::library{"\"test\"", cwcc::extern_{"X", {"int"}}});
-	REQUIRE(library("@library(\"test\") component X {};") == cwcc::library{"\"test\"", cwcc::component{{}, "X", false}});
+	REQUIRE(library("@library(\"test\") @version(1) component X {};") == cwcc::library{"\"test\"", cwcc::component{"1", {}, "X", false}});
 
-	REQUIRE_THROWS(library("@library() component X {};"));
-	REQUIRE_THROWS(library("@ library() component X {};"));
+	REQUIRE_THROWS(library("@library() @version(0) component X {};"));
+	REQUIRE_THROWS(library("@ library() @version(0) component X {};"));
 }
 
 TEST_CASE("parsing_namespace", "[parsing] [namespace]") {

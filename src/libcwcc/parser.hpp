@@ -32,6 +32,7 @@ namespace cwcc {
 		auto expect_type() -> std::string_view;
 		auto expect_number() -> std::string_view;
 		auto expect_tparam() -> std::string_view;
+		auto expect_version() -> std::string_view;
 
 		explicit
 		operator bool() const noexcept { return pos != content.cend(); }

@@ -91,6 +91,7 @@ namespace cwcc {
 	};
 
 	struct component final {
+		std::string_view version;
 		std::vector<attribute> attributes;
 		std::string_view name;
 		bool final{false};
@@ -98,7 +99,7 @@ namespace cwcc {
 
 		void parse(parser & p);
 
-		auto view() const noexcept { return std::tie(attributes, name, final, content); } //TODO: [C++20] remove as operator== will be defaulted
+		auto view() const noexcept { return std::tie(version, attributes, name, final, content); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
 		auto operator==(const component & lhs, const component & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] mark defaulted
 	};

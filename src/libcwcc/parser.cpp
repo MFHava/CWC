@@ -195,7 +195,23 @@ done:
 		if(!std::isdigit(*it)) throw std::invalid_argument{"invalid start of number"};
 
 		for(; it != std::cend(content) && std::isdigit(*it); ++it);
-		if(*pos == '0' && it != pos + 1) throw std::invalid_argument{"octal numbers are not supported"};
+		if(*pos == '0' && it != pos + 1) throw std::invalid_argument{"octal/hexadecimal numbers are not supported"};
+
+		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
+		pos = it;
+		skip_ws();
+		return result;
+	}
+
+	auto parser::expect_version() -> std::string_view {
+		if(!*this) throw std::invalid_argument{"EOF when version was required"};
+		if(!std::isdigit(*pos)) throw std::invalid_argument{"invalid start of version"};
+
+		auto it{pos};
+		if(*it == '0') {
+			++it;
+			if(it != std::cend(content) && std::isdigit(*it)) throw std::invalid_argument{"only decimal version numbers are supported"};
+		} else for(++it; it != std::cend(content) && std::isdigit(*it); ++it);
 
 		std::string_view result{&*pos, static_cast<std::size_t>(it - pos)};
 		pos = it;

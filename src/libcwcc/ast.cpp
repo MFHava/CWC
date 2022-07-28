@@ -90,6 +90,10 @@ namespace cwcc {
 	}
 
 	void component::parse(parser & p) {
+		p.expect("@version");
+		p.expect("(");
+		version = p.expect_version();
+		p.expect(")");
 		p.expect("component");
 		while(p.accept("[")) attributes.emplace_back().parse(p);
 		name = p.expect_name();

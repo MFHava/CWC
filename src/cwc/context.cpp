@@ -140,11 +140,12 @@ namespace cwc::internal {
 		~native_handle() noexcept { FreeLibrary(lib); }
 	};
 
-	context::context(const char * dll, const char * entry) : dll{std::make_unique<const native_handle>(dll)} {
+	context::context(const char * dll, const char * entry, version ver) : dll{std::make_unique<const native_handle>(dll)} {
 		std::string export_{"cwc_export_"};
 		export_ += entry;
 		vptr = reinterpret_cast<const void *>(GetProcAddress(this->dll->lib, export_.c_str()));
 		if(!vptr) throw std::runtime_error{"could not find entry point"};
+		if(*reinterpret_cast<const version *>(vptr) < ver) throw std::runtime_error{"version mismatch detected"};
 	}
 
 	context::~context() noexcept =default;

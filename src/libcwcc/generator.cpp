@@ -347,7 +347,7 @@ namespace cwcc {
 				[&](const template_ *) { os << ";\n"; },
 				[&](const library * lib) {
 					os << " {\n";
-					os << "static const cwc::internal::context instance{" << lib->name << ", \"cwc_export_" << mangled << "\"};\n";
+					os << "static const cwc::internal::context instance{" << lib->name << ", \"" << mangled << "\"};\n";
 					os << "return instance;\n";
 					os << "}\n";
 				}
@@ -392,7 +392,7 @@ namespace cwcc {
 				os << t;
 			}
 			os << ">::cwc_context() -> const cwc::internal::context & {\n";
-			os << "static const cwc::internal::context instance{" << l.name << ", \"cwc_export_" << mangled << "\"};\n";
+			os << "static const cwc::internal::context instance{" << l.name << ", \"" << mangled << "\"};\n";
 			os << "return instance;\n";
 			os << "}\n";
 		}

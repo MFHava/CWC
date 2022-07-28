@@ -141,7 +141,9 @@ namespace cwc::internal {
 	};
 
 	context::context(const char * dll, const char * entry) : dll{std::make_unique<const native_handle>(dll)} {
-		vptr = reinterpret_cast<const void *>(GetProcAddress(this->dll->lib, entry));
+		std::string export_{"cwc_export_"};
+		export_ += entry;
+		vptr = reinterpret_cast<const void *>(GetProcAddress(this->dll->lib, export_.c_str()));
 		if(!vptr) throw std::runtime_error{"could not find entry point"};
 	}
 

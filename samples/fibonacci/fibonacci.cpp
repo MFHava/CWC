@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <iostream>
 
-int main() {
+int main() try {
 	std::cout << "sequence is available: " << std::boolalpha << cwc::available<cwc::sample::fibonacci::sequence<std::uint8_t, 1>>() << std::noboolalpha << "\n";
 
 	cwc::sample::fibonacci::sequence<std::uint8_t, 1> s;
@@ -28,6 +28,8 @@ int main() {
 	} catch(const std::exception & exc) {
 		std::cout << "ERROR(" << typeid(exc).name() << "): " << exc.what() << "\n";
 	}
+} catch(const std::exception & exc) {
+	std::cout << "FATAL ERROR: " << typeid(exc).name() << ": \"" << exc.what() << "\"\n";
 }
 #else
 #include <stdexcept>

@@ -143,9 +143,12 @@ namespace cwc::internal {
 	context::context(const char * dll, const char * entry, version ver) : dll{std::make_unique<const native_handle>(dll)} {
 		std::string export_{"cwc_export_"};
 		export_ += entry;
-		vptr = reinterpret_cast<const void *>(GetProcAddress(this->dll->lib, export_.c_str()));
-		if(!vptr) throw std::runtime_error{"could not find entry point"};
-		if(*reinterpret_cast<const version *>(vptr) < ver) throw std::runtime_error{"version mismatch detected"};
+		auto ptr{reinterpret_cast<const void *>(GetProcAddress(this->dll->lib, export_.c_str()))};
+		if(!ptr) throw std::runtime_error{"could not find entry point"};
+		const auto & h{*reinterpret_cast<const header *>(ptr)};
+		//TODO: handle different header versions (changes will always only be additive)
+		if(h.cversion < ver) throw std::runtime_error{"version mismatch detected"};
+		vptr = reinterpret_cast<const char *>(ptr) + h.offset + 1; //+1 as offset == sizeof(header) - 1
 	}
 
 	context::~context() noexcept =default;

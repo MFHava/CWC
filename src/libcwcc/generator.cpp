@@ -156,7 +156,7 @@ namespace cwcc {
 					os << "{";
 					if(result) os << "\n" << *result << " cwc_result;\n";
 					else os << " ";
-					os << "cwc_context().call<&cwc_vtable_t::cwc_" << no << ">(";
+					os << "cwc_context().call<&cwc_vtable::cwc_" << no << ">(";
 					if(!static_) {
 						os << "cwc_self";
 						if(!params.empty() || result) os << ", ";
@@ -284,7 +284,7 @@ namespace cwcc {
 			os << c.name << "(" << c.name << " && cwc_other) noexcept : cwc_self{std::exchange(cwc_other.cwc_self, nullptr)} {}\n";
 			os << "auto operator=(const " << c.name << " &) -> " << c.name << " & =delete;\n";
 			os << "auto operator=(" << c.name << " && cwc_other) noexcept -> " << c.name << " & { std::swap(cwc_self, cwc_other.cwc_self); return *this; }\n";
-			os << "~" << c.name << "() noexcept { cwc_context().call<&cwc_vtable_t::cwc_0>(cwc_self); }\n";
+			os << "~" << c.name << "() noexcept { cwc_context().call<&cwc_vtable::cwc_0>(cwc_self); }\n";
 			os << "\n";
 
 			const auto default_ctor{[&]() -> std::optional<constructor> {
@@ -313,8 +313,7 @@ namespace cwcc {
 			os << "constexpr\n";
 			os << "cwc::internal::version cwc_version{" << c.version << "};\n";
 			os << "\n";
-			os << "struct cwc_vtable_t final {\n";
-			os << "cwc::internal::version cwc_version;\n";
+			os << "struct cwc_vtable final {\n";
 			os << "void(*cwc_0)(void *) noexcept;\n";
 			no = 0; //TODO: [C++20] merge into for-loop...
 			if(default_ctor) vtable_entry{*default_ctor}.declaration(os, ++no);
@@ -330,9 +329,10 @@ namespace cwcc {
 			os << "template<typename CWCImpl>\n";
 			os << "static\n";
 			os << "constexpr\n";
-			os << "auto cwc_vtable() noexcept -> cwc_vtable_t {\n";
-			os << "return {\n";
-			os << "cwc_version,\n";
+			os << "auto cwc_export() noexcept {\n";
+			os << "struct {\n";
+			os << "cwc::internal::header h{cwc_version};\n";
+			os << "cwc_vtable v{\n";
 			os << "+[](void * cwc_self) noexcept { delete reinterpret_cast<CWCImpl *>(cwc_self); }";
 			if(default_ctor) vtable_entry{*default_ctor}.definiton(os << ",\n");
 			for(const auto & c : c.content)
@@ -344,6 +344,8 @@ namespace cwcc {
 				}, c);
 			os << "\n";
 			os << "};\n";
+			os << "} e;\n";
+			os << "return e;\n";
 			os << "}\n";
 			os << "\n";
 			os << "static\n";
@@ -362,7 +364,7 @@ namespace cwcc {
 			os << "void * cwc_self;\n";
 			os << "};\n";
 			std::visit(combined{
-				[&](const library *) { os << "#define CWC_EXPORT_" << mangled << "(cwc_impl) extern \"C\" CWC_EXPORT const auto cwc_export_" << mangled << "{cwc::internal::access<" << ns << "::" << c.name << ">::template vtable<cwc_impl>()}\n"; },
+				[&](const library *) { os << "#define CWC_EXPORT_" << mangled << "(cwc_impl) extern \"C\" CWC_EXPORT const auto cwc_export_" << mangled << "{cwc::internal::access<" << ns << "::" << c.name << ">::template export_<cwc_impl>()}\n"; },
 				[](auto) {}
 			}, ctx);
 		}
@@ -388,7 +390,7 @@ namespace cwcc {
 				else os << ", ";
 				os << t;
 			}
-			os << ">>::template vtable<cwc_impl>()}\n";
+			os << ">>::template export_<cwc_impl>()}\n";
 			os << "template<>\n";
 			os << "auto " << e.component << "<";
 			first = true; //TODO: [C++20] merge into for-loop...

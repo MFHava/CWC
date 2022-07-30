@@ -19,17 +19,29 @@
 #include <type_traits>
 
 namespace cwc::internal {
-	using version = std::uint64_t;
+	using version = std::uint8_t;
+
+	struct alignas(std::uint64_t) header final {
+		const version hversion{0};
+		const std::uint8_t offset{sizeof(header) - 1};
+		version cversion;
+
+		constexpr
+		header(version cversion) noexcept : cversion{cversion} {}
+	};
+	static_assert(sizeof(header) == sizeof(std::uint64_t));
+	static_assert(alignof(header) == alignof(std::uint64_t));
+	static_assert(offsetof(header, hversion) == 0);
+	static_assert(offsetof(header, offset) == 1);
+	static_assert(offsetof(header, cversion) == 2);
 
 
 	template<typename T>
 	struct access final {
-		using vtable_t = typename T::cwc_vtable_t;
-
 		template<typename Impl>
 		static
 		constexpr
-		auto vtable() { return T::template cwc_vtable<Impl>(); }
+		auto export_() { return T::template cwc_export<Impl>(); }
 
 		static
 		auto available() noexcept -> bool {

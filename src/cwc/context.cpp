@@ -138,13 +138,17 @@ namespace cwc::internal {
 		auto operator=(const native_handle &) -> native_handle & =delete;
 
 		~native_handle() noexcept { FreeLibrary(lib); }
+
+		auto resolve(const char * class_) const -> const void * {
+			using namespace std::string_literals;
+			const auto ptr{reinterpret_cast<const void *>(GetProcAddress(lib, ("cwc_export_"s + class_).c_str()))};
+			if(!ptr) throw std::runtime_error{"could not find entry point"};
+			return ptr;
+		}
 	};
 
-	context::context(const char * dll, const char * entry, version ver) : dll{std::make_unique<const native_handle>(dll)} {
-		std::string export_{"cwc_export_"};
-		export_ += entry;
-		auto ptr{reinterpret_cast<const void *>(GetProcAddress(this->dll->lib, export_.c_str()))};
-		if(!ptr) throw std::runtime_error{"could not find entry point"};
+	context::context(const char * dll, const char * class_, version ver) : lib{std::make_unique<const native_handle>(dll)} {
+		const auto ptr{lib->resolve(class_)};
 		const auto & h{*reinterpret_cast<const header *>(ptr)};
 		//TODO: handle different header versions (changes will always only be additive)
 		if(h.cversion < ver) throw std::runtime_error{"version mismatch detected"};

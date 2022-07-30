@@ -21,6 +21,7 @@
 namespace cwc::internal {
 	using version = std::uint8_t;
 
+
 	struct alignas(std::uint64_t) header final {
 		const version hversion{0};
 		const std::uint8_t offset{sizeof(header) - 1};
@@ -102,11 +103,11 @@ namespace cwc::internal {
 
 	class context final {
 		struct native_handle;
-		const std::unique_ptr<const native_handle> dll;
+		const std::unique_ptr<const native_handle> lib;
 
 		const void * vptr;
 	public:
-		context(const char * dll, const char * entry, version version);
+		context(const char * dll, const char * class_, version ver);
 		~context() noexcept;
 
 		template<auto VFunc, typename... Args>

@@ -39,7 +39,7 @@ namespace cwcc {
 			const std::string_view name;
 		public:
 			vtable_entry(const constructor & c) noexcept : ctor{true}, explicit_{c.explicit_}, delete_{c.delete_}, params{c.params}, name{c.name} {}
-			vtable_entry(const method & m) noexcept : const_{m.const_}, delete_{m.delete_}, noexcept_{m.noexcept_}, static_{m.static_}, params{m.params}, result{m.result}, name{m.name}, ref{m.ref} {}
+			vtable_entry(const method & m) noexcept : const_{m.const_}, delete_{m.delete_}, noexcept_{m.noexcept_}, static_{m.static_}, ref{m.ref}, params{m.params}, result{m.result}, name{m.name} {}
 
 			void declaration(std::ostream & os, std::size_t no) const {
 				if(delete_) return;
@@ -138,6 +138,7 @@ namespace cwcc {
 					if(p.const_) os << "const ";
 					os << p.type << " ";
 					switch(p.ref) {
+						case ref_t::none: break;
 						case ref_t::lvalue: os << "& "; break;
 						case ref_t::rvalue: os << "&& "; break;
 					}
@@ -146,6 +147,7 @@ namespace cwcc {
 				os << ") ";
 				if(const_) os << "const ";
 				switch(ref) {
+					case ref_t::none: break;
 					case ref_t::lvalue: os << "& ";  break;
 					case ref_t::rvalue: os << "&& "; break;
 				}
@@ -192,16 +194,6 @@ namespace cwcc {
 		template<typename... Ts>
 		combined(Ts...) -> combined<Ts...>; //TODO: [C++20] this should be redudant...
 
-
-		void generate_(std::ostream & os, const param & p) {
-			if(p.const_) os << "const ";
-			os << p.type << " ";
-			switch(p.ref) {
-				case ref_t::lvalue: os << "& "; break;
-				case ref_t::rvalue: os << "&& "; break;
-			}
-			os << p.name;
-		}
 
 		void generate_(std::ostream & os, const comment & c) {
 			os << c.line;

@@ -45,7 +45,8 @@ namespace cwcc {
 			} while(p.consume(","));
 			p.expect(")");
 		}
-		if(delete_ = p.consume("=")) p.expect("delete");
+		delete_ = p.consume("=");
+		if(delete_) p.expect("delete");
 		p.expect(";");
 	}
 
@@ -77,7 +78,8 @@ namespace cwcc {
 			p.expect("->");
 			result = p.expect_type();
 		}
-		if(delete_ = p.consume("=")) p.expect("delete");
+		delete_ = p.consume("=");
+		if(delete_) p.expect("delete");
 		p.expect(";");
 	}
 
@@ -100,7 +102,6 @@ namespace cwcc {
 		final = p.consume("final");
 		p.expect("{");
 
-		std::size_t no{0};
 		while(!p.consume("}")) {
 			if(p.accept("[")) {
 				attribute a;

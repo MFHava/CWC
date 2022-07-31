@@ -26,6 +26,7 @@ namespace cwc::internal {
 		const version hversion{0};
 		const std::uint8_t offset{sizeof(header) - 1};
 		version cversion;
+		std::uint8_t reserved[5]{};
 
 		constexpr
 		header(version cversion) noexcept : cversion{cversion} {}

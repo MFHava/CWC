@@ -22,23 +22,17 @@ set(CWCC_GENERATED_DIRECTORY "${CMAKE_BINARY_DIR}/generated")
 file(MAKE_DIRECTORY ${CWCC_GENERATED_DIRECTORY})
 
 
-#add_library(ptl INTERFACE)
-#	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-#		target_compile_options(ptl INTERFACE -Wall -Wextra -Wpedantic -Wconversion)
-#	elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-#		target_compile_definitions(ptl INTERFACE _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS _CRT_SECURE_NO_WARNINGS _SCL_SECURE_NO_WARNINGS _SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING)
-#		target_compile_options(ptl INTERFACE
-#			/W4 /JMC /MP /permissive- /bigobj
-#			/wd4003 # ignore not enough parameters for function macro
-#			/wd4456 # ignore local shadowing
-#			/wd4457 # ignore function parameter shadowing
-#			/wd4458 # ignore class member shadowing
-#			/wd4459 # ignore global shadowing
-#		)
-#		target_link_options(ptl INTERFACE
-#			/ignore:4099 # ignore mixing struct and class keyword for same type
-#		)
-#	endif()
+add_library(flags INTERFACE)
+	if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		target_compile_options(flags INTERFACE -Wall -Wextra -Wpedantic -Wconversion)
+	elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+		target_compile_options(flags INTERFACE /W4 /JMC /MP /permissive- /bigobj
+			/wd4456 # ignore local shadowing
+			/wd4457 # ignore function parameter shadowing
+			/wd4458 # ignore class member shadowing
+			/wd4459 # ignore global shadowing
+		)
+	endif()
 
 
 add_library(cwc STATIC)
@@ -48,7 +42,7 @@ add_library(cwc STATIC)
 		source_group("src" FILES ${CWC_SRC})
 	target_sources(cwc PRIVATE ${CWC_HDR} ${CWC_SRC})
 	target_include_directories(cwc PUBLIC "inc")
-	target_link_libraries(cwc PUBLIC ${CMAKE_DL_LIBS})
+	target_link_libraries(cwc PUBLIC ${CMAKE_DL_LIBS} PRIVATE flags)
 	set_target_properties(cwc PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden)
 
 
@@ -57,6 +51,7 @@ add_library(libcwcc OBJECT)
 		source_group("" FILES ${CWCC_LIB})
 	target_sources(libcwcc PRIVATE ${CWCC_LIB})
 	target_include_directories(libcwcc PUBLIC "src/libcwcc")
+	target_link_libraries(libcwcc PUBLIC flags)
 	set_target_properties(libcwcc PROPERTIES FOLDER "CWCC")
 
 
@@ -99,7 +94,7 @@ if(CWC_BUILD_SAMPLES)
 			invoke_cwcc("${CMAKE_CURRENT_SOURCE_DIR}/samples/${sample}/${sample}.cwc" "${CWCC_GENERATED_DIRECTORY}/${sample}.cwch")
 			target_sources(sample-${sample} INTERFACE ${CWC_SAMPLE} "${CWCC_GENERATED_DIRECTORY}/${sample}.cwch")
 			target_include_directories(sample-${sample} INTERFACE ${CWCC_GENERATED_DIRECTORY})
-			target_link_libraries(sample-${sample} INTERFACE cwc)
+			target_link_libraries(sample-${sample} INTERFACE cwc flags)
 			add_library(sample-${sample}-dll SHARED)
 				target_compile_definitions(sample-${sample}-dll PRIVATE CWC_SAMPLE_DLL)
 				target_link_libraries(sample-${sample}-dll PRIVATE sample-${sample})
@@ -123,7 +118,7 @@ if(CWC_BUILD_TESTS)
 		invoke_cwcc("${CMAKE_CURRENT_SOURCE_DIR}/test/cwc/test.cwc" "${CWCC_GENERATED_DIRECTORY}/test.cwch")
 		target_sources(test-cwc INTERFACE ${CWC_TEST} "${CWCC_GENERATED_DIRECTORY}/test.cwch")
 		target_include_directories(test-cwc INTERFACE ${CWCC_GENERATED_DIRECTORY})
-		target_link_libraries(test-cwc INTERFACE cwc Catch2::Catch2 Catch2::Catch2WithMain)
+		target_link_libraries(test-cwc INTERFACE cwc Catch2::Catch2 Catch2::Catch2WithMain flags)
 		add_library(test-cwc-dll SHARED)
 			target_compile_definitions(test-cwc-dll PRIVATE CWC_TEST_DLL)
 			target_link_libraries(test-cwc-dll PRIVATE test-cwc)

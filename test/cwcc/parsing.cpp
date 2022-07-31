@@ -16,7 +16,7 @@ TEST_CASE("parsing_attribute", "[parsing] [attribute]") {
 		return res;
 	}};
 
-	REQUIRE(attribute("[[deprecated]]") == cwcc::attribute{"deprecated"});
+	REQUIRE(attribute("[[deprecated]]") == cwcc::attribute{"deprecated", {}});
 	REQUIRE(attribute("[[nodiscard(\"\")]]") == cwcc::attribute{"nodiscard", "\"\""});
 
 	REQUIRE(attribute("[[nodiscard(\"allocates memory\")]]") == cwcc::attribute{"nodiscard", "\"allocates memory\""});
@@ -266,8 +266,8 @@ TEST_CASE("parsing_component", "[parsing] [component]") {
 		return res;
 	}};
 
-	REQUIRE(component("@version(0) component comp {};") == cwcc::component{"0", {}, "comp", false});
-	REQUIRE(component("@version(1) component comp final {};") == cwcc::component{"1", {}, "comp", true});
+	REQUIRE(component("@version(0) component comp {};") == cwcc::component{"0", {}, "comp", false, {}});
+	REQUIRE(component("@version(1) component comp final {};") == cwcc::component{"1", {}, "comp", true, {}});
 
 	REQUIRE(component("@version(2) component comp { comp(int val); };") == cwcc::component{"2", {}, "comp", false, {cwcc::constructor{false, "comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
 	REQUIRE(component("@version(3) component comp final { comp(int val); };") == cwcc::component{"3", {}, "comp", true, {cwcc::constructor{false, "comp", {{false, "int", cwcc::ref_t::none, "val"}}, false}}});
@@ -301,9 +301,9 @@ TEST_CASE("parsing_template", "[parsing] [template]") {
 		return res;
 	}};
 
-	REQUIRE(template_("template<typename T> @version(0) component comp {};") == cwcc::template_{{{"typename", "T"}}, {"0", {}, "comp", false}});
-	REQUIRE(template_("template<typename T1, typename T2> @version(0) component comp {};") == cwcc::template_{{{"typename", "T1"}, {"typename", "T2"}}, {"0", {}, "comp", false}});
-	REQUIRE(template_("template<typename T_1, typename T_2> @version(0) component comp {};") == cwcc::template_{{{"typename", "T_1"}, {"typename", "T_2"}}, {"0", {}, "comp", false}});
+	REQUIRE(template_("template<typename T> @version(0) component comp {};") == cwcc::template_{{{"typename", "T"}}, {"0", {}, "comp", false, {}}});
+	REQUIRE(template_("template<typename T1, typename T2> @version(0) component comp {};") == cwcc::template_{{{"typename", "T1"}, {"typename", "T2"}}, {"0", {}, "comp", false, {}}});
+	REQUIRE(template_("template<typename T_1, typename T_2> @version(0) component comp {};") == cwcc::template_{{{"typename", "T_1"}, {"typename", "T_2"}}, {"0", {}, "comp", false, {}}});
 
 	REQUIRE_THROWS(template_("template<> @version(0) component comp {};"));
 }
@@ -330,7 +330,7 @@ TEST_CASE("parsing_library", "[parsing] [library]") {
 	}};
 
 	REQUIRE(library("@library(\"test\") extern template component X<int>;") == cwcc::library{"\"test\"", cwcc::extern_{"X", {"int"}}});
-	REQUIRE(library("@library(\"test\") @version(1) component X {};") == cwcc::library{"\"test\"", cwcc::component{"1", {}, "X", false}});
+	REQUIRE(library("@library(\"test\") @version(1) component X {};") == cwcc::library{"\"test\"", cwcc::component{"1", {}, "X", false, {}}});
 
 	REQUIRE_THROWS(library("@library() @version(0) component X {};"));
 	REQUIRE_THROWS(library("@ library() @version(0) component X {};"));
@@ -344,8 +344,8 @@ TEST_CASE("parsing_namespace", "[parsing] [namespace]") {
 		return res;
 	}};
 
-	REQUIRE(namespace_("namespace cwc {}") == cwcc::namespace_{"cwc"});
-	REQUIRE(namespace_("namespace cwc::xyz {}") == cwcc::namespace_{"cwc::xyz"});
+	REQUIRE(namespace_("namespace cwc {}") == cwcc::namespace_{"cwc", {}});
+	REQUIRE(namespace_("namespace cwc::xyz {}") == cwcc::namespace_{"cwc::xyz", {}});
 
 	REQUIRE_THROWS(namespace_("namespace {}"));
 	REQUIRE_THROWS(namespace_("namespace 3 {}"));
@@ -388,8 +388,8 @@ TEST_CASE("parsing_cwc", "[parsing] [cwc]") {
 
 	REQUIRE(cwc("#include <iostream>") == cwcc::cwc{{cwcc::include{"<iostream>"}}});
 	REQUIRE(cwc("#include <iostream>\n//test") == cwcc::cwc{{cwcc::include{"<iostream>"}, cwcc::comment{"//test"}}});
-	REQUIRE(cwc("namespace test {}") == cwcc::cwc{{cwcc::namespace_{"test"}}});
-	REQUIRE(cwc("namespace test {} namespace xyz {}") == cwcc::cwc{{cwcc::namespace_{"test"}, cwcc::namespace_{"xyz"}}});
+	REQUIRE(cwc("namespace test {}") == cwcc::cwc{{cwcc::namespace_{"test", {}}}});
+	REQUIRE(cwc("namespace test {} namespace xyz {}") == cwcc::cwc{{cwcc::namespace_{"test", {}}, cwcc::namespace_{"xyz", {}}}});
 
 	REQUIRE_THROWS(cwc("namespace test { namespace xyz {} }"));
 }

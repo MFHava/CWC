@@ -142,7 +142,11 @@ namespace cwcc {
 		auto it{pos};
 		std::size_t nesting{0};
 		do {
-			if(!nesting && !std::isalpha(*it)) throw std::invalid_argument{"invalid start of type segment"};
+			if(it == std::cend(content)) break;
+			if(!nesting) {
+				if(std::isspace(*it)) goto done;
+				if(!std::isalpha(*it)) throw std::invalid_argument{"invalid start of type segment"};
+			}
 			for(; it != std::cend(content) && (*it == '_' || std::isalnum(*it)); ++it);
 			if(it == std::cend(content)) break;
 retry:

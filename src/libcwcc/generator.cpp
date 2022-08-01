@@ -384,6 +384,7 @@ namespace cwcc {
 			}
 			os << ">>::template export_<cwc_impl>()}\n";
 			os << "template<>\n";
+			os << "inline\n";
 			os << "auto " << e.component << "<";
 			first = true; //TODO: [C++20] merge into for-loop...
 			for(const auto & t : e.tparams) {

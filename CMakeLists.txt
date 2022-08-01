@@ -65,6 +65,7 @@ add_executable(cwcc)
 
 function(invoke_cwcc cwc_file cwch_file)
 	add_custom_command(OUTPUT ${cwch_file} COMMAND cwcc ARGS ${cwc_file} ${cwch_file} DEPENDS ${cwc_file} cwcc VERBATIM)
+	source_group("generated" FILES ${cwch_file})
 endfunction()
 
 

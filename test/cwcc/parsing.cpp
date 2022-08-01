@@ -386,10 +386,10 @@ TEST_CASE("parsing_cwc", "[parsing] [cwc]") {
 		return res;
 	}};
 
-	REQUIRE(cwc("#include <iostream>") == cwcc::cwc{{cwcc::include{"<iostream>"}}});
-	REQUIRE(cwc("#include <iostream>\n//test") == cwcc::cwc{{cwcc::include{"<iostream>"}, cwcc::comment{"//test"}}});
-	REQUIRE(cwc("namespace test {}") == cwcc::cwc{{cwcc::namespace_{"test", {}}}});
-	REQUIRE(cwc("namespace test {} namespace xyz {}") == cwcc::cwc{{cwcc::namespace_{"test", {}}, cwcc::namespace_{"xyz", {}}}});
+	REQUIRE(cwc("#include <iostream>") == cwcc::cwc{{{"<iostream>"}}, {}});
+	REQUIRE(cwc("#include <iostream>\n//test") == cwcc::cwc{{{"<iostream>"}}, {cwcc::comment{"//test"}}});
+	REQUIRE(cwc("namespace test {}") == cwcc::cwc{{}, {cwcc::namespace_{"test", {}}}});
+	REQUIRE(cwc("namespace test {} namespace xyz {}") == cwcc::cwc{{}, {cwcc::namespace_{"test", {}}, cwcc::namespace_{"xyz", {}}}});
 
 	REQUIRE_THROWS(cwc("namespace test { namespace xyz {} }"));
 }

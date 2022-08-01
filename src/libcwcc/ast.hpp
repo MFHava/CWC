@@ -169,11 +169,13 @@ namespace cwcc {
 	};
 
 	struct cwc final {
-		std::vector<std::variant<include, comment, namespace_>> content;
+		std::vector<include> includes;
+		std::vector<std::variant<comment, namespace_>> content;
 
 		void parse(parser & p);
 
+		auto view() const noexcept { return std::tie(includes, content); } //TODO: [C++20] remove as operator== will be defaulted
 		friend
-		auto operator==(const cwc & lhs, const cwc & rhs) noexcept -> bool { return lhs.content == rhs.content; } //TODO: [C++20] remove as operator== will be defaulted
+		auto operator==(const cwc & lhs, const cwc & rhs) noexcept -> bool { return lhs.view() == rhs.view(); } //TODO: [C++20] remove as operator== will be defaulted
 	};
 }

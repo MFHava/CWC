@@ -203,12 +203,9 @@ namespace cwcc {
 	}
 
 	void cwc::parse(parser & p) { //TODO: [C++20] support for header units?
+		while(p.accept("#")) includes.emplace_back().parse(p);
 		while(p) {
-			if(p.accept("#")) {
-				include i;
-				i.parse(p);
-				content.emplace_back(std::move(i));
-			} else if(p.accept("/")) {
+			if(p.accept("/")) {
 				comment c;
 				c.parse(p);
 				content.emplace_back(std::move(c));

@@ -426,6 +426,8 @@ namespace cwcc {
 		os << "//generated with CWCC\n\n";
 		os << "#pragma once\n";
 		os << "#include <cwc/cwc.hpp>\n";
+		for(const auto & i : c.includes) generate_(os, i);
+		os << "\n";
 
 		auto first{true}; //TODO: [C++20] merge into loop...
 		for(const auto & c : c.content) {

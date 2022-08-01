@@ -14,7 +14,7 @@
 //TODO: move grammar to doxygen files
 /* CWC GRAMMAR
 
-CWCC ::= (INCLUDE | COMMENT | NAMESPACE)*
+CWCC ::= INCLUDE* (COMMENT | NAMESPACE)*
 INCLUDE ::= '#' 'include' (STRING | SYS_STRING)
 COMMENT ::= '//' .* EOF
 NAMESPACE ::= namespace NS_IDENT '{' (COMMENT | LIBRARY | TEMPLATE)* '}'

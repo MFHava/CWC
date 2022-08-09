@@ -44,60 +44,31 @@ namespace cwcc {
 			void declaration(std::ostream & os, std::size_t no) const {
 				if(delete_) return;
 				os << "void(*cwc_" << no << ")(";
-				auto first{true};
-				if(!noexcept_) {
-					os << "cwc::internal::exception *";
-					first = false;
-				}
+				os << "cwc::internal::call_context<" << result.value_or("void") << ", " << (noexcept_ ? "true" : "false") << "> *";
 				if(!static_) {
-					if(first) first = false;
-					else os << ", ";
+					os << ", ";
 					if(const_) os << "const ";
 					os << "void *";
 				}
-				if(!params.empty()) {
-					if(first) first = false;
-					else os << ", ";
-					generate_vtable<false>(os);
-				}
-				if(ctor || result) {
-					if(!first) os << ", ";
-					if(ctor) os << "void **";
-					else if(result) os << "cwc::internal::result<" << *result << "> *";
-				}
+				if(!params.empty()) generate_vtable<false>(os << ", ");
+				if(ctor) os << ", void **";
 				os << ") noexcept;\n";
 			}
 
 			void definiton(std::ostream & os) const {
 				if(delete_) return;
-				os << "+[](";
-				auto first{true};
-				if(!noexcept_) {
-					os << "cwc::internal::exception * cwc_error";
-					first = false;
-				}
+				os << "+[](cwc::internal::call_context<" << result.value_or("void") << ", " << (noexcept_ ? "true" : "false") << "> * cwc_ctx";
 				if(!static_) {
-					if(first) first = false;
-					else os << ", ";
+					os << ", ";
 					if(const_) os << "const ";
 					os << "void * cwc_self";
 				}
-				if(!params.empty()) {
-					if(first) first = false;
-					else os << ", ";
-					generate_vtable<true>(os);
-				}
-				if(ctor || result) {
-					if(!first) os << ", ";
-					if(ctor) os << "void **";
-					else if(result) os << "cwc::internal::result<" << *result << "> *";
-					os << " cwc_result";
-				}
-				os << ") noexcept { ";
-				if(!noexcept_) os << "cwc_error->try_([&] { ";
-				if(ctor || result) os << "*cwc_result = ";
-				if(ctor) os << "new CWCImpl";
+				if(!params.empty()) generate_vtable<true>(os << ", ");
+				if(ctor) os << ", void ** cwc_self";
+				os << ") noexcept { cwc_ctx->try_([&] { ";
+				if(ctor) os << "*cwc_self = new CWCImpl";
 				else {
+					if(result) os << "return ";
 					if(static_) os << "CWCImpl::";
 					else {
 						if(ref == ref_t::rvalue) os << "std::move";
@@ -108,7 +79,7 @@ namespace cwcc {
 					os << name;
 				}
 				os << "(";
-				first = true; //TODO: [C++20] merge into for-loop
+				auto first{true}; //TODO: [C++20] merge into for-loop
 				for(const auto & p : params) {
 					if(first) first = false;
 					else os << ", ";
@@ -120,9 +91,7 @@ namespace cwcc {
 					os << p.name;
 					if(p.ref != ref_t::lvalue) os << ")";
 				}
-				os << "); ";
-				if(!noexcept_) os << "}); ";
-				os << "}";
+				os << "); }); }";
 			}
 
 			void wrapper(std::ostream & os, std::size_t no) const {
@@ -301,7 +270,7 @@ namespace cwcc {
 			os << "cwc::internal::version cwc_version{" << c.version << "};\n";
 			os << "\n";
 			os << "struct cwc_vtable final {\n";
-			os << "void(*cwc_0)(void *) noexcept;\n";
+			os << "void(*cwc_0)(cwc::internal::call_context<void, true> *, void *) noexcept;\n";
 			no = 0; //TODO: [C++20] merge into for-loop...
 			if(default_ctor) vtable_entry{*default_ctor}.declaration(os, ++no);
 			for(const auto & c : c.content)
@@ -320,7 +289,7 @@ namespace cwcc {
 			os << "struct {\n";
 			os << "cwc::internal::header h{cwc_version};\n";
 			os << "cwc_vtable v{\n";
-			os << "+[](void * cwc_self) noexcept { delete reinterpret_cast<CWCImpl *>(cwc_self); }";
+			os << "+[](cwc::internal::call_context<void, true> *, void * cwc_self) noexcept { delete reinterpret_cast<CWCImpl *>(cwc_self); }";
 			if(default_ctor) vtable_entry{*default_ctor}.definiton(os << ",\n");
 			for(const auto & c : c.content)
 				std::visit(combined{

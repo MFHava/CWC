@@ -63,7 +63,7 @@ namespace cwcc {
 				if(ctor || result) {
 					if(!first) os << ", ";
 					if(ctor) os << "void **";
-					else if(result) os << *result << " *";
+					else if(result) os << "cwc::internal::result<" << *result << "> *";
 				}
 				os << ") noexcept;\n";
 			}
@@ -90,7 +90,7 @@ namespace cwcc {
 				if(ctor || result) {
 					if(!first) os << ", ";
 					if(ctor) os << "void **";
-					else if(result) os << *result << " *";
+					else if(result) os << "cwc::internal::result<" << *result << "> *";
 					os << " cwc_result";
 				}
 				os << ") noexcept { ";
@@ -155,9 +155,8 @@ namespace cwcc {
 				if(!ctor && result) os << "-> " << *result << " ";
 				if(delete_) os << "=delete;\n";
 				else {
-					os << "{";
-					if(result) os << "\n" << *result << " cwc_result;\n";
-					else os << " ";
+					os << "{ ";
+					if(result) os << "return ";
 					os << "cwc_context().call<&cwc_vtable::cwc_" << no << ">(";
 					if(!static_) {
 						os << "cwc_self";
@@ -171,15 +170,11 @@ namespace cwcc {
 						else os << "std::move(";
 						os << p.name << ")";
 					}
-					if(result || ctor) {
+					if(ctor) {
 						if(!params.empty()) os << ", ";
-						if(ctor) os << "&cwc_self";
-						else if(result) os << "std::addressof(cwc_result)";
+						os << "&cwc_self";
 					}
-					os << ");";
-					if(result) os << "\nreturn cwc_result;\n";
-					else os << " ";
-					os << "}\n";
+					os << "); }\n";
 				}
 				os << "\n";
 			}

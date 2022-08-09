@@ -77,6 +77,30 @@ namespace cwc::internal {
 	};
 
 
+	template<typename T>
+	class result final {
+		static_assert(!std::is_reference_v<T> && !std::is_pointer_v<T>);
+
+		unsigned char data[sizeof(T) + 1]{};
+	public:
+		result() noexcept =default;
+		result(const result &) =delete;
+		auto operator=(const result &) -> result & =delete;
+		~result() noexcept { if(data[sizeof(T)]) reinterpret_cast<T *>(data)->~T(); }
+
+		void operator=(T && val) noexcept {
+			//TODO: assert(!data[sizeof(T)]);
+			new(data) T{std::move(val)};
+			data[sizeof(T)] = true;
+		}
+
+		auto return_() noexcept -> T {
+			//TODO: assert(data[sizeof(T)]);
+			return std::move(*reinterpret_cast<T *>(data));
+		}
+	};
+
+
 	template<typename>
 	struct extract_vtable;
 
@@ -85,6 +109,18 @@ namespace cwc::internal {
 
 	template<typename VFunc>
 	using extract_vtable_t = typename extract_vtable<VFunc>::type;
+
+
+	template<typename>
+	struct is_result_specialization : std::false_type {};
+
+	template<typename T>
+	struct is_result_specialization<result<T>> : std::true_type {};
+
+	template<typename T>
+	inline
+	constexpr
+	bool is_result_specialization_v{is_result_specialization<T>::value};
 
 
 	template<typename>
@@ -102,6 +138,54 @@ namespace cwc::internal {
 	bool is_nothrow_v{is_nothrow<VFunc>::value};
 
 
+	template<typename>
+	struct is_returning;
+
+	template<typename Class, typename... Args>
+	class is_returning<void(* Class::*)(Args...) noexcept> {
+		static
+		constexpr
+		auto compute() noexcept -> bool {
+			if constexpr(sizeof...(Args) != 0) {
+				const bool tmp[]{is_result_specialization_v<std::remove_pointer_t<Args>>...};
+				return tmp[sizeof...(Args) - 1];
+			} else return false;
+		}
+	public:
+		static
+		constexpr
+		bool value{compute()};
+	};
+
+	template<typename VFunc>
+	inline
+	constexpr
+	bool is_returning_v{is_returning<VFunc>::value};
+
+
+	template<typename>
+	struct extract_return_type;
+
+	template<typename Class, typename... Args>
+	class extract_return_type<void(* Class::*)(Args...) noexcept> {
+		template<typename T>
+		struct type_identity final { using type = T; }; //TODO: [C++20] replace with std::type_identity
+
+		template<typename T, typename... Ts>
+		static
+		constexpr
+		auto compute() noexcept {
+			if constexpr(sizeof...(Ts) != 0) return compute<Ts...>();
+			else return type_identity<std::remove_pointer_t<T>>{};
+		}
+	public:
+		using type = typename decltype(compute<Args...>())::type;
+	};
+
+	template<typename VFunc>
+	using extract_return_type_t = typename extract_return_type<VFunc>::type;
+
+
 	class context final {
 		struct native_handle;
 		const std::unique_ptr<const native_handle> lib;
@@ -112,15 +196,25 @@ namespace cwc::internal {
 		~context() noexcept;
 
 		template<auto VFunc, typename... Args>
-		void call(Args &&... args) const {
+		auto call(Args &&... args) const {
 			using VFuncT = decltype(VFunc);
 			static_assert(std::is_member_object_pointer_v<VFuncT>);
 			const auto vtable{reinterpret_cast<const extract_vtable_t<VFuncT> *>(vptr)};
-			if constexpr(is_nothrow_v<VFuncT>) (vtable->*VFunc)(std::forward<Args>(args)...);
-			else {
-				exception exc;
-				(vtable->*VFunc)(&exc, std::forward<Args>(args)...);
-				exc.throw_();
+			exception exc;
+			if constexpr(is_returning_v<VFuncT>) {
+				extract_return_type_t<VFuncT> res;
+				if constexpr(is_nothrow_v<VFuncT>) (vtable->*VFunc)(std::forward<Args>(args)..., &res);
+				else {
+					(vtable->*VFunc)(&exc, std::forward<Args>(args)..., &res);
+					exc.throw_();
+				}
+				return res.return_();
+			} else {
+				if constexpr(is_nothrow_v<VFuncT>) (vtable->*VFunc)(std::forward<Args>(args)...);
+				else {
+					(vtable->*VFunc)(&exc, std::forward<Args>(args)...);
+					exc.throw_();
+				}
 			}
 		}
 	};

@@ -21,19 +21,21 @@ NAMESPACE ::= namespace NS_IDENT '{' (COMMENT | LIBRARY | TEMPLATE)* '}'
 LIBRARY ::= '@library' '(' STRING ')' (EXTERN | COMPONENT)
 EXTERN ::= 'extern' 'template' 'component' IDENT '<' TPARAM % ',' '>' ';'
 TEMPLATE ::= 'template' '<' (TYPE IDENT ) % ',' '>' COMPONENT
-COMPONENT ::= 'component' ATTRIBUTE* IDENT ['final'] '{' (ATTRIBUTE | COMMENT | CONSTRUCTOR | METHOD | USING)* '}' ';'
+COMPONENT ::= VERSION 'component' ATTRIBUTE* IDENT ['final'] '{' (ATTRIBUTE | COMMENT | CONSTRUCTOR | METHOD | USING)* '}' ';'
 CONSTRUCTOR ::= ['explicit'] IDENT '(' PARAM % ',' ')' ['=' 'delete'] ';'
 METHOD ::= ['static' ('auto' | 'void') ('operator' '(' ')' | IDENT) '(' PARAM % ',' ')' ['const'] [('&' | '&&')] ['noexcept'] ['->' TYPE] ['=' 'delete'] ';'
 PARAM ::= ((const TYPE '&') | ('const' TYPE ('&' | '&&'))) IDENT
 USING ::= 'using' IDENT '=' TYPE ';'
 ATTRIBUTE ::= '[[' IDENT ['(' STRING ')'] ']]'
 TYPE ::= NS_IDENT ['<' ?* '>']
-TPARAM ::= NUMBER | TYPE
-NUMBER ::= ['+' | '-'] 0 | (1-9)(0-9)*
+TPARAM ::= SIGNED_NUMBER | TYPE
+SIGNED_NUMBER ::= ['+' | '-'] NUMBER
+NUMBER ::= 0 | (1-9)(0-9)*
 NS_IDENT ::= [NS_IDENT '::'] IDENT
 IDENT ::= (a-zA-Z)(a-zA-Z0-9_)*
 STRING ::= '"' [^"]* '"'
 SYS_STRING ::= '<' [^>]* '>'
+VERSION ::= '@version' '(' NUMBER ')'
 */
 
 namespace cwcc {

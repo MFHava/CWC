@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <cstdint>
+#include <utility>
 #include <type_traits>
 
 namespace cwc::internal {

@@ -21,7 +21,7 @@
 	#endif
 	#include <Windows.h>
 
-	namespace cwc::internal {
+	namespace {
 		using handle = HMODULE;
 
 		auto executable_name() -> std::filesystem::path {
@@ -47,7 +47,7 @@
 	#define GetProcAddress(dll, function) dlsym(dll, function)
 	#define FreeLibrary(dll) dlclose(dll)
 
-	namespace cwc::internal {
+	namespace {
 		using handle = void *;
 
 		auto executable_name() -> std::filesystem::path {
@@ -72,13 +72,13 @@
 	#define GetProcAddress(dll, function) dlsym(dll, function)
 	#define FreeLibrary(dll) dlclose(dll)
 
-	namespace cwc::internal {
+	namespace {
 		using handle = void *;
 
 		auto executable_name() -> std::filesystem::path {
 			const auto pid{getpid()};
 			char tmp[PROC_PIDPATHINFO_MAXSIZE];
-			if(proc_pidpath(pid, tmp, sizeof(tmp)) == -1) throw std::runtime_error{"proc_pidpath failed"};	
+			if(proc_pidpath(pid, tmp, sizeof(tmp)) == -1) throw std::runtime_error{"proc_pidpath failed"};
 			return tmp;
 		}
 
@@ -97,7 +97,7 @@
 	}()
 	#define FreeLibrary(dll) unload_add_on(dll)
 
-	namespace cwc::internal {
+	namespace {
 		using handle = image_id;
 
 		auto executable_name() -> std::filesystem::path {
@@ -152,7 +152,7 @@ namespace cwc::internal {
 		const auto & h{*reinterpret_cast<const header *>(ptr)};
 		//TODO: handle different header versions (changes will always only be additive)
 		if(h.cversion < ver) throw std::runtime_error{"version mismatch detected"};
-		vptr = reinterpret_cast<const char *>(ptr) + h.offset + 1; //+1 as offset == sizeof(header) - 1
+		vptr = reinterpret_cast<const char *>(ptr) + h.size;
 	}
 
 	context::~context() noexcept =default;

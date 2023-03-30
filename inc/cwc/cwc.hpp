@@ -24,9 +24,9 @@ namespace cwc::internal {
 
 
 	struct alignas(std::uint64_t) header final {
-		const version hversion{0};
-		const std::uint8_t offset{sizeof(header) - 1};
-		version cversion;
+		const version hversion{0}; //CWC header version
+		const std::uint8_t size{sizeof(header)};
+		version cversion; //component version
 		std::uint8_t reserved[5]{};
 
 		constexpr
@@ -35,7 +35,7 @@ namespace cwc::internal {
 	static_assert(sizeof(header) == sizeof(std::uint64_t));
 	static_assert(alignof(header) == alignof(std::uint64_t));
 	static_assert(offsetof(header, hversion) == 0);
-	static_assert(offsetof(header, offset) == 1);
+	static_assert(offsetof(header, size) == 1);
 	static_assert(offsetof(header, cversion) == 2);
 
 

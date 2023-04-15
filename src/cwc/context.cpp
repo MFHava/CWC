@@ -126,10 +126,16 @@ namespace cwc::internal {
 		handle lib;
 
 		native_handle(const char * dll) {
+			auto end{dll};
+			while(*end != '\0') ++end;
+			const auto it{std::find(std::make_reverse_iterator(end), std::make_reverse_iterator(dll), '/').base()};
+
 			auto fullpath{base_path};
+			if(it != dll) fullpath += std::string_view{dll, static_cast<std::size_t>(it - dll)};
 			fullpath += dll_prefix;
-			fullpath += dll;
+			fullpath += std::string_view{it, static_cast<std::size_t>(end - it)};
 			fullpath += dll_suffix;
+
 			lib = LoadLibrary(fullpath.c_str());
 			if(!lib) throw std::runtime_error{"could not load library"};
 		}

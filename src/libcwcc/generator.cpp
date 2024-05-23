@@ -286,9 +286,12 @@ namespace cwcc {
 			os << "static\n";
 			os << "constexpr\n";
 			os << "auto cwc_export() noexcept {\n";
-			os << "struct {\n";
-			os << "cwc::internal::header h{cwc_version};\n";
-			os << "cwc_vtable v{\n";
+			os << "struct cwc_result final {\n";
+			os << "cwc::internal::header header;\n";
+			os << "cwc_vtable vtable;\n";
+			os << "};\n";
+			os << "return cwc_result{\n";
+			os << "cwc_version,\n";
 			os << "+[](cwc::internal::call_context<void, true> *, void * cwc_self) noexcept { delete reinterpret_cast<CWCImpl *>(cwc_self); }";
 			if(default_ctor) vtable_entry{*default_ctor}.definiton(os << ",\n");
 			for(const auto & c : c.content)
@@ -300,8 +303,6 @@ namespace cwcc {
 				}, c);
 			os << "\n";
 			os << "};\n";
-			os << "} e;\n";
-			os << "return e;\n";
 			os << "}\n";
 			os << "\n";
 			os << "static\n";
